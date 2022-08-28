@@ -20,14 +20,16 @@ class BasePipelineExplainer(ABC):
         self,
         prompt: Union[str, List[str]],
         attribution_method: str = 'grad_x_input',
+        normalize_attributions: bool = False,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
         generator: Optional[torch.Generator] = None,
+        output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False
-    ) -> Dict[str, torch.Tensor]:
+    ) -> Dict[str, Any]:
         # TODO: add description
 
         if attribution_method != 'grad_x_input':
@@ -68,6 +70,7 @@ class BasePipelineExplainer(ABC):
             run_safety_checker=run_safety_checker,
             enable_grad=True
         )
+
         if output['nsfw_content_detected']:
             raise Exception(
                 "NSFW content was detected, it is not possible to provide an explanation. "
@@ -75,11 +78,15 @@ class BasePipelineExplainer(ABC):
             )
 
         # Get primary attribution scores
-        feature_importance_normalized = gradient_x_inputs_attribution(
-            pred_logits=output['sample'][0], input_embeds=text_embeddings
+        output['token_attributions'] = gradient_x_inputs_attribution(
+            pred_logits=output['sample'][0], input_embeds=text_embeddings, normalize_attributions=normalize_attributions
         )
 
-        return output, feature_importance_normalized, text_input, text_embeddings
+        # convert to PIL Image if requested
+        if output_type == "pil":
+            output['sample'] = self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy())
+
+        return output
 
     @abstractmethod
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:

@@ -2,7 +2,6 @@ import inspect
 import warnings
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Dict, Any, Tuple
-
 from tqdm.auto import tqdm
 
 import torch

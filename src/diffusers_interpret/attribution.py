@@ -31,6 +31,4 @@ def gradient_x_inputs_attribution(
         # Normalize so we can show scores as percentages
         feature_importance = feature_importance / torch.sum(feature_importance)
 
-    feature_importance = torch.reshape(feature_importance, tuple(input_embeds.shape))
-
     return feature_importance

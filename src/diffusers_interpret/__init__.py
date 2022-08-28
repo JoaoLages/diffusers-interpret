@@ -156,7 +156,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_kwargs["eta"] = eta
 
-        for t in tqdm(self.pipe.scheduler.timesteps):
+        for t in tqdm(self.pipe.scheduler.timesteps, desc="Diffusion process"):
 
             if guidance_scale == 1.0:
                 # guidance_scale of 1 means no guidance
@@ -278,7 +278,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        for i, t in tqdm(enumerate(self.pipe.scheduler.timesteps), total=self.pipe.scheduler.timesteps, desc="Diffusion process"):
+        for i, t in tqdm(enumerate(self.pipe.scheduler.timesteps), total=len(self.pipe.scheduler.timesteps), desc="Diffusion process"):
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):

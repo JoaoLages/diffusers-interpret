@@ -1,4 +1,4 @@
-import torch
+import torch, time
 
 
 def gradient_x_inputs_attribution(pred_logits: torch.Tensor, input_embeds: torch.Tensor) -> torch.Tensor:
@@ -10,7 +10,10 @@ def gradient_x_inputs_attribution(pred_logits: torch.Tensor, input_embeds: torch
     tuple_of_pred_logits = tuple(torch.flatten(pred_logits))
 
     # back-prop gradients for all predictions with respect to the inputs and sum them
+    print("calculating gradients")
+    start = time.time()
     grad = torch.autograd.grad(tuple_of_pred_logits, input_embeds)[0]
+    print("Done", time.time()-start)
 
     # Grad X Input
     grad_enc_x_input = grad * input_embeds

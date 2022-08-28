@@ -82,6 +82,7 @@ class BasePipelineExplainer(ABC):
         #    )
 
         def get_pred_logit(logit_idx, text_input, text_embeddings):
+            print(logit_idx.shape)
             i, j, k = logit_idx
             return self._mimic_pipeline_call(
                 text_input=text_input,

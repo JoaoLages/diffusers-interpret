@@ -60,46 +60,30 @@ class BasePipelineExplainer(ABC):
         generator = generator or torch.Generator(self.pipe.device).manual_seed(random.randint(0, 9999))
 
         # Get prediction with their associated gradients
-        #output = self._mimic_pipeline_call(
-        #    text_max_length=text_max_length,
-        #    text_embeddings=text_embeddings,
-        #    batch_size=batch_size,
-        #    height=height,
-        #    width=width,
-        #    num_inference_steps=num_inference_steps,
-        #    guidance_scale=guidance_scale,
-        #    eta=eta,
-        #    generator=generator,
-        #    output_type=None,
-        #    run_safety_checker=run_safety_checker,
-        #    enable_grad=True
-        #)
+        output = self._mimic_pipeline_call(
+            text_max_length=text_max_length,
+            text_embeddings=text_embeddings,
+            batch_size=batch_size,
+            height=height,
+            width=width,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            eta=eta,
+            generator=generator,
+            output_type=None,
+            run_safety_checker=run_safety_checker,
+            enable_grad=True
+        )
 
-        #if output['nsfw_content_detected']:
-        #    raise Exception(
-        #        "NSFW content was detected, it is not possible to provide an explanation. "
-        #        "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
-        #    )
+        if output['nsfw_content_detected']:
+            raise Exception(
+                "NSFW content was detected, it is not possible to provide an explanation. "
+                "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
+            )
 
         def get_pred_logit(text_max_length, text_embeddings, logit_idx):
-            print(logit_idx.shape)
-            print(text_max_length.shape, text_max_length)
-            print(text_embeddings.shape)
             i, j, k = logit_idx
-            return self._mimic_pipeline_call(
-                text_embeddings=text_embeddings,
-                text_max_length=int(text_max_length.item()),
-                batch_size=batch_size,
-                height=height,
-                width=width,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
-                eta=eta,
-                generator=generator,
-                output_type=None,
-                run_safety_checker=run_safety_checker,
-                enable_grad=True
-            )['sample'][0][int(i.item())][int(j.item())][int(k.item())]
+            return output['sample'][0][int(i.item())][int(j.item())][int(k.item())]
 
         logits_idx = []
         for i in range(width):

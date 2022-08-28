@@ -123,16 +123,23 @@ class BasePipelineExplainer(ABC):
 
     @property
     def special_tokens_attributes(self) -> Set[str]:
-        self.pipe: LDMTextToImagePipeline
 
+        # remove verbosity
+        verbose = self.tokenizer.verbose
+        self.tokenizer.verbose = False
+
+        # get special tokens
         special_tokens = []
         for attr in self.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
-            t = getattr(self.pipe.tokenizer, attr, None)
+            t = getattr(self.tokenizer, attr, None)
 
             if isinstance(t, str):
                 special_tokens.append(t)
             elif isinstance(t, list) and len(t) > 0 and isinstance(t[0], str):
                 special_tokens += t
+
+        # reset verbosity
+        self.tokenizer.verbose = verbose
 
         return set(special_tokens)
 

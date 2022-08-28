@@ -98,7 +98,7 @@ class BasePipelineExplainer(ABC):
                 )
             )
             i += 100
-            if not logits_idx[i: i + 100]:
+            if not logits_idx[i: i + 100].any():
                 break
 
         import ipdb; ipdb.set_trace()

@@ -74,7 +74,7 @@ class StableDiffusionPipelineExplainer:
 
         # Get attributions
         attrs = gradient_x_inputs_attribution(pred_logits=output['sample'][0], input_embeds=text_embeddings)
-        return attrs
+        return output, attrs
 
     def _mimic_pipeline_call(
         self,

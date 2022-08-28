@@ -81,7 +81,7 @@ class BasePipelineExplainer(ABC):
         #        "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
         #    )
 
-        def get_pred_logit(logit_idx, text_max_length, text_embeddings):
+        def get_pred_logit(text_max_length, text_embeddings, logit_idx):
             print(logit_idx.shape)
             i, j, k = logit_idx
             return self._mimic_pipeline_call(

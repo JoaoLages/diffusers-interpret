@@ -31,7 +31,8 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False,
-        n_last_inference_steps_to_consider: Optional[int] = None
+        n_last_inference_steps_to_consider: Optional[int] = None,
+        get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
 
@@ -65,7 +66,8 @@ class BasePipelineExplainer(ABC):
             generator=generator,
             output_type=None,
             run_safety_checker=run_safety_checker,
-            n_last_inference_steps_to_consider=n_last_inference_steps_to_consider
+            n_last_inference_steps_to_consider=n_last_inference_steps_to_consider,
+            get_images_for_all_inference_steps=get_images_for_all_inference_steps
         )
 
         if output['nsfw_content_detected']:
@@ -76,7 +78,7 @@ class BasePipelineExplainer(ABC):
 
         # Get primary attribution scores
         if self.verbose:
-            print("Calculating primary attributions... ", end='')
+            print("Calculating token attributions... ", end='')
         if attribution_method == 'grad_x_input':
             token_attributions= gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
@@ -175,6 +177,7 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None
+        n_last_inference_steps_to_consider: Optional[int] = None,
+        get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         raise NotImplementedError

@@ -45,7 +45,8 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None
+        n_last_inference_steps_to_consider: Optional[int] = None,
+        get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
 
@@ -99,6 +100,27 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
+        def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[bool]]:
+            # scale and decode the image latents with vae
+            latents = 1 / 0.18215 * latents
+            image = pipe.vae.decode(latents)
+
+            image = (image / 2 + 0.5).clamp(0, 1)
+            image = image.permute(0, 2, 3, 1)
+
+            has_nsfw_concept = None
+            if run_safety_checker:
+                image = image.detach().cpu().numpy()
+                safety_cheker_input = pipe.feature_extractor(
+                    pipe.numpy_to_pil(image), return_tensors="pt"
+                ).to(pipe.device)
+                image, has_nsfw_concept = pipe.safety_checker(
+                    images=image, clip_input=safety_cheker_input.pixel_values
+                )
+
+            return image, has_nsfw_concept
+
+        all_generated_images = [] if get_images_for_all_inference_steps else None
         for i, t in tqdm(
             enumerate(self.pipe.scheduler.timesteps),
             total=len(self.pipe.scheduler.timesteps),
@@ -132,26 +154,29 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             else:
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs)["prev_sample"]
 
-        # scale and decode the image latents with vae
-        latents = 1 / 0.18215 * latents
-        image = self.pipe.vae.decode(latents)
+            if get_images_for_all_inference_steps and i + 1 != len(self.pipe.scheduler.timesteps):
+                image, _ = decode_latents(latents=latents, pipe=self.pipe)
+                all_generated_images.append(image)
 
-        image = (image / 2 + 0.5).clamp(0, 1)
-        image = image.permute(0, 2, 3, 1)
-
-        has_nsfw_concept = None
-        if run_safety_checker:
-            image = image.detach().cpu().numpy()
-            safety_cheker_input = self.pipe.feature_extractor(
-                self.pipe.numpy_to_pil(image), return_tensors="pt"
-            ).to(self.pipe.device)
-            image, has_nsfw_concept = self.pipe.safety_checker(
-                images=image, clip_input=safety_cheker_input.pixel_values
-            )
+        image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
+        all_images = all_generated_images
 
         if output_type == "pil":
             if isinstance(image, torch.Tensor):
                 image = image.detach().cpu().numpy()
             image = self.pipe.numpy_to_pil(image)
 
-        return {"sample": image, "nsfw_content_detected": has_nsfw_concept}
+            all_images = []
+            all_generated_images = all_generated_images or []
+            for im in all_generated_images:
+                if isinstance(im, torch.Tensor):
+                    im = im.detach().cpu().numpy()
+                im = self.pipe.numpy_to_pil(im)
+                all_images.append(im)
+            all_images.append(image)
+
+        return {
+            "sample": image,
+            "nsfw_content_detected": has_nsfw_concept,
+            "all_samples_during_generation": all_images
+        }

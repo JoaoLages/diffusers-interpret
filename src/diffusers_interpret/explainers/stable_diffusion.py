@@ -50,7 +50,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         # TODO: add description
 
         self.pipe: StableDiffusionPipeline
-        torch.set_grad_enabled(enable_grad)
+        torch.set_grad_enabled(True)
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
@@ -105,6 +105,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             desc="Diffusion process",
             disable=not self.verbose
         ):
+
+            if i + 1 == len(self.pipe.scheduler.timesteps):
+                torch.set_grad_enabled(True)
+            else:
+                torch.set_grad_enabled(False)
+
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):

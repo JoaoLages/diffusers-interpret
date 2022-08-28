@@ -55,6 +55,7 @@ class BasePipelineExplainer(ABC):
 
         # get prompt text embeddings
         text_max_length, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
+        import ipdb; ipdb.set_trace()
 
         # Generator cant be None
         generator = generator or torch.Generator(self.pipe.device).manual_seed(random.randint(0, 9999))

@@ -105,7 +105,10 @@ class BasePipelineExplainer(ABC):
                 # Add normalized
                 total = sum([attr for _, attr in output['token_attributions'][-1]])
                 output['normalized_token_attributions'].append(
-                    [round(100 * attr / total, 3) for _, attr in output['token_attributions'][-1]]
+                    [
+                        (token, round(100 * attr / total, 3))
+                        for token, attr in output['token_attributions'][-1]
+                    ]
                 )
 
         else:

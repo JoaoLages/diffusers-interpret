@@ -75,7 +75,7 @@ class BasePipelineExplainer(ABC):
 
         # Get primary attribution scores
         if self.verbose:
-            print("Calculating primary attributions ...")
+            print("Calculating primary attributions... ", end='')
         if attribution_method == 'grad_x_input':
             token_attributions, normalized_token_attributions = gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
@@ -110,6 +110,8 @@ class BasePipelineExplainer(ABC):
 
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+        if self.verbose:
+            print("Done!")
 
         # convert to PIL Image if requested
         # also draw bounding box if requested

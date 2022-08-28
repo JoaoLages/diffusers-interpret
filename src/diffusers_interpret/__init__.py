@@ -96,13 +96,14 @@ class BasePipelineExplainer(ABC):
                 output_type=None,
                 run_safety_checker=run_safety_checker,
                 enable_grad=True
-            )['sample'][0][i][j][k]
+            )['sample'][0][i.item()][j.item()][k.item()]
 
         logits_idx = []
         for i in range(width):
             for j in range(height):
                 for k in range(3):
                     logits_idx.append((i, j, k))
+        logits_idx = torch.IntTensor(logits_idx)
 
         i = 0
         per_sample_grads = []

@@ -110,9 +110,9 @@ class BasePipelineExplainer(ABC):
         per_sample_grads = []
         while True:
             per_sample_grads.append(
-                vmap(grad(get_pred_logit), (0, 0, 0))(
+                vmap(grad(get_pred_logit), (None, 0, 0))(
+                    text_input,
                     logits_idx[i: i + 100],
-                    [text_input] * len(logits_idx[i: i + 100]),
                     [text_embeddings] * len(logits_idx[i: i + 100])
                 )
             )

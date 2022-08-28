@@ -54,14 +54,14 @@ class BasePipelineExplainer(ABC):
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # get prompt text embeddings
-        text_input, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
+        text_max_length, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
 
         # Generator cant be None
         generator = generator or torch.Generator(self.pipe.device).manual_seed(random.randint(0, 9999))
 
         # Get prediction with their associated gradients
         #output = self._mimic_pipeline_call(
-        #    text_input=text_input,
+        #    text_max_length=text_max_length,
         #    text_embeddings=text_embeddings,
         #    batch_size=batch_size,
         #    height=height,
@@ -81,12 +81,12 @@ class BasePipelineExplainer(ABC):
         #        "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
         #    )
 
-        def get_pred_logit(logit_idx, text_input, text_embeddings):
+        def get_pred_logit(logit_idx, text_max_length, text_embeddings):
             print(logit_idx.shape)
             i, j, k = logit_idx
             return self._mimic_pipeline_call(
-                text_input=text_input,
                 text_embeddings=text_embeddings,
+                text_max_length=int(text_max_length.item()),
                 batch_size=batch_size,
                 height=height,
                 width=width,
@@ -105,13 +105,14 @@ class BasePipelineExplainer(ABC):
                 for k in range(3):
                     logits_idx.append((i, j, k))
         logits_idx = torch.Tensor(logits_idx)
+        text_max_length = torch.Tensor(text_max_length)
 
         i = 0
         per_sample_grads = []
         while True:
             per_sample_grads.append(
                 vmap(grad(get_pred_logit), in_dims=(None, None, 0))(
-                    text_input,
+                    text_max_length,
                     text_embeddings,
                     logits_idx[i: i + 100],
                 )
@@ -140,14 +141,14 @@ class BasePipelineExplainer(ABC):
         #return output
 
     @abstractmethod
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[int, torch.Tensor]:
         raise NotImplementedError
 
     @abstractmethod
     def _mimic_pipeline_call(
         self,
-        text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
+        text_max_length: int,
         batch_size: int,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
@@ -166,7 +167,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
     def __init__(self, pipe: LDMTextToImagePipeline, verbose: bool = True):
         super().__init__(pipe=pipe, verbose=verbose)
 
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[int, torch.Tensor]:
         self.pipe: LDMTextToImagePipeline
         text_input = self.pipe.tokenizer(prompt, padding="max_length", max_length=77, return_tensors="pt")
         text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
@@ -174,8 +175,8 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
     def _mimic_pipeline_call(
         self,
-        text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
+        text_max_length: int,
         batch_size: int,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
@@ -194,7 +195,9 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
         # get unconditional embeddings for classifier free guidance
         if guidance_scale != 1.0:
-            uncond_input = self.pipe.tokenizer([""] * batch_size, padding="max_length", max_length=77, return_tensors="pt")
+            uncond_input = self.pipe.tokenizer(
+                [""] * batch_size, padding="max_length", max_length=text_max_length, return_tensors="pt"
+            )
             uncond_embeddings = self.pipe.bert(uncond_input.input_ids.to(self.pipe.device))[0]
 
         # get prompt text embeddings
@@ -271,7 +274,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         self.pipe.vae.post_quant_conv.functional, self.pipe.vae.post_quant_conv.params, self.pipe.vae.post_quant_conv.buffers = \
             make_functional_with_buffers(self.pipe.vae.post_quant_conv)
 
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[int, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
         text_input = self.pipe.tokenizer(
             prompt,
@@ -285,12 +288,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             self.pipe.text_encoder.buffers,
             text_input.input_ids.to(self.pipe.device)
         )[0]
-        return text_input, text_embeddings
+        return text_input.input_ids.shape[-1], text_embeddings
 
     def _mimic_pipeline_call(
         self,
-        text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
+        text_max_length: int,
         batch_size: int,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
@@ -313,9 +316,8 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         do_classifier_free_guidance = guidance_scale > 1.0
         # get unconditional embeddings for classifier free guidance
         if do_classifier_free_guidance:
-            max_length = text_input.input_ids.shape[-1]
             uncond_input = self.pipe.tokenizer(
-                [""] * batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
+                [""] * batch_size, padding="max_length", max_length=text_max_length, return_tensors="pt"
             )
             uncond_embeddings = self.pipe.text_encoder.functional(
                 self.pipe.text_encoder.params,

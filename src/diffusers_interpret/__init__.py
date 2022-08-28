@@ -82,8 +82,7 @@ class BasePipelineExplainer(ABC):
             )
 
         def get_pred_logit(text_max_length, text_embeddings, logit_idx):
-            i, j, k = logit_idx
-            return output['sample'][0][int(i.item())][int(j.item())][int(k.item())]
+            return output['sample'][0]
 
         logits_idx = torch.flatten(output['sample'][0])
         text_max_length = torch.Tensor([text_max_length])

@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 
 import torch
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, LDMTextToImagePipeline, DiffusionPipeline
-from transformers import BatchEncoding
+from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
 
@@ -44,9 +44,6 @@ class BasePipelineExplainer(ABC):
             batch_size = len(prompt)
         else:
             raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
-
-        if height % 8 != 0 or width % 8 != 0:
-            raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # TODO: add asserts for out of bounds
         if explanation_2d_bounding_box:
@@ -125,8 +122,23 @@ class BasePipelineExplainer(ABC):
         return output
 
     @property
-    @abstractmethod
     def special_tokens_attributes(self) -> Set[str]:
+        self.pipe: LDMTextToImagePipeline
+
+        special_tokens = []
+        for attr in self.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
+            t = getattr(self.pipe.tokenizer, attr, None)
+
+            if isinstance(t, str):
+                special_tokens.append(t)
+            elif isinstance(t, list) and len(t) > 0 and isinstance(t[0], str):
+                special_tokens += t
+
+        return set(special_tokens)
+
+    @property
+    @abstractmethod
+    def tokenizer(self) -> PreTrainedTokenizerBase:
         raise NotImplementedError
 
     @abstractmethod
@@ -157,19 +169,9 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         super().__init__(pipe=pipe, verbose=verbose)
 
     @property
-    def special_tokens_attributes(self) -> Set[str]:
+    def tokenizer(self) -> PreTrainedTokenizerBase:
         self.pipe: LDMTextToImagePipeline
-
-        special_tokens = []
-        for attr in self.pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
-            t = getattr(self.pipe.tokenizer, attr, None)
-
-            if isinstance(t, str):
-                special_tokens.append(t)
-            elif isinstance(t, list) and isinstance(t[0], str):
-                special_tokens += t
-
-        return set(special_tokens)
+        return self.pipe.tokenizer
 
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
         self.pipe: LDMTextToImagePipeline
@@ -197,6 +199,9 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
         self.pipe: LDMTextToImagePipeline
         torch.set_grad_enabled(enable_grad)
+
+        if height % 8 != 0 or width % 8 != 0:
+            raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # get unconditional embeddings for classifier free guidance
         if guidance_scale != 1.0:
@@ -267,19 +272,9 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         super().__init__(pipe=pipe, verbose=verbose)
 
     @property
-    def special_tokens_attributes(self) -> Set[str]:
+    def tokenizer(self) -> PreTrainedTokenizerBase:
         self.pipe: StableDiffusionPipeline
-
-        special_tokens = []
-        for attr in self.pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
-            t = getattr(self.pipe.tokenizer, attr, None)
-
-            if isinstance(t, str):
-                special_tokens.append(t)
-            elif isinstance(t, list) and isinstance(t[0], str):
-                special_tokens += t
-
-        return set(special_tokens)
+        return self.pipe.tokenizer
 
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
@@ -313,6 +308,9 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
         self.pipe: StableDiffusionPipeline
         torch.set_grad_enabled(enable_grad)
+
+        if height % 8 != 0 or width % 8 != 0:
+            raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`

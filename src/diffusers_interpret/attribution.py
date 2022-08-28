@@ -13,7 +13,7 @@ def gradient_x_inputs_attribution(
     assert len(pred_logits.shape) == 3
     if explanation_2d_bounding_box:
         upper_left, bottom_right = explanation_2d_bounding_box
-        pred_logits = pred_logits[upper_left[0]: bottom_right[0]][upper_left[1]: bottom_right[1]]
+        pred_logits = pred_logits[upper_left[0]: bottom_right[0], upper_left[1]: bottom_right[1], :]
 
     # Construct tuple of scalar tensors with all `pred_logits`
     # The code below is equivalent to `tuple_of_pred_logits = tuple(torch.flatten(pred_logits))`,

@@ -83,7 +83,8 @@ class BasePipelineExplainer(ABC):
 
         def get_pred_logit(text_max_length, text_embeddings, logit_idx):
             print(logit_idx.shape)
-            print(text_max_length)
+            print(text_max_length.shape, text_max_length)
+            print(text_embeddings.shape)
             i, j, k = logit_idx
             return self._mimic_pipeline_call(
                 text_embeddings=text_embeddings,
@@ -108,6 +109,8 @@ class BasePipelineExplainer(ABC):
         logits_idx = torch.Tensor(logits_idx)
         text_max_length = torch.Tensor(text_max_length)
 
+        print(text_max_length)
+        print(text_embeddings.shape)
         i = 0
         per_sample_grads = []
         while True:

@@ -40,11 +40,15 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None
+        n_last_inference_steps_to_consider: Optional[int] = None,
+        get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
 
         if n_last_inference_steps_to_consider:
+            raise NotImplementedError
+
+        if get_images_for_all_inference_steps:
             raise NotImplementedError
 
         self.pipe: LDMTextToImagePipeline

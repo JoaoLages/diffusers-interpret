@@ -155,28 +155,30 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs)["prev_sample"]
 
             if get_images_for_all_inference_steps and i + 1 != len(self.pipe.scheduler.timesteps):
+                torch.set_grad_enabled(False)
                 image, _ = decode_latents(latents=latents, pipe=self.pipe)
                 all_generated_images.append(image)
+                torch.set_grad_enabled(True)
 
         image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
-        all_images = all_generated_images
 
         if output_type == "pil":
             if isinstance(image, torch.Tensor):
                 image = image.detach().cpu().numpy()
             image = self.pipe.numpy_to_pil(image)
 
-            all_images = []
+            aux = []
             all_generated_images = all_generated_images or []
             for im in all_generated_images:
                 if isinstance(im, torch.Tensor):
                     im = im.detach().cpu().numpy()
                 im = self.pipe.numpy_to_pil(im)
-                all_images.append(im)
-            all_images.append(image)
+                aux.append(im)
+            aux.append(image)
+            all_generated_images = aux
 
         return {
             "sample": image,
             "nsfw_content_detected": has_nsfw_concept,
-            "all_samples_during_generation": all_images
+            "all_samples_during_generation": all_generated_images
         }

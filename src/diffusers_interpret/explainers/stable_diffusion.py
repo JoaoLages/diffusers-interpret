@@ -108,9 +108,9 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
             if n_last_inference_steps_to_consider:
                 if i + i < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
-                    torch.set_grad_enabled(True)
-                else:
                     torch.set_grad_enabled(False)
+                else:
+                    torch.set_grad_enabled(True)
 
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents

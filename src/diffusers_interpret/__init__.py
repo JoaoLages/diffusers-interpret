@@ -74,9 +74,12 @@ class BasePipelineExplainer(ABC):
                 "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
             )
 
-        # Get attributions
-        attrs = gradient_x_inputs_attribution(pred_logits=output['sample'][0], input_embeds=text_embeddings)
-        return output, attrs
+        # Get primary attribution scores
+        feature_importance_normalized = gradient_x_inputs_attribution(
+            pred_logits=output['sample'][0], input_embeds=text_embeddings
+        )
+
+        return output, feature_importance_normalized, text_input, text_embeddings
 
     @abstractmethod
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:

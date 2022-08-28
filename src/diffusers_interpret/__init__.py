@@ -85,12 +85,7 @@ class BasePipelineExplainer(ABC):
             i, j, k = logit_idx
             return output['sample'][0][int(i.item())][int(j.item())][int(k.item())]
 
-        logits_idx = []
-        for i in range(width):
-            for j in range(height):
-                for k in range(3):
-                    logits_idx.append((i, j, k))
-        logits_idx = torch.Tensor(logits_idx)
+        logits_idx = torch.flatten(output['sample'][0])
         text_max_length = torch.Tensor([text_max_length])
 
         i = 0

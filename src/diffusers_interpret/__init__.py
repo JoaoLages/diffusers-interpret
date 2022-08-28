@@ -1,17 +1,19 @@
 import inspect
-from typing import List, Optional, Union, Dict, Any
+import warnings
+from abc import ABC, abstractmethod
+from typing import List, Optional, Union, Dict, Any, Tuple
 
 from tqdm.auto import tqdm
 
 import torch
-from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
+from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, LDMTextToImagePipeline, DiffusionPipeline
 from transformers import BatchEncoding
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
 
 
-class StableDiffusionPipelineExplainer:
-    def __init__(self, pipe: StableDiffusionPipeline):
+class BasePipelineExplainer(ABC):
+    def __init__(self, pipe: DiffusionPipeline):
         self.pipe = pipe
 
     def __call__(
@@ -76,6 +78,39 @@ class StableDiffusionPipelineExplainer:
         attrs = gradient_x_inputs_attribution(pred_logits=output['sample'][0], input_embeds=text_embeddings)
         return output, attrs
 
+    @abstractmethod
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _mimic_pipeline_call(
+        self,
+        text_input: BatchEncoding,
+        text_embeddings: torch.Tensor,
+        batch_size: int,
+        height: Optional[int] = 512,
+        width: Optional[int] = 512,
+        num_inference_steps: Optional[int] = 50,
+        guidance_scale: Optional[float] = 7.5,
+        eta: Optional[float] = 0.0,
+        generator: Optional[torch.Generator] = None,
+        output_type: Optional[str] = 'pil',
+        run_safety_checker: bool = True,
+        enable_grad: bool = False
+    ) -> Dict[str, Any]:
+        raise NotImplementedError
+
+
+class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
+    def __init__(self, pipe: LDMTextToImagePipeline):
+        super().__init__(pipe=pipe)
+
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+        self.pipe: LDMTextToImagePipeline
+        text_input = self.pipe.tokenizer(prompt, padding="max_length", max_length=77, return_tensors="pt")
+        text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
+        return text_input, text_embeddings
+
     def _mimic_pipeline_call(
         self,
         text_input: BatchEncoding,
@@ -93,6 +128,107 @@ class StableDiffusionPipelineExplainer:
     ) -> Dict[str, Any]:
         # TODO: add description
 
+        self.pipe: LDMTextToImagePipeline
+        torch.set_grad_enabled(enable_grad)
+
+        # get unconditional embeddings for classifier free guidance
+        if guidance_scale != 1.0:
+            uncond_input = self.pipe.tokenizer([""] * batch_size, padding="max_length", max_length=77, return_tensors="pt")
+            uncond_embeddings = self.pipe.bert(uncond_input.input_ids.to(self.pipe.device))[0]
+
+        # get prompt text embeddings
+
+        latents = torch.randn(
+            (batch_size, self.pipe.unet.in_channels, height // 8, width // 8),
+            generator=generator,
+        )
+        latents = latents.to(self.pipe.device)
+
+        self.pipe.scheduler.set_timesteps(num_inference_steps)
+
+        # prepare extra kwargs for the scheduler step, since not all schedulers have the same signature
+        accepts_eta = "eta" in set(inspect.signature(self.pipe.scheduler.step).parameters.keys())
+
+        extra_kwargs = {}
+        if accepts_eta:
+            extra_kwargs["eta"] = eta
+
+        for t in tqdm(self.pipe.scheduler.timesteps):
+
+            if guidance_scale == 1.0:
+                # guidance_scale of 1 means no guidance
+                latents_input = latents
+                context = text_embeddings
+            else:
+                # For classifier free guidance, we need to do two forward passes.
+                # Here we concatenate the unconditional and text embeddings into a single batch
+                # to avoid doing two forward passes
+                latents_input = torch.cat([latents] * 2)
+                context = torch.cat([uncond_embeddings, text_embeddings])
+
+            # predict the noise residual
+            noise_pred = self.pipe.unet(latents_input, t, encoder_hidden_states=context)["sample"]
+            # perform guidance
+            if guidance_scale != 1.0:
+                noise_pred_uncond, noise_prediction_text = noise_pred.chunk(2)
+                noise_pred = noise_pred_uncond + guidance_scale * (noise_prediction_text - noise_pred_uncond)
+
+            # compute the previous noisy sample x_t -> x_t-1
+            latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_kwargs)["prev_sample"]
+
+        # scale and decode the image latents with vqvae
+        latents = 1 / 0.18215 * latents
+        image = self.pipe.vqvae.decode(latents)
+
+        image = (image / 2 + 0.5).clamp(0, 1)
+        image = image.permute(0, 2, 3, 1)
+
+        has_nsfw_concept = None
+        if run_safety_checker:
+            warnings.warn(
+                f"{self.__class__.__name__} has no safety checker, `run_safety_checker=True` will be ignored"
+            )
+
+        if output_type == "pil":
+            image = self.pipe.numpy_to_pil(image.detach().cpu().numpy())
+
+        return {"sample": image, "nsfw_content_detected": has_nsfw_concept}
+
+
+class StableDiffusionPipelineExplainer(BasePipelineExplainer):
+    def __init__(self, pipe: StableDiffusionPipeline):
+        super().__init__(pipe=pipe)
+
+    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+        self.pipe: StableDiffusionPipeline
+        text_input = self.pipe.tokenizer(
+            prompt,
+            padding="max_length",
+            max_length=self.pipe.tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
+        return text_input, text_embeddings
+
+    def _mimic_pipeline_call(
+        self,
+        text_input: BatchEncoding,
+        text_embeddings: torch.Tensor,
+        batch_size: int,
+        height: Optional[int] = 512,
+        width: Optional[int] = 512,
+        num_inference_steps: Optional[int] = 50,
+        guidance_scale: Optional[float] = 7.5,
+        eta: Optional[float] = 0.0,
+        generator: Optional[torch.Generator] = None,
+        output_type: Optional[str] = 'pil',
+        run_safety_checker: bool = True,
+        enable_grad: bool = False
+    ) -> Dict[str, Any]:
+        # TODO: add description
+
+        self.pipe: StableDiffusionPipeline
         torch.set_grad_enabled(enable_grad)
 
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
@@ -111,7 +247,7 @@ class StableDiffusionPipelineExplainer:
             # to avoid doing two forward passes
             text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
 
-        # get the intial random noise
+        # get the initial random noise
         latents = torch.randn(
             (batch_size, self.pipe.unet.in_channels, height // 8, width // 8),
             generator=generator,
@@ -126,7 +262,7 @@ class StableDiffusionPipelineExplainer:
 
         self.pipe.scheduler.set_timesteps(num_inference_steps, **extra_set_kwargs)
 
-        # if we use LMSDiscreteScheduler, let's make sure latents are mulitplied by sigmas
+        # if we use LMSDiscreteScheduler, let's make sure latents are multiplied by sigmas
         if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):
             latents = latents * self.pipe.scheduler.sigmas[0]
 
@@ -139,7 +275,7 @@ class StableDiffusionPipelineExplainer:
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        for i, t in tqdm(enumerate(self.pipe.scheduler.timesteps)):
+        for i, t in tqdm(enumerate(self.pipe.scheduler.timesteps), total=self.pipe.scheduler.timesteps, desc="Diffusion process"):
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):

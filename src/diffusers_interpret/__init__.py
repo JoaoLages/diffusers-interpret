@@ -1,7 +1,9 @@
 import inspect
 import warnings
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union, Dict, Any, Tuple
+from typing import List, Optional, Union, Dict, Any, Tuple, Set
+
+from PIL import ImageDraw
 from tqdm.auto import tqdm
 
 import torch
@@ -20,7 +22,8 @@ class BasePipelineExplainer(ABC):
         self,
         prompt: Union[str, List[str]],
         attribution_method: str = 'grad_x_input',
-        normalize_attributions: bool = False,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
+        consider_special_tokens: bool = False,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
         num_inference_steps: Optional[int] = 50,
@@ -45,8 +48,12 @@ class BasePipelineExplainer(ABC):
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
+        # TODO: add asserts for out of bounds
+        if explanation_2d_bounding_box:
+            pass
+
         # get prompt text embeddings
-        text_input, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
+        tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
         # Get prediction with their associated gradients
         output = self._mimic_pipeline_call(
@@ -74,21 +81,56 @@ class BasePipelineExplainer(ABC):
         if self.verbose:
             print("Calculating primary attributions ...")
         if attribution_method == 'grad_x_input':
-            output['token_attributions'] = gradient_x_inputs_attribution(
+            token_attributions, normalized_token_attributions = gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
-                normalize_attributions=normalize_attributions
-            ).detach().cpu().numpy()
+                explanation_2d_bounding_box=explanation_2d_bounding_box
+            )
+            token_attributions = token_attributions.detach().cpu().numpy()
+            normalized_token_attributions = normalized_token_attributions.detach().cpu().numpy()
+
+            # remove special tokens
+            assert len(token_attributions) == len(tokens) == len(normalized_token_attributions)
+            output['token_attributions'] = []
+            output['normalized_token_attributions'] = []
+            for sample_token_attributions, sample_tokens, sample_normalized_token_attributions in zip(
+                token_attributions, tokens, normalized_token_attributions
+            ):
+                assert len(sample_token_attributions) == len(sample_tokens) == len(sample_normalized_token_attributions)
+
+                output['token_attributions'].append([])
+                output['normalized_token_attributions'].append([])
+                for attr, token, norm_attr in zip(sample_token_attributions, sample_tokens, sample_normalized_token_attributions):
+                    if consider_special_tokens or token not in self.special_tokens_attributes:
+                        output['token_attributions'][-1].append(
+                            (token, attr)
+                        )
+                        output['normalized_token_attributions'][-1].append(
+                            (token, norm_attr)
+                        )
+
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
 
         # convert to PIL Image if requested
+        # also draw bounding box if requested
         if output_type == "pil":
-            output['sample'] = self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy())
+            images_with_bounding_box = []
+            for im in self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy()):
+                if explanation_2d_bounding_box:
+                    draw = ImageDraw.Draw(im)
+                    draw.rectangle(explanation_2d_bounding_box, outline="red")
+                images_with_bounding_box.append(im)
+            output['sample'] = images_with_bounding_box
 
         return output
 
+    @property
     @abstractmethod
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    def special_tokens_attributes(self) -> Set[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
         raise NotImplementedError
 
     @abstractmethod
@@ -114,11 +156,27 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
     def __init__(self, pipe: LDMTextToImagePipeline, verbose: bool = True):
         super().__init__(pipe=pipe, verbose=verbose)
 
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    @property
+    def special_tokens_attributes(self) -> Set[str]:
+        self.pipe: LDMTextToImagePipeline
+
+        special_tokens = []
+        for attr in self.pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
+            t = getattr(self.pipe.tokenizer, attr, None)
+
+            if isinstance(t, str):
+                special_tokens.append(t)
+            elif isinstance(t, list) and isinstance(t[0], str):
+                special_tokens += t
+
+        return set(special_tokens)
+
+    def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
         self.pipe: LDMTextToImagePipeline
         text_input = self.pipe.tokenizer(prompt, padding="max_length", max_length=77, return_tensors="pt")
         text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
-        return text_input, text_embeddings
+        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input]
+        return tokens, text_input, text_embeddings
 
     def _mimic_pipeline_call(
         self,
@@ -208,7 +266,22 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
     def __init__(self, pipe: StableDiffusionPipeline, verbose: bool = True):
         super().__init__(pipe=pipe, verbose=verbose)
 
-    def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
+    @property
+    def special_tokens_attributes(self) -> Set[str]:
+        self.pipe: StableDiffusionPipeline
+
+        special_tokens = []
+        for attr in self.pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES:
+            t = getattr(self.pipe.tokenizer, attr, None)
+
+            if isinstance(t, str):
+                special_tokens.append(t)
+            elif isinstance(t, list) and isinstance(t[0], str):
+                special_tokens += t
+
+        return set(special_tokens)
+
+    def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
         text_input = self.pipe.tokenizer(
             prompt,
@@ -218,7 +291,8 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             return_tensors="pt",
         )
         text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
-        return text_input, text_embeddings
+        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input]
+        return tokens, text_input, text_embeddings
 
     def _mimic_pipeline_call(
         self,

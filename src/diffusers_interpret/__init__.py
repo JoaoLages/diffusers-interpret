@@ -1,7 +1,10 @@
 import inspect
 import warnings
 from abc import ABC, abstractmethod
+import random
 from typing import List, Optional, Union, Dict, Any, Tuple
+
+from functorch import make_functional, vmap, grad
 from tqdm.auto import tqdm
 
 import torch
@@ -15,6 +18,11 @@ class BasePipelineExplainer(ABC):
     def __init__(self, pipe: DiffusionPipeline, verbose: bool = True):
         self.pipe = pipe
         self.verbose = verbose
+        self.make_pipe_functional()
+
+    @abstractmethod
+    def make_pipe_functional(self):
+        raise NotImplementedError
 
     def __call__(
         self,
@@ -46,53 +54,88 @@ class BasePipelineExplainer(ABC):
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # get prompt text embeddings
-        text_input = self.pipe.tokenizer(
-            prompt,
-            padding="max_length",
-            max_length=self.pipe.tokenizer.model_max_length,
-            truncation=True,
-            return_tensors="pt",
-        )
-        text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
+        text_input, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
+
+        # Generator cant be None
+        generator = generator or torch.Generator(self.pipe.device).manual_seed(random.randint(0, 9999))
 
         # Get prediction with their associated gradients
-        output = self._mimic_pipeline_call(
-            text_input=text_input,
-            text_embeddings=text_embeddings,
-            batch_size=batch_size,
-            height=height,
-            width=width,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            eta=eta,
-            generator=generator,
-            output_type=None,
-            run_safety_checker=run_safety_checker,
-            enable_grad=True
-        )
+        #output = self._mimic_pipeline_call(
+        #    text_input=text_input,
+        #    text_embeddings=text_embeddings,
+        #    batch_size=batch_size,
+        #    height=height,
+        #    width=width,
+        #    num_inference_steps=num_inference_steps,
+        #    guidance_scale=guidance_scale,
+        #    eta=eta,
+        #    generator=generator,
+        #    output_type=None,
+        #    run_safety_checker=run_safety_checker,
+        #    enable_grad=True
+        #)
 
-        if output['nsfw_content_detected']:
-            raise Exception(
-                "NSFW content was detected, it is not possible to provide an explanation. "
-                "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
+        #if output['nsfw_content_detected']:
+        #    raise Exception(
+        #        "NSFW content was detected, it is not possible to provide an explanation. "
+        #        "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
+        #    )
+
+        def get_pred_logit(logit_idx, text_input, text_embeddings):
+            i, j, k = logit_idx
+            return self._mimic_pipeline_call(
+                text_input=text_input,
+                text_embeddings=text_embeddings,
+                batch_size=batch_size,
+                height=height,
+                width=width,
+                num_inference_steps=num_inference_steps,
+                guidance_scale=guidance_scale,
+                eta=eta,
+                generator=generator,
+                output_type=None,
+                run_safety_checker=run_safety_checker,
+                enable_grad=True
+            )['sample'][0][i][j][k]
+
+        logits_idx = []
+        for i in range(width):
+            for j in range(height):
+                for k in range(3):
+                    logits_idx.append((i, j, k))
+
+        i = 0
+        per_sample_grads = []
+        while True:
+            per_sample_grads.append(
+                vmap(grad(get_pred_logit), (None, None, 0))(
+                    logits_idx[i: i + 100],
+                    [text_input] * len(logits_idx[i: i + 100]),
+                    [text_embeddings] * len(logits_idx[i: i + 100])
+                )
             )
+            i += 100
+            if not logits_idx[i: i + 100]:
+                break
+
+        import ipdb; ipdb.set_trace()
 
         # Get primary attribution scores
         if self.verbose:
             print("Calculating primary attribution scores...")
-        if attribution_method == 'grad_x_input':
-            output['token_attributions'] = gradient_x_inputs_attribution(
-                pred_logits=output['sample'][0], input_embeds=text_embeddings,
-                normalize_attributions=normalize_attributions
-            ).detach().cpu().numpy()
-        else:
-            raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+        #if attribution_method == 'grad_x_input':
+        #    output['token_attributions'] = gradient_x_inputs_attribution(
+        #        pred_logits=output['sample'][0], input_embeds=text_embeddings,
+        #        normalize_attributions=normalize_attributions
+        #    ).detach().cpu().numpy()
+        #else:
+        #    raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
 
         # convert to PIL Image if requested
-        if output_type == "pil":
-            output['sample'] = self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy())
+        #if output_type == "pil":
+        #    output['sample'] = self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy())
 
-        return output
+        #return output
 
     @abstractmethod
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
@@ -215,6 +258,13 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
     def __init__(self, pipe: StableDiffusionPipeline, verbose: bool = True):
         super().__init__(pipe=pipe, verbose=verbose)
 
+    def make_pipe_functional(self):
+        self.pipe: StableDiffusionPipeline
+        self.pipe.text_encoder, self.pipe.text_encoder.params = make_functional(self.pipe.text_encoder)
+        self.pipe.unet, self.pipe.unet.params = make_functional(self.pipe.unet)
+        self.pipe.vae.decoder, self.pipe.vae.decoder.params = make_functional(self.pipe.vae.decoder)
+        self.pipe.vae.post_quant_conv, self.pipe.vae.post_quant_conv.params = make_functional(self.pipe.vae.post_quant_conv)
+
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
         text_input = self.pipe.tokenizer(
@@ -224,7 +274,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             truncation=True,
             return_tensors="pt",
         )
-        text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
+        text_embeddings = self.pipe.text_encoder(
+            self.pipe.text_encoder.params,
+            text_input.input_ids.to(self.pipe.device)
+        )[0]
         return text_input, text_embeddings
 
     def _mimic_pipeline_call(
@@ -257,7 +310,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             uncond_input = self.pipe.tokenizer(
                 [""] * batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
             )
-            uncond_embeddings = self.pipe.text_encoder(uncond_input.input_ids.to(self.pipe.device))[0]
+            uncond_embeddings = self.pipe.text_encoder(
+                self.pipe.text_encoder.params,
+                uncond_input.input_ids.to(self.pipe.device)
+            )[0]
             # For classifier free guidance, we need to do two forward passes.
             # Here we concatenate the unconditional and text embeddings into a single batch
             # to avoid doing two forward passes
@@ -304,7 +360,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 latent_model_input = latent_model_input / ((sigma**2 + 1) ** 0.5)
 
             # predict the noise residual
-            noise_pred = self.pipe.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)["sample"]
+            noise_pred = self.pipe.unet(
+                self.pipe.unet.params,
+                latent_model_input, t, encoder_hidden_states=text_embeddings
+            )["sample"]
 
             # perform guidance
             if do_classifier_free_guidance:
@@ -319,7 +378,8 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
         # scale and decode the image latents with vae
         latents = 1 / 0.18215 * latents
-        image = self.pipe.vae.decode(latents)
+        z = self.pipe.vae.post_quant_conv(self.pipe.vae.post_quant_conv.params, latents)
+        image = self.pipe.vae.decoder(self.pipe.vae.decoder.params, z)
 
         image = (image / 2 + 0.5).clamp(0, 1)
         image = image.permute(0, 2, 3, 1)

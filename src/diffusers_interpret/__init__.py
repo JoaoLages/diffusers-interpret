@@ -78,9 +78,14 @@ class BasePipelineExplainer(ABC):
             )
 
         # Get primary attribution scores
-        output['token_attributions'] = gradient_x_inputs_attribution(
-            pred_logits=output['sample'][0], input_embeds=text_embeddings, normalize_attributions=normalize_attributions
-        )
+        if attribution_method == 'grad_x_input':
+            output['token_attributions'] = gradient_x_inputs_attribution(
+                pred_logits=output['sample'][0], input_embeds=text_embeddings,
+                normalize_attributions=normalize_attributions
+            )
+        else:
+            raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+
 
         # convert to PIL Image if requested
         if output_type == "pil":

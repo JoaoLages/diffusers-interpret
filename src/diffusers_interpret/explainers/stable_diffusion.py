@@ -45,7 +45,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        enable_grad: bool = False
+        n_last_inference_steps_to_consider: Optional[int] = None
     ) -> Dict[str, Any]:
         # TODO: add description
 
@@ -106,10 +106,11 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             disable=not self.verbose
         ):
 
-            if i + 1 == len(self.pipe.scheduler.timesteps):
-                torch.set_grad_enabled(True)
-            else:
-                torch.set_grad_enabled(False)
+            if n_last_inference_steps_to_consider:
+                if i + i < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
+                    torch.set_grad_enabled(True)
+                else:
+                    torch.set_grad_enabled(False)
 
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents

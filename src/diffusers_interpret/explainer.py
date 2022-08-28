@@ -30,7 +30,8 @@ class BasePipelineExplainer(ABC):
         eta: Optional[float] = 0.0,
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
-        run_safety_checker: bool = False
+        run_safety_checker: bool = False,
+        n_last_inference_steps_to_consider: Optional[int] = None
     ) -> Dict[str, Any]:
         # TODO: add description
 
@@ -64,7 +65,7 @@ class BasePipelineExplainer(ABC):
             generator=generator,
             output_type=None,
             run_safety_checker=run_safety_checker,
-            enable_grad=True
+            n_last_inference_steps_to_consider=n_last_inference_steps_to_consider
         )
 
         if output['nsfw_content_detected']:
@@ -174,6 +175,6 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        enable_grad: bool = False
+        n_last_inference_steps_to_consider: Optional[int] = None
     ) -> Dict[str, Any]:
         raise NotImplementedError

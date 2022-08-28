@@ -260,13 +260,13 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
     def make_pipe_functional(self):
         self.pipe: StableDiffusionPipeline
-        self.pipe.text_encoder, self.pipe.text_encoder.params, self.pipe.text_encoder.buffers = \
+        self.pipe.text_encoder.functional, self.pipe.text_encoder.params, self.pipe.text_encoder.buffers = \
             make_functional_with_buffers(self.pipe.text_encoder)
-        self.pipe.unet, self.pipe.unet.params, self.pipe.unet.buffers = \
+        self.pipe.unet.functional, self.pipe.unet.params, self.pipe.unet.buffers = \
             make_functional_with_buffers(self.pipe.unet)
-        self.pipe.vae.decoder, self.pipe.vae.decoder.params, self.pipe.vae.decoder.buffers = \
+        self.pipe.vae.decoder.functional, self.pipe.vae.decoder.params, self.pipe.vae.decoder.buffers = \
             make_functional_with_buffers(self.pipe.vae.decoder)
-        self.pipe.vae.post_quant_conv, self.pipe.vae.post_quant_conv.params, self.pipe.vae.post_quant_conv.buffers = \
+        self.pipe.vae.post_quant_conv.functional, self.pipe.vae.post_quant_conv.params, self.pipe.vae.post_quant_conv.buffers = \
             make_functional_with_buffers(self.pipe.vae.post_quant_conv)
 
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
@@ -278,7 +278,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             truncation=True,
             return_tensors="pt",
         )
-        text_embeddings = self.pipe.text_encoder(
+        text_embeddings = self.pipe.text_encoder.functional(
             self.pipe.text_encoder.params,
             self.pipe.text_encoder.buffers,
             text_input.input_ids.to(self.pipe.device)
@@ -315,7 +315,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             uncond_input = self.pipe.tokenizer(
                 [""] * batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
             )
-            uncond_embeddings = self.pipe.text_encoder(
+            uncond_embeddings = self.pipe.text_encoder.functional(
                 self.pipe.text_encoder.params,
                 self.pipe.text_encoder.buffers,
                 uncond_input.input_ids.to(self.pipe.device)
@@ -366,7 +366,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 latent_model_input = latent_model_input / ((sigma**2 + 1) ** 0.5)
 
             # predict the noise residual
-            noise_pred = self.pipe.unet(
+            noise_pred = self.pipe.unet.functional(
                 self.pipe.unet.params,
                 self.pipe.unet.buffers,
                 latent_model_input, t, encoder_hidden_states=text_embeddings
@@ -385,12 +385,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
         # scale and decode the image latents with vae
         latents = 1 / 0.18215 * latents
-        z = self.pipe.vae.post_quant_conv(
+        z = self.pipe.vae.post_quant_conv.functional(
             self.pipe.vae.post_quant_conv.params,
             self.pipe.vae.post_quant_conv.buffers,
             latents
         )
-        image = self.pipe.vae.decoder(
+        image = self.pipe.vae.decoder.functional(
             self.pipe.vae.decoder.params,
             self.pipe.vae.decoder.buffers,
             z

@@ -81,8 +81,8 @@ class BasePipelineExplainer(ABC):
                 "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
             )
 
-        def get_pred_logit(text_max_length, text_embeddings, logit_idx):
-            return output['sample'][0]
+        def get_pred_logit(text_max_length, text_embeddings, logit):
+            return logit
 
         logits_idx = torch.flatten(output['sample'][0])
         text_max_length = torch.Tensor([text_max_length])

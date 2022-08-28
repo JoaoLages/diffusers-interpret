@@ -12,8 +12,9 @@ from diffusers_interpret.attribution import gradient_x_inputs_attribution
 
 
 class BasePipelineExplainer(ABC):
-    def __init__(self, pipe: DiffusionPipeline):
+    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True):
         self.pipe = pipe
+        self.verbose = verbose
 
     def __call__(
         self,
@@ -45,14 +46,7 @@ class BasePipelineExplainer(ABC):
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
         # get prompt text embeddings
-        text_input = self.pipe.tokenizer(
-            prompt,
-            padding="max_length",
-            max_length=self.pipe.tokenizer.model_max_length,
-            truncation=True,
-            return_tensors="pt",
-        )
-        text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
+        text_input, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
 
         # Get prediction with their associated gradients
         output = self._mimic_pipeline_call(
@@ -77,6 +71,8 @@ class BasePipelineExplainer(ABC):
             )
 
         # Get primary attribution scores
+        if self.verbose:
+            print("Calculating primary attributions ...")
         if attribution_method == 'grad_x_input':
             output['token_attributions'] = gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
@@ -84,7 +80,6 @@ class BasePipelineExplainer(ABC):
             ).detach().cpu().numpy()
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
-
 
         # convert to PIL Image if requested
         if output_type == "pil":
@@ -116,8 +111,8 @@ class BasePipelineExplainer(ABC):
 
 
 class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
-    def __init__(self, pipe: LDMTextToImagePipeline):
-        super().__init__(pipe=pipe)
+    def __init__(self, pipe: LDMTextToImagePipeline, verbose: bool = True):
+        super().__init__(pipe=pipe, verbose=verbose)
 
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
         self.pipe: LDMTextToImagePipeline
@@ -167,7 +162,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_kwargs["eta"] = eta
 
-        for t in tqdm(self.pipe.scheduler.timesteps, desc="Diffusion process"):
+        for t in tqdm(self.pipe.scheduler.timesteps, desc="Diffusion process", disable=not self.verbose):
 
             if guidance_scale == 1.0:
                 # guidance_scale of 1 means no guidance
@@ -210,8 +205,8 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
 
 class StableDiffusionPipelineExplainer(BasePipelineExplainer):
-    def __init__(self, pipe: StableDiffusionPipeline):
-        super().__init__(pipe=pipe)
+    def __init__(self, pipe: StableDiffusionPipeline, verbose: bool = True):
+        super().__init__(pipe=pipe, verbose=verbose)
 
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
@@ -289,7 +284,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        for i, t in tqdm(enumerate(self.pipe.scheduler.timesteps), total=len(self.pipe.scheduler.timesteps), desc="Diffusion process"):
+        for i, t in tqdm(
+            enumerate(self.pipe.scheduler.timesteps),
+            total=len(self.pipe.scheduler.timesteps),
+            desc="Diffusion process",
+            disable=not self.verbose
+        ):
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):

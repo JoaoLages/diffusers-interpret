@@ -130,6 +130,20 @@ class BasePipelineExplainer(ABC):
                 images_with_bounding_box.append(im)
             output['sample'] = images_with_bounding_box
 
+            if output['all_samples_during_generation']:
+                aux = []
+                all_generated_images = output['all_samples_during_generation'] or []
+                for im in all_generated_images:
+                    if isinstance(im, torch.Tensor):
+                        im = im.detach().cpu().numpy()
+                    im = self.pipe.numpy_to_pil(im)
+                    if explanation_2d_bounding_box:
+                        draw = ImageDraw.Draw(im)
+                        draw.rectangle(explanation_2d_bounding_box, outline="red")
+                    aux.append(im)
+                aux.append(images_with_bounding_box)
+                output['all_samples_during_generation'] = aux
+
         return output
 
     @property

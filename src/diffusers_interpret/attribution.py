@@ -25,10 +25,12 @@ def gradient_x_inputs_attribution(
     grad_x_input = grad * input_embeds
 
     # Turn into a scalar value for each input token by taking L2 norm
-    feature_importance = torch.norm(grad_x_input, dim=1)
+    feature_importance = torch.norm(grad_x_input, dim=-11)
 
     if normalize_attributions:
         # Normalize so we can show scores as percentages
         feature_importance = feature_importance / torch.sum(feature_importance)
+
+    feature_importance = torch.reshape(feature_importance, tuple(input_embeds.shape))
 
     return feature_importance

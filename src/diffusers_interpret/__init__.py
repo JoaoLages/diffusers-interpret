@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import random
 from typing import List, Optional, Union, Dict, Any, Tuple
 
-from functorch import make_functional, vmap, grad
+from functorch import make_functional_with_buffers, vmap, grad
 from tqdm.auto import tqdm
 
 import torch
@@ -260,10 +260,14 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
     def make_pipe_functional(self):
         self.pipe: StableDiffusionPipeline
-        self.pipe.text_encoder, self.pipe.text_encoder.params = make_functional(self.pipe.text_encoder)
-        self.pipe.unet, self.pipe.unet.params = make_functional(self.pipe.unet)
-        self.pipe.vae.decoder, self.pipe.vae.decoder.params = make_functional(self.pipe.vae.decoder)
-        self.pipe.vae.post_quant_conv, self.pipe.vae.post_quant_conv.params = make_functional(self.pipe.vae.post_quant_conv)
+        self.pipe.text_encoder, self.pipe.text_encoder.params, self.pipe.text_encoder.buffers = \
+            make_functional_with_buffers(self.pipe.text_encoder)
+        self.pipe.unet, self.pipe.unet.params, self.pipe.unet.buffers = \
+            make_functional_with_buffers(self.pipe.unet)
+        self.pipe.vae.decoder, self.pipe.vae.decoder.params, self.pipe.vae.decoder.buffers = \
+            make_functional_with_buffers(self.pipe.vae.decoder)
+        self.pipe.vae.post_quant_conv, self.pipe.vae.post_quant_conv.params, self.pipe.vae.post_quant_conv.buffers = \
+            make_functional_with_buffers(self.pipe.vae.post_quant_conv)
 
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[BatchEncoding, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
@@ -276,6 +280,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         )
         text_embeddings = self.pipe.text_encoder(
             self.pipe.text_encoder.params,
+            self.pipe.text_encoder.buffers,
             text_input.input_ids.to(self.pipe.device)
         )[0]
         return text_input, text_embeddings
@@ -312,6 +317,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             )
             uncond_embeddings = self.pipe.text_encoder(
                 self.pipe.text_encoder.params,
+                self.pipe.text_encoder.buffers,
                 uncond_input.input_ids.to(self.pipe.device)
             )[0]
             # For classifier free guidance, we need to do two forward passes.
@@ -362,6 +368,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             # predict the noise residual
             noise_pred = self.pipe.unet(
                 self.pipe.unet.params,
+                self.pipe.unet.buffers,
                 latent_model_input, t, encoder_hidden_states=text_embeddings
             )["sample"]
 
@@ -378,14 +385,22 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
         # scale and decode the image latents with vae
         latents = 1 / 0.18215 * latents
-        z = self.pipe.vae.post_quant_conv(self.pipe.vae.post_quant_conv.params, latents)
-        image = self.pipe.vae.decoder(self.pipe.vae.decoder.params, z)
+        z = self.pipe.vae.post_quant_conv(
+            self.pipe.vae.post_quant_conv.params,
+            self.pipe.vae.post_quant_conv.buffers,
+            latents
+        )
+        image = self.pipe.vae.decoder(
+            self.pipe.vae.decoder.params,
+            self.pipe.vae.decoder.buffers,
+            z
+        )
 
         image = (image / 2 + 0.5).clamp(0, 1)
         image = image.permute(0, 2, 3, 1)
 
         has_nsfw_concept = None
-        if run_safety_checker:
+        if run_safety_checker: # TODO: make functional
             image = image.detach().cpu().numpy()
             safety_cheker_input = self.pipe.feature_extractor(
                 self.pipe.numpy_to_pil(image), return_tensors="pt"

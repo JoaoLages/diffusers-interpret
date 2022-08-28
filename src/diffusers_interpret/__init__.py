@@ -175,7 +175,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         self.pipe: LDMTextToImagePipeline
         text_input = self.pipe.tokenizer(prompt, padding="max_length", max_length=77, return_tensors="pt")
         text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
-        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input]
+        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
         return tokens, text_input, text_embeddings
 
     def _mimic_pipeline_call(
@@ -291,7 +291,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             return_tensors="pt",
         )
         text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
-        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input]
+        tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
         return tokens, text_input, text_embeddings
 
     def _mimic_pipeline_call(

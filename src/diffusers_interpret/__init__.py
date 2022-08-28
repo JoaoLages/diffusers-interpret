@@ -55,7 +55,6 @@ class BasePipelineExplainer(ABC):
 
         # get prompt text embeddings
         text_max_length, text_embeddings = self.get_prompt_token_ids_and_embeds(prompt=prompt)
-        import ipdb; ipdb.set_trace()
 
         # Generator cant be None
         generator = generator or torch.Generator(self.pipe.device).manual_seed(random.randint(0, 9999))
@@ -108,10 +107,8 @@ class BasePipelineExplainer(ABC):
                 for k in range(3):
                     logits_idx.append((i, j, k))
         logits_idx = torch.Tensor(logits_idx)
-        text_max_length = torch.Tensor(text_max_length)
+        text_max_length = torch.Tensor([text_max_length])
 
-        print(text_max_length)
-        print(text_embeddings.shape)
         i = 0
         per_sample_grads = []
         while True:

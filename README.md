@@ -15,7 +15,7 @@ Install directly from PyPI:
 
 ## Usage
 
-Let's see how we can interpret the [new 🎨🎨🎨 Stable Diffusion](https://github.com/huggingface/diffusers#new--stable-diffusion-is-now-fully-compatible-with-diffusers)!
+Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https://github.com/huggingface/diffusers#new--stable-diffusion-is-now-fully-compatible-with-diffusers)!**
 
 ```python
 # make sure you're logged in with `huggingface-cli login`

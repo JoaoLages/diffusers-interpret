@@ -77,25 +77,22 @@ class BasePipelineExplainer(ABC):
         if self.verbose:
             print("Calculating primary attributions... ", end='')
         if attribution_method == 'grad_x_input':
-            token_attributions, normalized_token_attributions = gradient_x_inputs_attribution(
+            token_attributions= gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
                 explanation_2d_bounding_box=explanation_2d_bounding_box
             )
             token_attributions = token_attributions.detach().cpu().numpy()
-            normalized_token_attributions = normalized_token_attributions.detach().cpu().numpy()
 
             # remove special tokens
-            assert len(token_attributions) == len(tokens) == len(normalized_token_attributions)
+            assert len(token_attributions) == len(tokens)
             output['token_attributions'] = []
             output['normalized_token_attributions'] = []
-            for sample_token_attributions, sample_tokens, sample_normalized_token_attributions in zip(
-                token_attributions, tokens, normalized_token_attributions
-            ):
-                assert len(sample_token_attributions) == len(sample_tokens) == len(sample_normalized_token_attributions)
+            for sample_token_attributions, sample_tokens in zip(token_attributions, tokens):
+                assert len(sample_token_attributions) == len(sample_tokens)
 
+                # Add token attributions
                 output['token_attributions'].append([])
-                output['normalized_token_attributions'].append([])
-                for attr, token, norm_attr in zip(sample_token_attributions, sample_tokens, sample_normalized_token_attributions):
+                for attr, token in zip(sample_token_attributions, sample_tokens):
                     if consider_special_tokens or token not in self.special_tokens_attributes:
 
                         if clean_token_prefixes_and_suffixes:
@@ -104,9 +101,12 @@ class BasePipelineExplainer(ABC):
                         output['token_attributions'][-1].append(
                             (token, attr)
                         )
-                        output['normalized_token_attributions'][-1].append(
-                            (token, round(100 * norm_attr, 4))
-                        )
+
+                # Add normalized
+                total = sum([attr for _, attr in output['token_attributions'][-1]])
+                output['normalized_token_attributions'].append(
+                    [round(100 * attr / total, 3) for _, attr in output['token_attributions'][-1]]
+                )
 
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")

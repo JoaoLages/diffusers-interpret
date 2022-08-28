@@ -7,7 +7,7 @@ def gradient_x_inputs_attribution(
     pred_logits: torch.Tensor,
     input_embeds: torch.Tensor,
     explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> torch.Tensor:
     # TODO: add description
 
     assert len(pred_logits.shape) == 3
@@ -34,7 +34,4 @@ def gradient_x_inputs_attribution(
     # Turn into a scalar value for each input token by taking L2 norm
     feature_importance = torch.norm(grad_x_input, dim=-1)
 
-    # Normalize so we can show scores as percentages
-    normalized_feature_importance = feature_importance / torch.sum(feature_importance)
-
-    return feature_importance, normalized_feature_importance
+    return feature_importance

@@ -105,7 +105,7 @@ class BasePipelineExplainer(ABC):
                             (token, attr)
                         )
                         output['normalized_token_attributions'][-1].append(
-                            (token, 100 * round(norm_attr, 4))
+                            (token, round(100 * norm_attr, 4))
                         )
 
         else:

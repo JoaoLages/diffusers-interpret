@@ -96,7 +96,7 @@ class BasePipelineExplainer(ABC):
         per_sample_grads = []
         while True:
             per_sample_grads.append(
-                vmap(jacfwd(get_pred_logit), in_dims=(None, None, 0), randomness="different")(
+                vmap(jacrev(get_pred_logit), in_dims=(None, None, 0), randomness="different")(
                     text_max_length,
                     text_embeddings,
                     logits_idx[i: i + 100],

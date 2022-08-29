@@ -1,5 +1,5 @@
 import torch
-from functorch import vmap, grad
+from functorch import vmap, grad, jacfwd, jacrev 
 
 
 def gradient_x_inputs_attribution(
@@ -19,10 +19,10 @@ def gradient_x_inputs_attribution(
                 tuple_of_pred_logits.append(z)
     tuple_of_pred_logits = tuple(tuple_of_pred_logits)
 
-    def compute_loss(output, input):
+    def compute_loss(input, output):
         return output[0]
-    grad_weight_per_example = vmap(grad(compute_loss), in_dims=(None, 0))(
-        tuple_of_pred_logits, [input_embeds] * len(tuple_of_pred_logits)
+    grad_weight_per_example = vmap(jacfwd(compute_loss), in_dims=(None, 0))(
+        input_embeds, tuple_of_pred_logits
     )
 
     # get the sum of back-prop gradients for all predictions with respect to the inputs

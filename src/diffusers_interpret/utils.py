@@ -1,7 +1,7 @@
 from typing import List
 
 import torch
-from PIL import Image
+from PIL.Image import Image
 from diffusers import DiffusionPipeline
 
 

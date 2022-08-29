@@ -32,7 +32,7 @@ class BasePipelineExplainer(ABC):
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False,
         n_last_inference_steps_to_consider: Optional[int] = None,
-        get_images_for_all_inference_steps: bool = False
+        get_images_for_all_inference_steps: bool = True
     ) -> Dict[str, Any]:
         # TODO: add description
 

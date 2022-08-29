@@ -8,7 +8,7 @@ from diffusers import DiffusionPipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
-from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
+from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes, transform_images_to_pil_format
 
 
 class BasePipelineExplainer(ABC):
@@ -18,7 +18,7 @@ class BasePipelineExplainer(ABC):
 
     def __call__(
         self,
-        prompt: Union[str, List[str]],
+        prompt: str,
         attribution_method: str = 'grad_x_input',
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
         consider_special_tokens: bool = False,
@@ -40,11 +40,9 @@ class BasePipelineExplainer(ABC):
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
 
         if isinstance(prompt, str):
-            batch_size = 1
-        elif isinstance(prompt, list):
-            batch_size = len(prompt)
+            batch_size = 1 # TODO: make compatible with bigger batch sizes
         else:
-            raise ValueError(f"`prompt` has to be of type `str` or `list` but is {type(prompt)}")
+            raise ValueError(f"`prompt` has to be of type `str` but is {type(prompt)}")
 
         # TODO: add asserts for out of bounds
         if explanation_2d_bounding_box:
@@ -130,19 +128,22 @@ class BasePipelineExplainer(ABC):
                 images_with_bounding_box.append(im)
             output['sample'] = images_with_bounding_box
 
-            if output['all_samples_during_generation']:
-                aux = []
-                all_generated_images = output['all_samples_during_generation'] or []
-                for im in all_generated_images:
-                    if isinstance(im, torch.Tensor):
-                        im = im.detach().cpu().numpy()
-                    im = self.pipe.numpy_to_pil(im)
+            images_with_bounding_box = []
+            for list_im in transform_images_to_pil_format(output['all_samples_during_generation'], self.pipe):
+                batch_images = []
+                for im in list_im:
                     if explanation_2d_bounding_box:
                         draw = ImageDraw.Draw(im)
                         draw.rectangle(explanation_2d_bounding_box, outline="red")
-                    aux.append(im)
-                aux.append(images_with_bounding_box)
-                output['all_samples_during_generation'] = aux
+                    batch_images.append(im)
+                images_with_bounding_box.append(batch_images)
+            output['all_samples_during_generation'] = images_with_bounding_box
+            output['sample'] = output['all_samples_during_generation'][-1]
+
+        if batch_size == 1:
+            # squash batch dimension
+            output['sample'] = output['sample'][0]
+            output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
 
         return output
 

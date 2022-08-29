@@ -8,6 +8,7 @@ from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
+from diffusers_interpret.utils import transform_images_to_pil_format
 
 
 class StableDiffusionPipelineExplainer(BasePipelineExplainer):
@@ -160,21 +161,11 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                     all_generated_images.append(image)
 
         image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
+        all_generated_images.append(image)
 
         if output_type == "pil":
-            if isinstance(image, torch.Tensor):
-                image = image.detach().cpu().numpy()
-            image = self.pipe.numpy_to_pil(image)
-
-            aux = []
-            all_generated_images = all_generated_images or []
-            for im in all_generated_images:
-                if isinstance(im, torch.Tensor):
-                    im = im.detach().cpu().numpy()
-                im = self.pipe.numpy_to_pil(im)
-                aux.append(im)
-            aux.append(image)
-            all_generated_images = aux
+            all_generated_images = transform_images_to_pil_format(all_generated_images, self.pipe)
+            image = all_generated_images[-1]
 
         return {
             "sample": image,

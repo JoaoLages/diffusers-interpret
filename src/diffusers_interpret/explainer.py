@@ -121,15 +121,8 @@ class BasePipelineExplainer(ABC):
         # also draw bounding box if requested
         if output_type == "pil":
             images_with_bounding_box = []
-            for im in self.pipe.numpy_to_pil(output['sample'].detach().cpu().numpy()):
-                if explanation_2d_bounding_box:
-                    draw = ImageDraw.Draw(im)
-                    draw.rectangle(explanation_2d_bounding_box, outline="red")
-                images_with_bounding_box.append(im)
-            output['sample'] = images_with_bounding_box
-
-            images_with_bounding_box = []
-            for list_im in transform_images_to_pil_format(output['all_samples_during_generation'], self.pipe):
+            all_samples = output['all_samples_during_generation'] or [output['sample']]
+            for list_im in transform_images_to_pil_format(all_samples, self.pipe):
                 batch_images = []
                 for im in list_im:
                     if explanation_2d_bounding_box:
@@ -137,13 +130,18 @@ class BasePipelineExplainer(ABC):
                         draw.rectangle(explanation_2d_bounding_box, outline="red")
                     batch_images.append(im)
                 images_with_bounding_box.append(batch_images)
-            output['all_samples_during_generation'] = images_with_bounding_box
-            output['sample'] = output['all_samples_during_generation'][-1]
+
+            if output['all_samples_during_generation']:
+                output['all_samples_during_generation'] = images_with_bounding_box
+                output['sample'] = output['all_samples_during_generation'][-1]
+            else:
+                output['sample'] = images_with_bounding_box[-1]
 
         if batch_size == 1:
             # squash batch dimension
             output['sample'] = output['sample'][0]
-            output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
+            if output['all_samples_during_generation']:
+                output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
 
         return output
 

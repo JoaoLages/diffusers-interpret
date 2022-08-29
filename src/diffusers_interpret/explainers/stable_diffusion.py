@@ -135,6 +135,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 else:
                     torch.set_grad_enabled(True)
 
+            # decode latents
+            if get_images_for_all_inference_steps:
+                with torch.no_grad():
+                    image, _ = decode_latents(latents=latents, pipe=self.pipe)
+                    all_generated_images.append(image)
+
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):
@@ -155,17 +161,16 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             else:
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs)["prev_sample"]
 
-            if get_images_for_all_inference_steps and i + 1 != len(self.pipe.scheduler.timesteps):
-                with torch.no_grad():
-                    image, _ = decode_latents(latents=latents, pipe=self.pipe)
-                    all_generated_images.append(image)
-
         image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
-        all_generated_images.append(image)
+        if all_generated_images:
+            all_generated_images.append(image)
 
         if output_type == "pil":
-            all_generated_images = transform_images_to_pil_format(all_generated_images, self.pipe)
-            image = all_generated_images[-1]
+            if all_generated_images:
+                all_generated_images = transform_images_to_pil_format(all_generated_images, self.pipe)
+                image = all_generated_images[-1]
+            else:
+                image = transform_images_to_pil_format([image], self.pipe)[0]
 
         return {
             "sample": image,

@@ -93,7 +93,7 @@ Or their computed normalized version, in percentage:
  ('background', 14.607)]
 ```
 
-`diffusers-interpret` also computes these tokens attributions for generating a particular part of the image.
+`diffusers-interpret` also computes these token attributions for generating a particular part of the image.
 
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
 
@@ -131,6 +131,7 @@ The token attributions are now computed only for the area specified in the image
 Check other functionalities and more implementation examples in [here](https://github.com/JoaoLages/diffusers-interpret/blob/main/notebooks/).
 
 ## Future Development
+- [ ] Add interactive display of all the images that were generated in the diffusion process
 - [ ] Add interactive bounding-box and token attributions visualization
 - [ ] Add unit tests
 - [ ] Add example for `diffusers_interpret.LDMTextToImagePipelineExplainer`

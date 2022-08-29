@@ -9,6 +9,7 @@ from diffusers import LDMTextToImagePipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
+from diffusers_interpret.utils import transform_images_to_pil_format
 
 
 class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
@@ -45,12 +46,6 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
     ) -> Dict[str, Any]:
         # TODO: add description
 
-        if n_last_inference_steps_to_consider:
-            raise NotImplementedError
-
-        if get_images_for_all_inference_steps:
-            raise NotImplementedError
-
         self.pipe: LDMTextToImagePipeline
         torch.set_grad_enabled(True)
 
@@ -62,8 +57,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             uncond_input = self.pipe.tokenizer([""] * batch_size, padding="max_length", max_length=77, return_tensors="pt")
             uncond_embeddings = self.pipe.bert(uncond_input.input_ids.to(self.pipe.device))[0]
 
-        # get prompt text embeddings
-
+        # get the initial random noise
         latents = torch.randn(
             (batch_size, self.pipe.unet.in_channels, height // 8, width // 8),
             generator=generator,
@@ -79,7 +73,45 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_kwargs["eta"] = eta
 
-        for t in tqdm(self.pipe.scheduler.timesteps, desc="Diffusion process", disable=not self.verbose):
+        def decode_latents(latents: torch.Tensor, pipe: LDMTextToImagePipeline) -> Tuple[torch.Tensor, Optional[bool]]:
+            # scale and decode the image latents with vae
+            latents = 1 / 0.18215 * latents
+            image = pipe.vqvae.decode(latents)
+
+            image = (image / 2 + 0.5).clamp(0, 1)
+            image = image.permute(0, 2, 3, 1)
+
+            has_nsfw_concept = None
+            if run_safety_checker:
+                image = image.detach().cpu().numpy()
+                safety_cheker_input = pipe.feature_extractor(
+                    pipe.numpy_to_pil(image), return_tensors="pt"
+                ).to(pipe.device)
+                image, has_nsfw_concept = pipe.safety_checker(
+                    images=image, clip_input=safety_cheker_input.pixel_values
+                )
+
+            return image, has_nsfw_concept
+
+        all_generated_images = [] if get_images_for_all_inference_steps else None
+        for i, t in tqdm(
+            enumerate(self.pipe.scheduler.timesteps),
+            total=len(self.pipe.scheduler.timesteps),
+            desc="Diffusion process",
+            disable=not self.verbose
+        ):
+
+            if n_last_inference_steps_to_consider:
+                if i + i < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
+                    torch.set_grad_enabled(False)
+                else:
+                    torch.set_grad_enabled(True)
+
+            # decode latents
+            if get_images_for_all_inference_steps:
+                with torch.no_grad():
+                    image, _ = decode_latents(latents=latents, pipe=self.pipe)
+                    all_generated_images.append(image)
 
             if guidance_scale == 1.0:
                 # guidance_scale of 1 means no guidance
@@ -102,20 +134,19 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             # compute the previous noisy sample x_t -> x_t-1
             latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_kwargs)["prev_sample"]
 
-        # scale and decode the image latents with vqvae
-        latents = 1 / 0.18215 * latents
-        image = self.pipe.vqvae.decode(latents)
-
-        image = (image / 2 + 0.5).clamp(0, 1)
-        image = image.permute(0, 2, 3, 1)
-
-        has_nsfw_concept = None
-        if run_safety_checker:
-            warnings.warn(
-                f"{self.__class__.__name__} has no safety checker, `run_safety_checker=True` will be ignored"
-            )
+        image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
+        if all_generated_images:
+            all_generated_images.append(image)
 
         if output_type == "pil":
-            image = self.pipe.numpy_to_pil(image.detach().cpu().numpy())
+            if all_generated_images:
+                all_generated_images = transform_images_to_pil_format(all_generated_images, self.pipe)
+                image = all_generated_images[-1]
+            else:
+                image = transform_images_to_pil_format([image], self.pipe)[0]
 
-        return {"sample": image, "nsfw_content_detected": has_nsfw_concept}
+        return {
+            "sample": image,
+            "nsfw_content_detected": has_nsfw_concept,
+            "all_samples_during_generation": all_generated_images
+        }

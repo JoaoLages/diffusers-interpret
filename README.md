@@ -28,6 +28,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 pipe = StableDiffusionPipeline.from_pretrained(
     "CompVis/stable-diffusion-v1-4", 
+    use_auth_token=True,
     
     # FP16 is not working for 'cpu'
     revision='fp16' if device != 'cpu' else None,

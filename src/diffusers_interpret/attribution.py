@@ -1,5 +1,5 @@
 import torch
-from functorch import vmap, grad, jacfwd, jacrev 
+from functorch import vmap, grad, jacfwd, jacrev
 
 
 def gradient_x_inputs_attribution(

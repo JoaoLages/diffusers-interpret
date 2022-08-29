@@ -3,7 +3,7 @@ import warnings
 from abc import ABC, abstractmethod
 import random
 from typing import List, Optional, Union, Dict, Any, Tuple
-
+from functorch import vmap, grad, jacfwd, jacrev
 from functorch import make_functional_with_buffers, vmap, grad
 from tqdm.auto import tqdm
 
@@ -91,7 +91,7 @@ class BasePipelineExplainer(ABC):
         per_sample_grads = []
         while True:
             per_sample_grads.append(
-                vmap(grad(get_pred_logit), in_dims=(None, None, 0), randomness="different")(
+                vmap(jacfwd(get_pred_logit), in_dims=(None, None, 0), randomness="different")(
                     text_max_length,
                     text_embeddings,
                     logits_idx[i: i + 100],

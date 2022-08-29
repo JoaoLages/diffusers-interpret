@@ -9,8 +9,8 @@ with open('requirements.txt', encoding='utf-8') as f:
 
 setup(
     name='diffusers-interpret',
-    version='0.0.0',
-    description='', # TODO
+    version='0.0.1',
+    description='diffusers-interpret: model explainability for 🤗 Diffusers',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/JoaoLages/diffusers-interpret',

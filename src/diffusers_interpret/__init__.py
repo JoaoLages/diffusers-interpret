@@ -65,11 +65,13 @@ class BasePipelineExplainer(ABC):
         #        "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
         #    )
 
-        def get_pred_logit(text_max_length, text_embeddings, logit):
+        def get_pred_logit(text_embeddings):
             # Get prediction with their associated gradients
-            i, j, k = logit
+            #print(text_max_length.shape, text_embeddings.shape, logit.shape)
+            #i, j, k = logit
+            print(text_embeddings.shape)
             output = self._mimic_pipeline_call(
-                text_max_length=text_max_length,
+                text_max_length=77,
                 text_embeddings=text_embeddings,
                 batch_size=batch_size,
                 height=height,
@@ -82,7 +84,7 @@ class BasePipelineExplainer(ABC):
                 run_safety_checker=run_safety_checker,
                 enable_grad=True
             )
-            return output['sample'][0][i][j][k]
+            return output['sample']
 
         logits_idx = []
         for i in range(width):
@@ -90,16 +92,19 @@ class BasePipelineExplainer(ABC):
                 for k in range(3):
                     logits_idx.append((i,j,k))
         logits_idx = torch.IntTensor(logits_idx)
-        text_max_length = torch.Tensor([text_max_length])
+        text_max_length = torch.IntTensor([text_max_length])
+        print(text_embeddings.shape)
+        grads = vmap(jacrev(get_pred_logit), randomness="same")(text_embeddings.unsqueeze(0))
+        import ipdb; ipdb.set_trace() 
 
         i = 0
         per_sample_grads = []
         while True:
             per_sample_grads.append(
-                vmap(jacrev(get_pred_logit), in_dims=(None, None, 0), randomness="different")(
-                    text_max_length,
+                vmap(jacrev(get_pred_logit), in_dims=None, randomness="different")(
+                
                     text_embeddings,
-                    logits_idx[i: i + 100],
+                    #logits_idx[i: i + 100],
                 )
             )
             i += 100
@@ -258,6 +263,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             make_functional_with_buffers(self.pipe.vae.decoder)
         self.pipe.vae.post_quant_conv.functional, self.pipe.vae.post_quant_conv.params, self.pipe.vae.post_quant_conv.buffers = \
             make_functional_with_buffers(self.pipe.vae.post_quant_conv)
+        self.pipe.scheduler.tensor_format = 'np'
+        for key, value in vars(self.pipe.scheduler).items():
+            if torch.is_tensor(value):
+                setattr(self.pipe.scheduler, key, value.numpy()) # torch.from_numpy(value))
 
     def get_prompt_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[int, torch.Tensor]:
         self.pipe: StableDiffusionPipeline
@@ -358,7 +367,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             noise_pred = self.pipe.unet.functional(
                 self.pipe.unet.params,
                 self.pipe.unet.buffers,
-                latent_model_input, t, encoder_hidden_states=text_embeddings
+                latent_model_input, int(t) if not torch.is_tensor(t) else t, encoder_hidden_states=text_embeddings
             )["sample"]
 
             # perform guidance

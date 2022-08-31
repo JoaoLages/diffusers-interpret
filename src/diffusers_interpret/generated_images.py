@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from IPython import display as d
-from IPython.core.display_functions import DisplayHandle
 from PIL import ImageDraw
 from PIL.Image import Image
 from diffusers import DiffusionPipeline
@@ -107,7 +106,8 @@ class GeneratedImages:
         self.iframe = d.IFrame(
             os.path.relpath(
                 os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "final.html"),
-                '.'),
+                '.'
+            ),
             width="100%", height="400px"
         )
 

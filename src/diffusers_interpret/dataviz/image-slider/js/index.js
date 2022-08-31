@@ -32,7 +32,7 @@
    *
    * @param {string} jsonPayload
    */
-  function initalize(jsonPayload) {
+  function initialize(jsonPayload) {
     const isOK = parseJSONPayload(jsonPayload);
 
     if (isOK) {
@@ -240,7 +240,7 @@
 
     if ($body) {
       const e = new CustomEvent("INITALIZE_IS_READY", {
-        detail: { initalize },
+        detail: { initialize },
       });
 
       $body.dispatchEvent(e);

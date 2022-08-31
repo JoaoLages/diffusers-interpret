@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Dict, Any, Tuple, Set
 
 import torch
+from PIL import ImageDraw
 from diffusers import DiffusionPipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
@@ -129,7 +130,6 @@ class BasePipelineExplainer(ABC):
             all_samples = GeneratedImages(
                 all_generated_images=output['all_samples_during_generation'] or [output['sample']],
                 pipe=self.pipe,
-                explanation_2d_bounding_box=explanation_2d_bounding_box,
                 remove_batch_dimension=batch_size==1,
                 prepare_image_slider=bool(output['all_samples_during_generation'])
             )
@@ -138,6 +138,10 @@ class BasePipelineExplainer(ABC):
                 sample = output['all_samples_during_generation'][-1]
             else:
                 sample = all_samples[-1]
+
+            if explanation_2d_bounding_box:
+                draw = ImageDraw.Draw(sample)
+                draw.rectangle(explanation_2d_bounding_box, outline="red")
 
             if output_type == "pil":
                 output['sample'] = sample

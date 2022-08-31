@@ -1,11 +1,10 @@
 import base64
 import json
 import os
-from typing import List, Optional, Tuple, Union
+from typing import List, Union
 
 import torch
 from IPython import display as d
-from PIL import ImageDraw
 from PIL.Image import Image
 from diffusers import DiffusionPipeline
 
@@ -18,7 +17,6 @@ class GeneratedImages:
             self,
             all_generated_images: List[torch.Tensor],
             pipe: DiffusionPipeline,
-            explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
             remove_batch_dimension: bool = True,
             prepare_image_slider: bool = True
     ) -> None:
@@ -27,12 +25,9 @@ class GeneratedImages:
 
         # Convert images to PIL and draw box if requested
         self.images = []
-        for i, list_im in enumerate(transform_images_to_pil_format(all_generated_images, pipe)):
+        for list_im in transform_images_to_pil_format(all_generated_images, pipe):
             batch_images = []
             for im in list_im:
-                if i + 1 == len(all_generated_images) and explanation_2d_bounding_box:
-                    draw = ImageDraw.Draw(im)
-                    draw.rectangle(explanation_2d_bounding_box, outline="red")
                 batch_images.append(im)
 
             if remove_batch_dimension:
@@ -115,6 +110,14 @@ class GeneratedImages:
         return self.images[item]
 
     def show(self) -> None:
+
+        if len(self.images) == 0:
+            raise Exception("`self.images` is an empty list, can't show any images")
+
+        if isinstance(self.images[0], list):
+            raise NotImplementedError("GeneratedImages.show visualization is not supported "
+                                      "when `self.images` is a list of lists of images")
+
         if self.iframe is None:
             self.prepare_image_slider()
         d.display(self.iframe)

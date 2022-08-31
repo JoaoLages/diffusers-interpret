@@ -114,10 +114,7 @@ class GeneratedImages:
     def __getitem__(self, item: int) -> Union[Image, List[Image]]:
         return self.images[item]
 
-    def __repr__(self) -> DisplayHandle:
-        """
-        Return DisplayHandle that shows the image slider on IPython
-        """
+    def show(self) -> None:
         if self.iframe is None:
             self.prepare_image_slider()
-        return d.display(self.iframe)
+        d.display(self.iframe)

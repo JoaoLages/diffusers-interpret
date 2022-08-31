@@ -28,7 +28,7 @@
   let currentIndex = 0;
 
   /**
-   * Initialize the Slider
+   * Initialize the Image Slider
    *
    * @param {string} jsonPayload
    */
@@ -37,27 +37,13 @@
 
     if (isOK) {
       handleSuccessState();
-
-      /**
-       * Initialize a `click` event in the Prev Button
-       */
-      const $actionPrev = d.getElementById(ID_BUTTON_PREV);
-
-      if ($actionPrev) $actionPrev.addEventListener("click", prevImageAction);
-
-      /**
-       * Initialize a `click` event in the Next Button
-       */
-      const $actionNext = d.getElementById(ID_BUTTON_NEXT);
-
-      if ($actionNext) $actionNext.addEventListener("click", nextImageAction);
     } else {
       handleErrorState();
     }
   }
 
   /**
-   * Parse the Payload
+   * Parse the JSON payload
    *
    * @param {string} jsonPayload
    *
@@ -80,7 +66,7 @@
   }
 
   /**
-   * handleSuccessState
+   * Render the application success state
    */
   function handleSuccessState() {
     /**
@@ -108,17 +94,34 @@
     });
 
     /**
-     * Update Iteration Values
+     * Update the iteration values
      */
     updateIterationValues();
 
+    /**
+     * Initialize a `click` event in the Prev Button
+     */
+    const $actionPrev = d.getElementById(ID_BUTTON_PREV);
+
+    if ($actionPrev) $actionPrev.addEventListener("click", prevImageAction);
+
+    /**
+     * Initialize a `click` event in the Next Button
+     */
+    const $actionNext = d.getElementById(ID_BUTTON_NEXT);
+
+    if ($actionNext) $actionNext.addEventListener("click", nextImageAction);
+
+    /**
+     * Display the Slider
+     */
     const $slider = d.getElementById(ID_SLIDER);
 
     if ($slider) $slider.style.display = "flex";
   }
 
   /**
-   * handleErrorState
+   * Render the application error state
    */
   function handleErrorState() {
     const $error = d.getElementById(ID_ERROR);
@@ -127,7 +130,7 @@
   }
 
   /**
-   * Previous Image
+   * Click the `Prev` image button
    */
   function prevImageAction() {
     const canGoPrev = currentIndex > 0;
@@ -152,7 +155,7 @@
   }
 
   /**
-   * Next Image
+   * Click the `Next` image button
    */
   function nextImageAction() {
     const imageLen = imageList.length;
@@ -177,7 +180,7 @@
   }
 
   /**
-   * Update the Image
+   * Update the Image attributes
    *
    * @param {ID_IMAGE_FIRST | ID_IMAGE_CURRENT | ID_IMAGE_FINAL} imageID
    * @param {{ backgroundImage: string | null}} options
@@ -195,7 +198,7 @@
   }
 
   /**
-   * Update the Prev/Next Button state
+   * Update the Prev/Next Button attributes
    *
    * @param {ID_BUTTON_PREV | ID_BUTTON_NEXT} buttonID
    * @param {{disabled: boolean}} options
@@ -212,7 +215,7 @@
   }
 
   /**
-   * Update Iteration Values
+   * Update the iteration values
    */
   function updateIterationValues() {
     const $iterationCurrent = d.getElementById(ID_ITERATIONS_CURRENT);
@@ -230,9 +233,9 @@
   }
 
   /**
-   * Document is Ready
+   * Trigger the `INITALIZE_IS_READY` event when the Document is ready.
    */
-  function isReady() {
+  d.addEventListener("DOMContentLoaded", function isReady() {
     const $body = d.querySelector("body");
 
     if ($body) {
@@ -242,10 +245,5 @@
 
       $body.dispatchEvent(e);
     }
-  }
-
-  /**
-   * Document Ready
-   */
-  d.addEventListener("DOMContentLoaded", isReady);
+  });
 })(document);

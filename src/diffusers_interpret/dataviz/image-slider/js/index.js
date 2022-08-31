@@ -51,7 +51,7 @@
    */
   function parseJSONPayload(jsonPayload) {
     try {
-      const parsedPayload = JSON.parse(jsonPayload);
+      const parsedPayload = jsonPayload;
 
       if (Array.isArray(parsedPayload)) {
         imageList = parsedPayload;

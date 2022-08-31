@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Dict, Any, Tuple, Set
 
-from PIL import ImageDraw
-
 import torch
 from diffusers import DiffusionPipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
+from diffusers_interpret.generated_images import GeneratedImages
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes, transform_images_to_pil_format
 
 
 class BasePipelineExplainer(ABC):
-    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True):
+    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True) -> None:
         self.pipe = pipe
         self.verbose = verbose
 
@@ -117,32 +116,31 @@ class BasePipelineExplainer(ABC):
         if self.verbose:
             print("Done!")
 
-        # convert to PIL Image if requested
-        # also draw bounding box if requested
-        if output_type == "pil":
-            images_with_bounding_box = []
-            all_samples = output['all_samples_during_generation'] or [output['sample']]
-            for list_im in transform_images_to_pil_format(all_samples, self.pipe):
-                batch_images = []
-                for im in list_im:
-                    if explanation_2d_bounding_box:
-                        draw = ImageDraw.Draw(im)
-                        draw.rectangle(explanation_2d_bounding_box, outline="red")
-                    batch_images.append(im)
-                images_with_bounding_box.append(batch_images)
-
-            if output['all_samples_during_generation']:
-                output['all_samples_during_generation'] = images_with_bounding_box
-                output['sample'] = output['all_samples_during_generation'][-1]
-            else:
-                output['sample'] = images_with_bounding_box[-1]
-
         if batch_size == 1:
             # squash batch dimension
             for k in ['sample', 'token_attributions', 'normalized_token_attributions']:
                 output[k] = output[k][0]
             if output['all_samples_during_generation']:
                 output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
+
+        # convert to PIL Image if requested
+        # also draw bounding box in the last image if requested
+        if output['all_samples_during_generation'] or output_type == "pil":
+            all_samples = GeneratedImages(
+                all_generated_images=output['all_samples_during_generation'] or [output['sample']],
+                pipe=self.pipe,
+                explanation_2d_bounding_box=explanation_2d_bounding_box,
+                remove_batch_dimension=batch_size==1,
+                prepare_image_slider=bool(output['all_samples_during_generation'])
+            )
+            if output['all_samples_during_generation']:
+                output['all_samples_during_generation'] = all_samples
+                sample = output['all_samples_during_generation'][-1]
+            else:
+                sample = all_samples[-1]
+
+            if output_type == "pil":
+                output['sample'] = sample
 
         return output
 

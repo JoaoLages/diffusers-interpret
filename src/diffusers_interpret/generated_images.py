@@ -77,7 +77,7 @@ class GeneratedImages:
             const $body = d.querySelector("body");
 
             if ($body) {
-              $body.addEventListener("INITALIZE_IS_READY", ({ detail }) => {
+              $body.addEventListener("INITIALIZE_IS_READY", ({ detail }) => {
                 const initialize = detail?.initialize ?? null;
 
                 if (initialize) initialize(%s);

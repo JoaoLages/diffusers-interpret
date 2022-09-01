@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <title>Image Slider</title>
+    <link href="css/index.css" rel="stylesheet" />
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <section id="loading">
+      <div id="loading-ripple">
+        <div></div>
+        <div></div>
+      </div>
+      <span id="loading-name" class="pulsate">Preparing Data...</span>
+    </section>
+    <section id="error">
+      <span>Unexpected Error</span>
+    </section>
+    <section id="slider">
+      <div class="slider-item">
+        <div id="slider-image-first" class="slider-image"></div>
+        <span class="slider-title">First Iteration</span>
+      </div>
+      <div class="slider-item">
+        <div id="slider-image-current" class="slider-image"></div>
+        <div class="slide-actions">
+          <button id="slider-action-prev">◄ Prev</button>
+          <span class="slider-iterations">
+            <span id="slider-iterations-current">0</span>
+            /
+            <span id="slider-iterations-final">0</span>
+          </span>
+          <button id="slider-action-next">Next ►</button>
+        </div>
+      </div>
+      <div class="slider-item">
+        <div id="slider-image-final" class="slider-image"></div>
+        <span class="slider-title">Final Iteration</span>
+      </div>
+    </section>
+    <!-- INSERT STARTING SCRIPT HERE -->
+    <script type="text/javascript" src="js/index.js"></script>
+  </body>
+</html>

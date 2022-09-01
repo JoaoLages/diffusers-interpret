@@ -56,13 +56,8 @@ output['sample']
 
 ![](assets/corgi_eiffel_tower.png)
 
-You can also check the image that the diffusion process generated in the end of each step.
-
-For example, to see the image from step 10:
-```python
-output['all_samples_during_generation'][10]
-```
-![](assets/corgi_eiffel_tower_step10.png)
+You can also check all the images that the diffusion process generated at the end of each step.
+![](assets/image_slider.gif)
 
 To check how a token in the input `prompt` influenced the generation, you can check the token attribution scores:
 ```python
@@ -132,7 +127,7 @@ The token attributions are now computed only for the area specified in the image
 Check other functionalities and more implementation examples in [here](https://github.com/JoaoLages/diffusers-interpret/blob/main/notebooks/).
 
 ## Future Development
-- [ ] Add interactive display of all the images that were generated in the diffusion process
+- [x] ~~Add interactive display of all the images that were generated in the diffusion process~~
 - [ ] Add interactive bounding-box and token attributions visualization
 - [ ] Add unit tests
 - [ ] Add example for `diffusers_interpret.LDMTextToImagePipelineExplainer`
@@ -141,3 +136,7 @@ Check other functionalities and more implementation examples in [here](https://g
 
 ## Contributing
 Feel free to open an [Issue](https://github.com/JoaoLages/diffusers-interpret/issues) or create a [Pull Request](https://github.com/JoaoLages/diffusers-interpret/pulls) and let's get started 🚀
+
+## Credits
+
+A special thanks to [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1) to show all the generated images during diffusion! 💪 

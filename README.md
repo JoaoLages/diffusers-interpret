@@ -139,4 +139,4 @@ Feel free to open an [Issue](https://github.com/JoaoLages/diffusers-interpret/is
 
 ## Credits
 
-A special thanks to [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1)! 💪 
+A special thanks to [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1) to show all the generated images during diffusion! 💪 

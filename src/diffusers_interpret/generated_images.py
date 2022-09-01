@@ -81,21 +81,20 @@ class GeneratedImages:
         # get html with image slider JS call
         index = html.find("<!-- INSERT STARTING SCRIPT HERE -->")
         add = """
-                <script type="text/javascript">
-                  ((d) => {
-                    const $body = d.querySelector("body");
-
-                    if ($body) {
-                      $body.addEventListener("INITIALIZE_IS_READY", ({ detail }) => {
-                        const initialize = detail?.initialize ?? null;
-
-                        if (initialize) initialize(%s);
-                      });
-                    }
-                  })(document);
-                </script>
-                <script type="text/javascript">\n%s</script>
-                """ % (json.dumps(json_payload), js)
+            <script type="text/javascript">
+              ((d) => {
+                const $body = d.querySelector("body");
+    
+                if ($body) {
+                  $body.addEventListener("INITIALIZE_IS_READY", ({ detail }) => {
+                    const initialize = detail?.initialize ?? null;
+    
+                    if (initialize) initialize(%s);
+                  });
+                }
+              })(document);
+            </script>
+        """ % json.dumps(json_payload)
         html_with_image_slider = html[:index] + add + html[index:]
 
         # save files and load IFrame to be displayed in self.__repr__
@@ -137,8 +136,8 @@ class GeneratedImages:
 
         self.loading_iframe.width = width
         self.loading_iframe.height = height
-        d.display(self.loading_iframe)
+        d.display(self.loading_iframe, display_id=42)
 
         self.image_slider_iframe.width = width
         self.image_slider_iframe.height = height
-        d.display(self.image_slider_iframe)
+        d.display(self.image_slider_iframe, display_id=42)

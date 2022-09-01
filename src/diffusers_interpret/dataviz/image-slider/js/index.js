@@ -5,6 +5,7 @@
    * Constants
    */
   const ID_SLIDER = "slider";
+  const ID_LOADING = "loading";
   const ID_ERROR = "error";
   //
   const ID_BUTTON_PREV = "slider-action-prev";
@@ -50,19 +51,13 @@
    * @return {boolean}
    */
   function parseJSONPayload(jsonPayload) {
-    try {
-      const parsedPayload = jsonPayload;
+    if (Array.isArray(jsonPayload)) {
+      imageList = jsonPayload;
 
-      if (Array.isArray(parsedPayload)) {
-        imageList = parsedPayload;
-
-        return true;
-      }
-
-      return false;
-    } catch (err) {
-      return false;
+      return true;
     }
+
+    return false;
   }
 
   /**
@@ -99,34 +94,42 @@
     updateIterationValues();
 
     /**
+     * Set Prev Button initial state
+     */
+    updateButtonAttributes(ID_BUTTON_PREV, {
+      disabled: currentIndex === 0,
+    });
+
+    /**
+     * Set Next Button initial state
+     */
+    const imageLen = imageList.length;
+    updateButtonAttributes(ID_BUTTON_NEXT, {
+      disabled: currentIndex === imageLen - 1,
+    });
+
+    /**
      * Initialize a `click` event in the Prev Button
      */
     const $actionPrev = d.getElementById(ID_BUTTON_PREV);
-
     if ($actionPrev) $actionPrev.addEventListener("click", prevImageAction);
 
     /**
      * Initialize a `click` event in the Next Button
      */
     const $actionNext = d.getElementById(ID_BUTTON_NEXT);
-
     if ($actionNext) $actionNext.addEventListener("click", nextImageAction);
 
-    /**
-     * Display the Slider
-     */
-    const $slider = d.getElementById(ID_SLIDER);
-
-    if ($slider) $slider.style.display = "flex";
+    hideElement(ID_LOADING);
+    showElement(ID_SLIDER);
   }
 
   /**
    * Render the application error state
    */
   function handleErrorState() {
-    const $error = d.getElementById(ID_ERROR);
-
-    if ($error) $error.style.display = "flex";
+    hideElement(ID_LOADING);
+    showElement(ID_ERROR);
   }
 
   /**
@@ -141,12 +144,12 @@
       const backgroundImage = imageList[currentIndex]?.image ?? null;
 
       updateImageAttributes(ID_IMAGE_CURRENT, { backgroundImage });
-      updateButtonAttributes(ID_BUTTON_PREV, { disabled: false });
+      updateButtonAttributes(ID_BUTTON_NEXT, { disabled: false });
       updateIterationValues();
 
-      const shouldDisable = currentIndex === 0;
+      const disablePrev = currentIndex === 0;
 
-      if (shouldDisable) {
+      if (disablePrev) {
         updateButtonAttributes(ID_BUTTON_PREV, { disabled: true });
       } else {
         updateButtonAttributes(ID_BUTTON_NEXT, { disabled: false });
@@ -167,50 +170,16 @@
       const backgroundImage = imageList[currentIndex]?.image ?? null;
 
       updateImageAttributes(ID_IMAGE_CURRENT, { backgroundImage });
+      updateButtonAttributes(ID_BUTTON_PREV, { disabled: false });
       updateIterationValues();
 
-      const shouldDisable = currentIndex === imageLen - 1;
+      const disableNext = currentIndex === imageLen - 1;
 
-      if (shouldDisable) {
+      if (disableNext) {
         updateButtonAttributes(ID_BUTTON_NEXT, { disabled: true });
       } else {
         updateButtonAttributes(ID_BUTTON_PREV, { disabled: false });
       }
-    }
-  }
-
-  /**
-   * Update the Image attributes
-   *
-   * @param {ID_IMAGE_FIRST | ID_IMAGE_CURRENT | ID_IMAGE_FINAL} imageID
-   * @param {{ backgroundImage: string | null}} options
-   */
-  function updateImageAttributes(imageID, options) {
-    const { backgroundImage } = options ?? {};
-
-    if (imageID) {
-      const $img = d.getElementById(imageID);
-
-      if ($img && backgroundImage) {
-        $img.style.backgroundImage = `url("${backgroundImage}")`;
-      }
-    }
-  }
-
-  /**
-   * Update the Prev/Next Button attributes
-   *
-   * @param {ID_BUTTON_PREV | ID_BUTTON_NEXT} buttonID
-   * @param {{disabled: boolean}} options
-   */
-  function updateButtonAttributes(buttonID, options) {
-    const { disabled } = options ?? {};
-
-    if (buttonID) {
-      const $button = d.getElementById(buttonID);
-
-      // @ts-ignore
-      if ($button) $button.disabled = disabled;
     }
   }
 
@@ -233,13 +202,70 @@
   }
 
   /**
-   * Trigger the `INITALIZE_IS_READY` event when the Document is ready.
+   * Show an element
+   *
+   * @param {ID_SLIDER | ID_LOADING | ID_ERROR} id
+   */
+  function showElement(id) {
+    const $element = d.getElementById(id);
+
+    if ($element) $element.style.display = "flex";
+  }
+
+  /**
+   * Hide an element
+   *
+   * @param {ID_SLIDER | ID_LOADING | ID_ERROR} id
+   */
+  function hideElement(id) {
+    const $element = d.getElementById(id);
+
+    if ($element) $element.style.display = "none";
+  }
+
+  /**
+   * Update the Image attributes
+   *
+   * @param {ID_IMAGE_FIRST | ID_IMAGE_CURRENT | ID_IMAGE_FINAL} id
+   * @param {{ backgroundImage: string | null}} options
+   */
+  function updateImageAttributes(id, options) {
+    const { backgroundImage } = options ?? {};
+
+    if (id) {
+      const $img = d.getElementById(id);
+
+      if ($img && backgroundImage) {
+        $img.style.backgroundImage = `url("${backgroundImage}")`;
+      }
+    }
+  }
+
+  /**
+   * Update the Prev/Next Button attributes
+   *
+   * @param {ID_BUTTON_PREV | ID_BUTTON_NEXT} id
+   * @param {{disabled: boolean}} options
+   */
+  function updateButtonAttributes(id, options) {
+    const { disabled } = options ?? {};
+
+    if (id) {
+      const $button = d.getElementById(id);
+
+      // @ts-ignore
+      if ($button) $button.disabled = disabled;
+    }
+  }
+
+  /**
+   * Trigger the `INITIALIZE_IS_READY` event when the Document is ready.
    */
   d.addEventListener("DOMContentLoaded", function isReady() {
     const $body = d.querySelector("body");
 
     if ($body) {
-      const e = new CustomEvent("INITALIZE_IS_READY", {
+      const e = new CustomEvent("INITIALIZE_IS_READY", {
         detail: { initialize },
       });
 

@@ -134,8 +134,12 @@ class GeneratedImages:
         if self.image_slider_iframe is None:
             self.prepare_image_slider()
 
+        # display loading
         self.loading_iframe.width = width
         self.loading_iframe.height = height
+        display = d.display(self.loading_iframe, display_id=42)
+
+        # display image slider
         self.image_slider_iframe.width = width
         self.image_slider_iframe.height = height
-        d.display((self.loading_iframe, self.image_slider_iframe), display_id=42)
+        display.update(self.image_slider_iframe)

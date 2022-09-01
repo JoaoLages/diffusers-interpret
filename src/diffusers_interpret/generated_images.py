@@ -136,8 +136,6 @@ class GeneratedImages:
 
         self.loading_iframe.width = width
         self.loading_iframe.height = height
-        d.display(self.loading_iframe, display_id=42)
-
         self.image_slider_iframe.width = width
         self.image_slider_iframe.height = height
-        d.display(self.image_slider_iframe, display_id=42)
+        d.display((self.loading_iframe, self.image_slider_iframe), display_id=42)

@@ -49,7 +49,7 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
     )
 ```
 
-To check the final generated image:
+To see the final generated image:
 ```python
 output['sample']
 ```
@@ -59,7 +59,7 @@ output['sample']
 You can also check all the images that the diffusion process generated at the end of each step.
 ![](assets/image_slider.gif)
 
-To check how a token in the input `prompt` influenced the generation, you can check the token attribution scores:
+To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
 ```python
 >>> output['token_attributions'] # (token, attribution)
 [('a', 1063.0526),

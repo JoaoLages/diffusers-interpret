@@ -129,10 +129,10 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
             # predict the noise residual
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                noise_pred = self.pipe.unet(latents_input, t, encoder_hidden_states=text_embeddings)["sample"]
+                noise_pred = self.pipe.unet(latents_input, t, context)["sample"]
             else:
                 noise_pred = checkpoint(
-                    self.pipe.unet.forward, latents_input, t, encoder_hidden_states=text_embeddings
+                    self.pipe.unet.forward, latents_input, t, context
                 )["sample"]
 
             # perform guidance

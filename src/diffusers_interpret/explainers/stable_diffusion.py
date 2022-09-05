@@ -107,7 +107,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[bool]]:
             # scale and decode the image latents with vae
             latents = 1 / 0.18215 * latents
-            image = pipe.vae.decode(latents) # TODO: should support gradient checkpointing
+            if not self.gradient_checkpointing or not torch.is_grad_enabled():
+                image = pipe.vae.decode(latents)
+            else:
+                image = checkpoint(pipe.vae.decode, latents, use_reentrant=False)
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)

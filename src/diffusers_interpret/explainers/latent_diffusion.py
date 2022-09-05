@@ -82,7 +82,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
                 image = pipe.vqvae.decode(latents)
             else:
-                image = checkpoint(pipe.vqvae.decode, latents, use_reentrant=True)
+                image = checkpoint(pipe.vqvae.decode, latents, use_reentrant=False)
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)
@@ -135,7 +135,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
                 noise_pred = self.pipe.unet(latents_input, t, context)["sample"]
             else:
                 noise_pred = checkpoint(
-                    self.pipe.unet.forward, latents_input, t, context, use_reentrant=True
+                    self.pipe.unet.forward, latents_input, t, context, use_reentrant=False
                 )["sample"]
 
             # perform guidance

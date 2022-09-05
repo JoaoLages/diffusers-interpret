@@ -55,7 +55,8 @@ class BasePipelineExplainer(ABC):
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
         # Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions > 0`
-        calculate_attributions = n_last_diffusion_steps_to_consider_for_attributions > 0
+        calculate_attributions = n_last_diffusion_steps_to_consider_for_attributions is None \
+                                 or n_last_diffusion_steps_to_consider_for_attributions > 0
         if not calculate_attributions:
             torch.set_grad_enabled(False)
         else:

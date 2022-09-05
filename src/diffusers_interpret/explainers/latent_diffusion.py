@@ -47,7 +47,6 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         # TODO: add description
 
         self.pipe: LDMTextToImagePipeline
-        torch.set_grad_enabled(True)
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
@@ -102,7 +101,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         ):
 
             if n_last_inference_steps_to_consider:
-                if i + i < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
+                if i + 1 < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
                     torch.set_grad_enabled(False)
                 else:
                     torch.set_grad_enabled(True)

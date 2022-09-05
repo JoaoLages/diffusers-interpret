@@ -14,16 +14,13 @@ from diffusers_interpret.utils import transform_images_to_pil_format
 
 
 class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
-    def __init__(self, pipe: LDMTextToImagePipeline, verbose: bool = True):
-        super().__init__(pipe=pipe, verbose=verbose)
+    pipe: LDMTextToImagePipeline
 
     @property
     def tokenizer(self) -> PreTrainedTokenizerBase:
-        self.pipe: LDMTextToImagePipeline
         return self.pipe.tokenizer
 
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
-        self.pipe: LDMTextToImagePipeline
         text_input = self.pipe.tokenizer(prompt, padding="max_length", max_length=77, return_tensors="pt")
         text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
         tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
@@ -54,8 +51,6 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
-
-        self.pipe: LDMTextToImagePipeline
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")

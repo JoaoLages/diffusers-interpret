@@ -13,16 +13,13 @@ from diffusers_interpret.utils import transform_images_to_pil_format
 
 
 class StableDiffusionPipelineExplainer(BasePipelineExplainer):
-    def __init__(self, pipe: StableDiffusionPipeline, verbose: bool = True):
-        super().__init__(pipe=pipe, verbose=verbose)
+    pipe: StableDiffusionPipeline
 
     @property
     def tokenizer(self) -> PreTrainedTokenizerBase:
-        self.pipe: StableDiffusionPipeline
         return self.pipe.tokenizer
 
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
-        self.pipe: StableDiffusionPipeline
         text_input = self.pipe.tokenizer(
             prompt,
             padding="max_length",
@@ -59,8 +56,6 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
-
-        self.pipe: StableDiffusionPipeline
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")

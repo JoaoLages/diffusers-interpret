@@ -79,7 +79,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         def decode_latents(latents: torch.Tensor, pipe: LDMTextToImagePipeline) -> Tuple[torch.Tensor, Optional[bool]]:
             # scale and decode the image latents with vae
             latents = 1 / 0.18215 * latents
-            image = pipe.vqvae.decode(latents)
+            image = pipe.vqvae.decode(latents) # TODO: should support gradient checkpointing
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)
@@ -132,7 +132,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
                 noise_pred = self.pipe.unet(latents_input, t, context)["sample"]
             else:
                 noise_pred = checkpoint(
-                    self.pipe.unet.forward, latents_input, t, context
+                    self.pipe.unet.forward, latents_input, t, context, use_reentrant=False
                 )["sample"]
 
             # perform guidance

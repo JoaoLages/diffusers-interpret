@@ -35,8 +35,7 @@ class BasePipelineExplainer(ABC):
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
-        get_images_for_all_inference_steps: bool = True,
-        force_calculate_gradient_in_cpu: bool = False
+        get_images_for_all_inference_steps: bool = True
     ) -> Dict[str, Any]:
         # TODO: add description
 
@@ -93,10 +92,6 @@ class BasePipelineExplainer(ABC):
 
             if self.verbose:
                 print("Calculating token attributions... ", end='')
-
-            if force_calculate_gradient_in_cpu:
-                output['sample'][0] = output['sample'][0].cpu()
-                text_embeddings = text_embeddings.cpu()
 
             token_attributions = gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,

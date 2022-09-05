@@ -31,7 +31,7 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = True
     ) -> Dict[str, Any]:
         # TODO: add description
@@ -51,8 +51,8 @@ class BasePipelineExplainer(ABC):
         # get prompt text embeddings
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
-        # Enable gradient, if `n_last_inference_steps_to_consider > 0`
-        calculate_attributions = n_last_inference_steps_to_consider > 0
+        # Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions > 0`
+        calculate_attributions = n_last_diffusion_steps_to_consider_for_attributions > 0
         if not calculate_attributions:
             torch.set_grad_enabled(False)
         else:
@@ -71,7 +71,7 @@ class BasePipelineExplainer(ABC):
             generator=generator,
             output_type=None,
             run_safety_checker=run_safety_checker,
-            n_last_inference_steps_to_consider=n_last_inference_steps_to_consider,
+            n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
             get_images_for_all_inference_steps=get_images_for_all_inference_steps
         )
 
@@ -206,7 +206,7 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         raise NotImplementedError

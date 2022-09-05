@@ -41,7 +41,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
@@ -100,8 +100,8 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             disable=not self.verbose
         ):
 
-            if n_last_inference_steps_to_consider:
-                if i + 1 < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
+            if n_last_diffusion_steps_to_consider_for_attributions:
+                if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
                     torch.set_grad_enabled(False)
                 else:
                     torch.set_grad_enabled(True)

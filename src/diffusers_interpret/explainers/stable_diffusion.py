@@ -110,7 +110,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
                 image = pipe.vae.decode(latents)
             else:
-                image = checkpoint(pipe.vae.decode, latents, use_reentrant=False)
+                image = checkpoint(pipe.vae.decode, latents, use_reentrant=True)
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)
@@ -158,7 +158,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 noise_pred = self.pipe.unet(latent_model_input, t, text_embeddings)["sample"]
             else:
                 noise_pred = checkpoint(
-                    self.pipe.unet.forward, latent_model_input, t, text_embeddings, use_reentrant=False
+                    self.pipe.unet.forward, latent_model_input, t, text_embeddings, use_reentrant=True
                 )["sample"]
 
             # perform guidance

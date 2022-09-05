@@ -4,6 +4,7 @@ from typing import List, Optional, Union, Dict, Any, Tuple
 from tqdm.auto import tqdm
 
 import torch
+from torch.utils.checkpoint import checkpoint
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
@@ -32,6 +33,14 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
         tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
         return tokens, text_input, text_embeddings
+
+    def gradient_checkpointing_enable(self) -> None:
+        self.pipe.text_encoder.gradient_checkpointing_enable()
+        super().gradient_checkpointing_enable()
+
+    def gradient_checkpointing_disable(self) -> None:
+        self.pipe.text_encoder.gradient_checkpointing_disable()
+        super().gradient_checkpointing_disable()
 
     def _mimic_pipeline_call(
         self,
@@ -147,7 +156,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 latent_model_input = latent_model_input / ((sigma**2 + 1) ** 0.5)
 
             # predict the noise residual
-            noise_pred = self.pipe.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)["sample"]
+            if not self.gradient_checkpointing or not torch.is_grad_enabled():
+                noise_pred = self.pipe.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)["sample"]
+            else:
+                noise_pred = checkpoint(
+                    self.pipe.unet.forward, latent_model_input, t, encoder_hidden_states=text_embeddings
+                )["sample"]
 
             # perform guidance
             if do_classifier_free_guidance:

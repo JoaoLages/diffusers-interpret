@@ -1,10 +1,11 @@
 import inspect
-import warnings
 from typing import List, Optional, Union, Dict, Any, Tuple
 
 from tqdm.auto import tqdm
 
 import torch
+from torch.utils.checkpoint import checkpoint
+
 from diffusers import LDMTextToImagePipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
@@ -27,6 +28,14 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         text_embeddings = self.pipe.bert(text_input.input_ids.to(self.pipe.device))[0]
         tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
         return tokens, text_input, text_embeddings
+
+    def gradient_checkpointing_enable(self) -> None:
+        self.pipe.bert.gradient_checkpointing_enable()
+        super().gradient_checkpointing_enable()
+
+    def gradient_checkpointing_disable(self) -> None:
+        self.pipe.bert.gradient_checkpointing_disable()
+        super().gradient_checkpointing_disable()
 
     def _mimic_pipeline_call(
         self,
@@ -124,7 +133,13 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
                 context = torch.cat([uncond_embeddings, text_embeddings])
 
             # predict the noise residual
-            noise_pred = self.pipe.unet(latents_input, t, encoder_hidden_states=context)["sample"]
+            if not self.gradient_checkpointing or not torch.is_grad_enabled():
+                noise_pred = self.pipe.unet(latents_input, t, encoder_hidden_states=text_embeddings)["sample"]
+            else:
+                noise_pred = checkpoint(
+                    self.pipe.unet.forward, latents_input, t, encoder_hidden_states=text_embeddings
+                )["sample"]
+
             # perform guidance
             if guidance_scale != 1.0:
                 noise_pred_uncond, noise_prediction_text = noise_pred.chunk(2)

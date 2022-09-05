@@ -12,9 +12,12 @@ from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
 class BasePipelineExplainer(ABC):
-    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True) -> None:
+    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True, gradient_checkpointing: bool = False) -> None:
         self.pipe = pipe
         self.verbose = verbose
+        self.gradient_checkpointing = gradient_checkpointing
+        if self.gradient_checkpointing:
+            self.gradient_checkpointing_enable()
 
     def __call__(
         self,
@@ -182,6 +185,12 @@ class BasePipelineExplainer(ABC):
         self.tokenizer.verbose = verbose
 
         return set(special_tokens)
+
+    def gradient_checkpointing_enable(self) -> None:
+        self.gradient_checkpointing = True
+
+    def gradient_checkpointing_disable(self) -> None:
+        self.gradient_checkpointing = False
 
     @property
     @abstractmethod

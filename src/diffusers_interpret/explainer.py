@@ -8,7 +8,7 @@ from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
 from diffusers_interpret.generated_images import GeneratedImages
-from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes, transform_images_to_pil_format
+from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
 class BasePipelineExplainer(ABC):
@@ -51,6 +51,13 @@ class BasePipelineExplainer(ABC):
         # get prompt text embeddings
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
+        # Enable gradient, if `n_last_inference_steps_to_consider > 0`
+        calculate_attributions = n_last_inference_steps_to_consider > 0
+        if not calculate_attributions:
+            torch.set_grad_enabled(False)
+        else:
+            torch.set_grad_enabled(True)
+
         # Get prediction with their associated gradients
         output = self._mimic_pipeline_call(
             text_input=text_input,
@@ -75,10 +82,14 @@ class BasePipelineExplainer(ABC):
             )
 
         # Get primary attribution scores
-        if self.verbose:
-            print("Calculating token attributions... ", end='')
-        if attribution_method == 'grad_x_input':
-            token_attributions= gradient_x_inputs_attribution(
+        output['token_attributions'] = None
+        output['normalized_token_attributions'] = None
+        if calculate_attributions and attribution_method == 'grad_x_input':
+
+            if self.verbose:
+                print("Calculating token attributions... ", end='')
+
+            token_attributions = gradient_x_inputs_attribution(
                 pred_logits=output['sample'][0], input_embeds=text_embeddings,
                 explanation_2d_bounding_box=explanation_2d_bounding_box
             )
@@ -112,15 +123,17 @@ class BasePipelineExplainer(ABC):
                     ]
                 )
 
+            if self.verbose:
+                print("Done!")
+
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
-        if self.verbose:
-            print("Done!")
 
         if batch_size == 1:
             # squash batch dimension
             for k in ['sample', 'token_attributions', 'normalized_token_attributions']:
-                output[k] = output[k][0]
+                if output[k]:
+                    output[k] = output[k][0]
             if output['all_samples_during_generation']:
                 output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
 

@@ -2,5 +2,5 @@ transformers>=4.21.1
 setuptools>=49.6.0
 torch>=1.9.1
 diffusers~=0.2.4
-scipy>=1.9.1
+scipy>=1.7.3
 ftfy>=6.1.1

@@ -9,7 +9,7 @@ with open('requirements.txt', encoding='utf-8') as f:
 
 setup(
     name='diffusers-interpret',
-    version='0.2.0',
+    version='0.2.1',
     description='diffusers-interpret: model explainability for 🤗 Diffusers',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -19,5 +19,6 @@ setup(
     license='MIT',
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    include_package_data=True,
     install_requires=required
 )

@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import shutil
 from typing import List, Union
 
 import torch
@@ -35,8 +36,8 @@ class GeneratedImages:
             else:
                 self.images.append(batch_images)
 
-        self.loading_iframe = None
-        self.image_slider_iframe = None
+        self.loading_html = None
+        self.image_slider_html = None
         if prepare_image_slider:
             self.prepare_image_slider()
 
@@ -103,26 +104,28 @@ class GeneratedImages:
         with open(os.path.join(image_slider_dir, "final.html"), 'w') as fp:
             fp.write(html_with_image_slider)
 
-        self.loading_iframe = d.IFrame(
-            os.path.relpath(
-                os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "loading.html"),
-                '.'
-            ),
-            width="100%", height="400px"
+        filepath = os.path.relpath(
+            os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "loading.html"),
+            '.'
         )
+        if os.path.isdir("/usr/local/share/jupyter/nbextensions/"): # specific to work for Google Colab
+            shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
+            filepath = "/usr/local/share/jupyter/nbextensions/loading.html"
+        self.loading_html = d.HTML(open(filepath).read())
 
-        self.image_slider_iframe = d.IFrame(
-            os.path.relpath(
-                os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "final.html"),
-                '.'
-            ),
-            width="100%", height="400px"
+        filepath = os.path.relpath(
+            os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "final.html"),
+            '.'
         )
+        if os.path.isdir("/usr/local/share/jupyter/nbextensions/"): # specific to work for Google Colab
+            shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
+            filepath = "/usr/local/share/jupyter/nbextensions/final.html"
+        self.image_slider_html = d.HTML(open(filepath).read())
 
     def __getitem__(self, item: int) -> Union[Image, List[Image]]:
         return self.images[item]
 
-    def show(self, width: Union[str, int] = "100%", height: Union[str, int] = "400px") -> None:
+    def show(self) -> None:
 
         if len(self.images) == 0:
             raise Exception("`self.images` is an empty list, can't show any images")
@@ -131,15 +134,11 @@ class GeneratedImages:
             raise NotImplementedError("GeneratedImages.show visualization is not supported "
                                       "when `self.images` is a list of lists of images")
 
-        if self.image_slider_iframe is None:
+        if self.image_slider_html is None:
             self.prepare_image_slider()
 
         # display loading
-        self.loading_iframe.width = width
-        self.loading_iframe.height = height
-        display = d.display(self.loading_iframe, display_id=42)
+        display = d.display(self.loading_html)
 
         # display image slider
-        self.image_slider_iframe.width = width
-        self.image_slider_iframe.height = height
-        display.update(self.image_slider_iframe)
+        display.update(self.image_slider_html)

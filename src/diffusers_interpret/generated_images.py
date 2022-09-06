@@ -109,8 +109,11 @@ class GeneratedImages:
             '.'
         )
         if os.path.isdir("/usr/local/share/jupyter/nbextensions/"): # specific to work for Google Colab
-            shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
-            filepath = "/usr/local/share/jupyter/nbextensions/loading.html"
+            try:
+                shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
+                filepath = "/usr/local/share/jupyter/nbextensions/loading.html"
+            except PermissionError:
+                pass
         self.loading_html = d.HTML(open(filepath).read())
 
         filepath = os.path.relpath(
@@ -118,8 +121,11 @@ class GeneratedImages:
             '.'
         )
         if os.path.isdir("/usr/local/share/jupyter/nbextensions/"): # specific to work for Google Colab
-            shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
-            filepath = "/usr/local/share/jupyter/nbextensions/final.html"
+            try:
+                shutil.copy2(filepath, "/usr/local/share/jupyter/nbextensions/")
+                filepath = "/usr/local/share/jupyter/nbextensions/final.html"
+            except PermissionError:
+                pass
         self.image_slider_html = d.HTML(open(filepath).read())
 
     def __getitem__(self, item: int) -> Union[Image, List[Image]]:

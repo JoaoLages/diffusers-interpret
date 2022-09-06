@@ -9,6 +9,7 @@ import torch
 from IPython import display as d
 from PIL.Image import Image
 from diffusers import DiffusionPipeline
+from ipywidgets import widgets
 
 import diffusers_interpret
 from diffusers_interpret.utils import transform_images_to_pil_format
@@ -115,7 +116,7 @@ class GeneratedImages:
                 filepath = "/usr/local/share/jupyter/nbextensions/loading.html"
             except PermissionError:
                 pass
-        self.loading_html = d.HTML(open(filepath).read())
+        self.loading_html = open(filepath).read()
 
         filepath = os.path.relpath(
             os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "final.html"),
@@ -127,7 +128,7 @@ class GeneratedImages:
                 filepath = "/usr/local/share/jupyter/nbextensions/final.html"
             except PermissionError:
                 pass
-        self.image_slider_html = d.HTML(open(filepath).read())
+        self.image_slider_html = open(filepath).read()
 
     def __getitem__(self, item: int) -> Union[Image, List[Image]]:
         return self.images[item]
@@ -145,7 +146,9 @@ class GeneratedImages:
             self.prepare_image_slider()
 
         # display loading
-        display = d.display(self.loading_html, display_id=random.randint(0, 9999999))
+        out = widgets.HTML()
+        d.display(out)
+        out.value = self.loading_html
 
         # display image slider
-        display.update(self.image_slider_html)
+        out.value = self.image_slider_html

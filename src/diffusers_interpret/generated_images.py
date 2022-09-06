@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import random
 from typing import List, Union
 
 import torch
@@ -137,7 +138,7 @@ class GeneratedImages:
         # display loading
         self.loading_iframe.width = width
         self.loading_iframe.height = height
-        display = d.display(self.loading_iframe, display_id=42)
+        display = d.display(self.loading_iframe, display_id=random.randint(0, 9999999))
 
         # display image slider
         self.image_slider_iframe.width = width

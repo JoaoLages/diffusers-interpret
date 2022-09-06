@@ -9,7 +9,7 @@ with open('requirements.txt', encoding='utf-8') as f:
 
 setup(
     name='diffusers-interpret',
-    version='0.2.1',
+    version='0.2.3',
     description='diffusers-interpret: model explainability for 🤗 Diffusers',
     long_description=long_description,
     long_description_content_type='text/markdown',

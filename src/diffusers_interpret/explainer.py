@@ -12,9 +12,12 @@ from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
 class BasePipelineExplainer(ABC):
-    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True) -> None:
+    def __init__(self, pipe: DiffusionPipeline, verbose: bool = True, gradient_checkpointing: bool = False) -> None:
         self.pipe = pipe
         self.verbose = verbose
+        self.gradient_checkpointing = gradient_checkpointing
+        if self.gradient_checkpointing:
+            self.gradient_checkpointing_enable()
 
     def __call__(
         self,
@@ -31,7 +34,7 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = False,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = True
     ) -> Dict[str, Any]:
         # TODO: add description
@@ -51,8 +54,9 @@ class BasePipelineExplainer(ABC):
         # get prompt text embeddings
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
-        # Enable gradient, if `n_last_inference_steps_to_consider > 0`
-        calculate_attributions = n_last_inference_steps_to_consider > 0
+        # Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions > 0`
+        calculate_attributions = n_last_diffusion_steps_to_consider_for_attributions is None \
+                                 or n_last_diffusion_steps_to_consider_for_attributions > 0
         if not calculate_attributions:
             torch.set_grad_enabled(False)
         else:
@@ -71,7 +75,7 @@ class BasePipelineExplainer(ABC):
             generator=generator,
             output_type=None,
             run_safety_checker=run_safety_checker,
-            n_last_inference_steps_to_consider=n_last_inference_steps_to_consider,
+            n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
             get_images_for_all_inference_steps=get_images_for_all_inference_steps
         )
 
@@ -132,7 +136,7 @@ class BasePipelineExplainer(ABC):
         if batch_size == 1:
             # squash batch dimension
             for k in ['sample', 'token_attributions', 'normalized_token_attributions']:
-                if output[k]:
+                if output[k] is not None:
                     output[k] = output[k][0]
             if output['all_samples_during_generation']:
                 output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]
@@ -183,6 +187,12 @@ class BasePipelineExplainer(ABC):
 
         return set(special_tokens)
 
+    def gradient_checkpointing_enable(self) -> None:
+        self.gradient_checkpointing = True
+
+    def gradient_checkpointing_disable(self) -> None:
+        self.gradient_checkpointing = False
+
     @property
     @abstractmethod
     def tokenizer(self) -> PreTrainedTokenizerBase:
@@ -206,7 +216,7 @@ class BasePipelineExplainer(ABC):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         raise NotImplementedError

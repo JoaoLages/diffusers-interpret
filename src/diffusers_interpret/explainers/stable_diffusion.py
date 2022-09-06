@@ -4,6 +4,7 @@ from typing import List, Optional, Union, Dict, Any, Tuple
 from tqdm.auto import tqdm
 
 import torch
+from torch.utils.checkpoint import checkpoint
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
@@ -12,16 +13,13 @@ from diffusers_interpret.utils import transform_images_to_pil_format
 
 
 class StableDiffusionPipelineExplainer(BasePipelineExplainer):
-    def __init__(self, pipe: StableDiffusionPipeline, verbose: bool = True):
-        super().__init__(pipe=pipe, verbose=verbose)
+    pipe: StableDiffusionPipeline
 
     @property
     def tokenizer(self) -> PreTrainedTokenizerBase:
-        self.pipe: StableDiffusionPipeline
         return self.pipe.tokenizer
 
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
-        self.pipe: StableDiffusionPipeline
         text_input = self.pipe.tokenizer(
             prompt,
             padding="max_length",
@@ -32,6 +30,14 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         text_embeddings = self.pipe.text_encoder(text_input.input_ids.to(self.pipe.device))[0]
         tokens = [self.pipe.tokenizer.convert_ids_to_tokens(sample) for sample in text_input['input_ids']]
         return tokens, text_input, text_embeddings
+
+    def gradient_checkpointing_enable(self) -> None:
+        self.pipe.text_encoder.gradient_checkpointing_enable()
+        super().gradient_checkpointing_enable()
+
+    def gradient_checkpointing_disable(self) -> None:
+        self.pipe.text_encoder.gradient_checkpointing_disable()
+        super().gradient_checkpointing_disable()
 
     def _mimic_pipeline_call(
         self,
@@ -46,12 +52,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         generator: Optional[torch.Generator] = None,
         output_type: Optional[str] = 'pil',
         run_safety_checker: bool = True,
-        n_last_inference_steps_to_consider: Optional[int] = None,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
     ) -> Dict[str, Any]:
         # TODO: add description
-
-        self.pipe: StableDiffusionPipeline
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
@@ -103,7 +107,10 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[bool]]:
             # scale and decode the image latents with vae
             latents = 1 / 0.18215 * latents
-            image = pipe.vae.decode(latents)
+            if not self.gradient_checkpointing or not torch.is_grad_enabled():
+                image = pipe.vae.decode(latents)
+            else:
+                image = checkpoint(pipe.vae.decode, latents, use_reentrant=False)
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)
@@ -128,8 +135,8 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             disable=not self.verbose
         ):
 
-            if n_last_inference_steps_to_consider:
-                if i + 1 < len(self.pipe.scheduler.timesteps) - n_last_inference_steps_to_consider:
+            if n_last_diffusion_steps_to_consider_for_attributions:
+                if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
                     torch.set_grad_enabled(False)
                 else:
                     torch.set_grad_enabled(True)
@@ -147,7 +154,12 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
                 latent_model_input = latent_model_input / ((sigma**2 + 1) ** 0.5)
 
             # predict the noise residual
-            noise_pred = self.pipe.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)["sample"]
+            if not self.gradient_checkpointing or not torch.is_grad_enabled():
+                noise_pred = self.pipe.unet(latent_model_input, t, text_embeddings)["sample"]
+            else:
+                noise_pred = checkpoint(
+                    self.pipe.unet.forward, latent_model_input, t, text_embeddings, use_reentrant=False
+                )["sample"]
 
             # perform guidance
             if do_classifier_free_guidance:

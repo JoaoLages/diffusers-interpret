@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import random
 import shutil
 from typing import List, Union
 
@@ -144,7 +145,7 @@ class GeneratedImages:
             self.prepare_image_slider()
 
         # display loading
-        display = d.display(self.loading_html)
+        display = d.display(self.loading_html, display_id=random.randint(0, 9999999))
 
         # display image slider
         display.update(self.image_slider_html)

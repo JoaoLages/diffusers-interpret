@@ -17,6 +17,8 @@ Install directly from PyPI:
 
 Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https://github.com/huggingface/diffusers#new--stable-diffusion-is-now-fully-compatible-with-diffusers)!**
 
+**NEW**: <a href="https://colab.research.google.com/drive/16m1HA3guhvP-uJRGMhD0gvuaMAUiiqUc?authuser=1#scrollTo=jKd5c5oUBmNP"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+
 ```python
 # make sure you're logged in with `huggingface-cli login`
 import torch

@@ -136,7 +136,7 @@ class BasePipelineExplainer(ABC):
         if batch_size == 1:
             # squash batch dimension
             for k in ['sample', 'token_attributions', 'normalized_token_attributions']:
-                if output[k]:
+                if output[k] is not None:
                     output[k] = output[k][0]
             if output['all_samples_during_generation']:
                 output['all_samples_during_generation'] = [b[0] for b in output['all_samples_during_generation']]

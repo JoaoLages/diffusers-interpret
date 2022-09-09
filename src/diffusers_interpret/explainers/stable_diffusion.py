@@ -81,7 +81,7 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
             uncond_input = self.pipe.tokenizer(
                 [""] * batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
             )
-            uncond_embeddings = self.pipe.text_encoder(uncond_input.input_ids)[0]
+            uncond_embeddings = self.pipe.text_encoder(uncond_input.input_ids.to(self.pipe.device))[0]
             # For classifier free guidance, we need to do two forward passes.
             # Here we concatenate the unconditional and text embeddings into a single batch
             # to avoid doing two forward passes
@@ -242,7 +242,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         self.pipe.scheduler.set_timesteps(num_inference_steps, **extra_set_kwargs)
 
         # encode the init image into latents and scale the latents
-        init_latent_dist = self.pipe.vae.encode(init_image.to(self.pipe.device)).latent_dist
+        init_latent_dist = self.pipe.vae.encode(init_image).latent_dist
         init_latents = init_latent_dist.sample(generator=generator)
         init_latents = 0.18215 * init_latents
 

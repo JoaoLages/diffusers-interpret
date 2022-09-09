@@ -195,7 +195,7 @@ class BasePipelineExplainer(ABC):
 
         if batch_size == 1:
             # squash batch dimension
-            for k in ['images', 'token_attributions', 'normalized_token_attributions']:
+            for k in ['image', 'token_attributions', 'normalized_token_attributions']:
                 if output[k] is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:

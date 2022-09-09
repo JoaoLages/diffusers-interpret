@@ -42,9 +42,9 @@ class BaseMimicPipelineCallOutput:
 
 @dataclass
 class PipelineExplainerOutput:
-    images: Union[List[Image], np.ndarray, torch.Tensor]
+    image: Union[Image, np.ndarray, torch.Tensor]
     nsfw_content_detected: List[bool]
-    all_images_during_generation: Optional[List[List[Image]]]
+    all_images_during_generation: Optional[GeneratedImages]
     token_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
 
@@ -94,6 +94,9 @@ class BasePipelineExplainer(ABC):
 
         if isinstance(prompt, str):
             batch_size = 1 # TODO: make compatible with bigger batch sizes
+        elif isinstance(prompt, list) and len(prompt) > 0 and isinstance(prompt[0], str):
+            batch_size = len(prompt)
+            raise NotImplementedError("Passing a list of strings in `prompt` is still not implemented yet.")
         else:
             raise ValueError(f"`prompt` has to be of type `str` but is {type(prompt)}")
 
@@ -132,7 +135,7 @@ class BasePipelineExplainer(ABC):
         )
 
         output = PipelineExplainerOutput(
-            images=output.images, nsfw_content_detected=output.nsfw_content_detected,
+            image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
             all_images_during_generation=output.all_images_during_generation
         )
 
@@ -151,7 +154,7 @@ class BasePipelineExplainer(ABC):
                 print("Calculating token attributions... ", end='')
 
             token_attributions = gradient_x_inputs_attribution(
-                pred_logits=output.images[0], input_embeds=text_embeddings,
+                pred_logits=output.image, input_embeds=text_embeddings,
                 explanation_2d_bounding_box=explanation_2d_bounding_box
             )
             token_attributions = token_attributions.detach().cpu().numpy()
@@ -205,7 +208,7 @@ class BasePipelineExplainer(ABC):
         # also draw bounding box in the last image if requested
         if output.all_images_during_generation or output_type == "pil":
             all_images = GeneratedImages(
-                all_generated_images=output.all_images_during_generation or [output.images],
+                all_generated_images=output.all_images_during_generation or [output.image],
                 pipe=self.pipe,
                 remove_batch_dimension=batch_size==1,
                 prepare_image_slider=bool(output.all_images_during_generation)

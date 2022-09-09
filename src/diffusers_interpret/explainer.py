@@ -224,7 +224,7 @@ class BasePipelineExplainer(ABC):
                 draw.rectangle(explanation_2d_bounding_box, outline="red")
 
             if output_type == "pil":
-                output.images = image
+                output.image = image
 
         return output
 

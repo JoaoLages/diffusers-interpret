@@ -144,7 +144,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             return image, has_nsfw_concept
 
         all_generated_images = [] if get_images_for_all_inference_steps else None
-        for i, t in enumerate(self.pipe.progress_bar(self.pipe.scheduler.timesteps, disable=not self.verbose)):
+        for i, t in enumerate(self.pipe.progress_bar(self.pipe.scheduler.timesteps)):
 
             if n_last_diffusion_steps_to_consider_for_attributions:
                 if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:

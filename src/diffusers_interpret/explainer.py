@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Union, Tuple, Set
+from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
 import torch
 import numpy as np
 from PIL import ImageDraw
 from PIL.Image import Image
 from diffusers import DiffusionPipeline
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import preprocess
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradient_x_inputs_attribution
@@ -55,7 +56,11 @@ class PipelineExplainerOutput:
         setattr(self, key, value)
 
 
-class BasePipelineExplainer(ABC):
+class CorePipelineExplainer(ABC):
+    """
+    Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines
+    """
+
     def __init__(self, pipe: DiffusionPipeline, verbose: bool = True, gradient_checkpointing: bool = False) -> None:
         self.pipe = pipe
         self.verbose = verbose
@@ -67,6 +72,9 @@ class BasePipelineExplainer(ABC):
         if self.gradient_checkpointing:
             self.gradient_checkpointing_enable()
 
+    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
+        return kwargs
+
     def __call__(
         self,
         prompt: str,
@@ -74,18 +82,11 @@ class BasePipelineExplainer(ABC):
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
-        height: Optional[int] = 512,
-        width: Optional[int] = 512,
-        num_inference_steps: Optional[int] = 50,
-        guidance_scale: Optional[float] = 7.5,
-        eta: Optional[float] = 0.0,
-        generator: Optional[torch.Generator] = None,
-        latents: Optional[torch.FloatTensor] = None,
-        output_type: Optional[str] = 'pil',
-        return_dict: bool = True,
         run_safety_checker: bool = False,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
-        get_images_for_all_inference_steps: bool = True
+        get_images_for_all_inference_steps: bool = True,
+        output_type: Optional[str] = 'pil',
+        **kwargs
     ) -> PipelineExplainerOutput:
         # TODO: add description
 
@@ -104,6 +105,8 @@ class BasePipelineExplainer(ABC):
         if explanation_2d_bounding_box:
             pass
 
+        kwargs = self._preprocess_input(**kwargs)
+
         # get prompt text embeddings
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
 
@@ -120,20 +123,14 @@ class BasePipelineExplainer(ABC):
             text_input=text_input,
             text_embeddings=text_embeddings,
             batch_size=batch_size,
-            height=height,
-            width=width,
-            num_inference_steps=num_inference_steps,
-            guidance_scale=guidance_scale,
-            eta=eta,
-            generator=generator,
-            latents=latents,
             output_type=None,
-            return_dict=return_dict,
             run_safety_checker=run_safety_checker,
             n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
-            get_images_for_all_inference_steps=get_images_for_all_inference_steps
+            get_images_for_all_inference_steps=get_images_for_all_inference_steps,
+            **kwargs
         )
 
+        # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput
         output = PipelineExplainerOutput(
             image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
             all_images_during_generation=output.all_images_during_generation
@@ -145,51 +142,17 @@ class BasePipelineExplainer(ABC):
                 "Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check."
             )
 
-        # Get primary attribution scores
-        output.token_attributions = None
-        output.normalized_token_attributions = None
+        # Calculate primary attribution scores
         if calculate_attributions and attribution_method == 'grad_x_input':
-
-            if self.verbose:
-                print("Calculating token attributions... ", end='')
-
-            token_attributions = gradient_x_inputs_attribution(
-                pred_logits=output.image, input_embeds=text_embeddings,
-                explanation_2d_bounding_box=explanation_2d_bounding_box
+            output = self._get_attributions(
+                output=output,
+                tokens=tokens,
+                text_embeddings=text_embeddings,
+                explanation_2d_bounding_box=explanation_2d_bounding_box,
+                consider_special_tokens=consider_special_tokens,
+                clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
+                **kwargs
             )
-            token_attributions = token_attributions.detach().cpu().numpy()
-
-            # remove special tokens
-            assert len(token_attributions) == len(tokens)
-            output.token_attributions = []
-            output.normalized_token_attributions = []
-            for image_token_attributions, image_tokens in zip(token_attributions, tokens):
-                assert len(image_token_attributions) == len(image_tokens)
-
-                # Add token attributions
-                output.token_attributions.append([])
-                for attr, token in zip(image_token_attributions, image_tokens):
-                    if consider_special_tokens or token not in self.special_tokens_attributes:
-
-                        if clean_token_prefixes_and_suffixes:
-                            token = clean_token_from_prefixes_and_suffixes(token)
-
-                        output.token_attributions[-1].append(
-                            (token, attr)
-                        )
-
-                # Add normalized
-                total = sum([attr for _, attr in output.token_attributions[-1]])
-                output.normalized_token_attributions.append(
-                    [
-                        (token, round(100 * attr / total, 3))
-                        for token, attr in output.token_attributions[-1]
-                    ]
-                )
-
-            if self.verbose:
-                print("Done!")
-
         else:
             raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
 
@@ -225,6 +188,57 @@ class BasePipelineExplainer(ABC):
 
             if output_type == "pil":
                 output.image = image
+
+        return output
+
+    def _get_attributions(
+        self,
+        output: PipelineExplainerOutput,
+        tokens: List[List[str]],
+        text_embeddings: torch.Tensor,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        consider_special_tokens: bool = False,
+        clean_token_prefixes_and_suffixes: bool = True,
+        **kwargs
+    ) -> PipelineExplainerOutput:
+        if self.verbose:
+            print("Calculating token attributions... ", end='')
+
+        token_attributions = gradient_x_inputs_attribution(
+            pred_logits=output.image, input_embeds=text_embeddings,
+            explanation_2d_bounding_box=explanation_2d_bounding_box
+        ).detach().cpu().numpy()
+
+        # remove special tokens
+        assert len(token_attributions) == len(tokens)
+        output.token_attributions = []
+        output.normalized_token_attributions = []
+        for image_token_attributions, image_tokens in zip(token_attributions, tokens):
+            assert len(image_token_attributions) == len(image_tokens)
+
+            # Add token attributions
+            output.token_attributions.append([])
+            for attr, token in zip(image_token_attributions, image_tokens):
+                if consider_special_tokens or token not in self.special_tokens_attributes:
+
+                    if clean_token_prefixes_and_suffixes:
+                        token = clean_token_from_prefixes_and_suffixes(token)
+
+                    output.token_attributions[-1].append(
+                        (token, attr)
+                    )
+
+            # Add normalized
+            total = sum([attr for _, attr in output.token_attributions[-1]])
+            output.normalized_token_attributions.append(
+                [
+                    (token, round(100 * attr / total, 3))
+                    for token, attr in output.token_attributions[-1]
+                ]
+            )
+
+        if self.verbose:
+            print("Done!")
 
         return output
 
@@ -268,6 +282,16 @@ class BasePipelineExplainer(ABC):
     @abstractmethod
     def _mimic_pipeline_call(
         self,
+        *args,
+        **kwargs
+    ) -> BaseMimicPipelineCallOutput:
+        raise NotImplementedError
+
+
+class BasePipelineExplainer(CorePipelineExplainer):
+    @abstractmethod
+    def _mimic_pipeline_call(
+        self,
         text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
         batch_size: int,
@@ -285,3 +309,72 @@ class BasePipelineExplainer(ABC):
         get_images_for_all_inference_steps: bool = False
     ) -> BaseMimicPipelineCallOutput:
         raise NotImplementedError
+
+
+class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
+    @abstractmethod
+    def _mimic_pipeline_call(
+        self,
+        text_input: BatchEncoding,
+        text_embeddings: torch.Tensor,
+        batch_size: int,
+        init_image: Union[torch.FloatTensor, Image],
+        strength: float = 0.8,
+        num_inference_steps: Optional[int] = 50,
+        guidance_scale: Optional[float] = 7.5,
+        eta: Optional[float] = 0.0,
+        generator: Optional[torch.Generator] = None,
+        output_type: Optional[str] = 'pil',
+        return_dict: bool = True,
+        run_safety_checker: bool = True,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
+        get_images_for_all_inference_steps: bool = False
+    ) -> BaseMimicPipelineCallOutput:
+        raise NotImplementedError
+
+    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
+        """
+        Converts input image to tensor
+        """
+        kwargs = super()._preprocess_input(**kwargs)
+        if 'init_image' not in kwargs:
+            raise TypeError("missing 1 required positional argument: 'init_image'")
+
+        kwargs['init_image'] = preprocess(kwargs['init_image'])
+
+        return kwargs
+
+    def _get_attributions(
+        self,
+        output: PipelineExplainerOutput,
+        tokens: List[List[str]],
+        text_embeddings: torch.Tensor,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        consider_special_tokens: bool = False,
+        clean_token_prefixes_and_suffixes: bool = True,
+        **kwargs
+    ) -> PipelineExplainerOutput:
+
+        if 'init_image' not in kwargs:
+            raise TypeError("missing 1 required positional argument: 'init_image'")
+        init_image = kwargs['init_image']
+
+        output = super()._get_attributions(
+            output=output,
+            tokens=tokens,
+            text_embeddings=text_embeddings,
+            explanation_2d_bounding_box=explanation_2d_bounding_box,
+            consider_special_tokens=consider_special_tokens,
+            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
+            **kwargs
+        )
+
+        if self.verbose:
+            print("Calculating image pixel attributions... ", end='')
+
+        pixel_attributions = gradient_x_inputs_attribution(
+            pred_logits=output.image, input_embeds=init_image,
+            explanation_2d_bounding_box=explanation_2d_bounding_box
+        ).detach().cpu().numpy()
+
+        import ipdb; ipdb.set_trace()

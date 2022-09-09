@@ -11,7 +11,7 @@
 
 Install directly from PyPI:
 
-    pip install diffusers-interpret
+    pip install --upgrade diffusers-interpret
 
 ## Usage
 
@@ -53,7 +53,7 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
 
 To see the final generated image:
 ```python
-output['sample']
+output.image
 ```
 
 ![](assets/corgi_eiffel_tower.png)
@@ -63,7 +63,7 @@ You can also check all the images that the diffusion process generated at the en
 
 To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
 ```python
->>> output['token_attributions'] # (token, attribution)
+>>> output.token_attributions # (token, attribution)
 [('a', 1063.0526),
  ('cute', 415.62888),
  ('corgi', 6430.694),
@@ -78,7 +78,7 @@ To analyse how a token in the input `prompt` influenced the generation, you can 
 
 Or their computed normalized version, in percentage:
 ```python
->>> output['normalized_token_attributions'] # (token, attribution_percentage)
+>>> output.normalized_token_attributions # (token, attribution_percentage)
 [('a', 3.884),
  ('cute', 1.519),
  ('corgi', 23.495),
@@ -104,7 +104,7 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
         generator=generator,
         explanation_2d_bounding_box=((70, 180), (400, 435)), # (upper left corner, bottom right corner)
     )
-output['sample']
+output.image
 ```
 ![](assets/corgi_eiffel_tower_box_1.png)
 
@@ -113,7 +113,7 @@ The generated image now has a <span style="color:red"> **red bounding box** </sp
 The token attributions are now computed only for the area specified in the image.
 
 ```python
->>> output['normalized_token_attributions'] # (token, attribution_percentage)
+>>> output.normalized_token_attributions # (token, attribution_percentage)
 [('a', 1.891),
  ('cute', 1.344),
  ('corgi', 23.115),
@@ -130,6 +130,8 @@ Check other functionalities and more implementation examples in [here](https://g
 
 ## Future Development
 - [x] ~~Add interactive display of all the images that were generated in the diffusion process~~
+- [ ] Add explainer for StableDiffusionImg2ImgPipeline
+- [ ] Add explainer for StableDiffusionInpaintPipeline
 - [ ] Add interactive bounding-box and token attributions visualization
 - [ ] Add unit tests
 - [ ] Add example for `diffusers_interpret.LDMTextToImagePipelineExplainer`

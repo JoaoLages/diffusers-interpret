@@ -11,7 +11,7 @@
 
 Install directly from PyPI:
 
-    pip install diffusers-interpret
+    pip install --upgrade diffusers-interpret
 
 ## Usage
 

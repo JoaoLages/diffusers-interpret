@@ -61,9 +61,9 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
-        if return_dict:
+        if not return_dict:
             raise NotImplementedError(
-                "`return_dict=True` not available in StableDiffusionPipelineExplainer._mimic_pipeline_call"
+                "`return_dict=False` not available in StableDiffusionPipelineExplainer._mimic_pipeline_call"
             )
 
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)

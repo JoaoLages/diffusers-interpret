@@ -340,7 +340,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
 
-        kwargs['init_image'] = preprocess(kwargs['init_image'])
+        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device)
         kwargs['init_image'].requires_grad = True
 
         return kwargs

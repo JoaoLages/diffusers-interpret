@@ -1,7 +1,5 @@
 import inspect
-from typing import List, Optional, Union, Dict, Any, Tuple
-
-from tqdm.auto import tqdm
+from typing import List, Optional, Union, Tuple
 
 import torch
 from torch.utils.checkpoint import checkpoint
@@ -10,6 +8,7 @@ from diffusers import LDMTextToImagePipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
+from diffusers_interpret.explainer import BaseMimicPipelineCallOutput
 from diffusers_interpret.utils import transform_images_to_pil_format
 
 
@@ -45,15 +44,27 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
         generator: Optional[torch.Generator] = None,
+        latents: Optional[torch.FloatTensor] = None,
         output_type: Optional[str] = 'pil',
+        return_dict: bool = True,
         run_safety_checker: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
-    ) -> Dict[str, Any]:
+    ) -> BaseMimicPipelineCallOutput:
         # TODO: add description
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
+
+        if not return_dict:
+            raise NotImplementedError(
+                "`return_dict=False` not available in LDMTextToImagePipelineExplainer._mimic_pipeline_call"
+            )
+
+        if latents is not None:
+            raise NotImplementedError(
+                "Can't provide `latents` to LDMTextToImagePipelineExplainer._mimic_pipeline_call"
+            )
 
         # get unconditional embeddings for classifier free guidance
         if guidance_scale != 1.0:
@@ -76,13 +87,13 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_kwargs["eta"] = eta
 
-        def decode_latents(latents: torch.Tensor, pipe: LDMTextToImagePipeline) -> Tuple[torch.Tensor, Optional[bool]]:
+        def decode_latents(latents: torch.Tensor, pipe: LDMTextToImagePipeline) -> Tuple[torch.Tensor, Optional[List[bool]]]:
             # scale and decode the image latents with vae
             latents = 1 / 0.18215 * latents
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                image = pipe.vqvae.decode(latents)
+                image = pipe.vqvae.decode(latents).sample
             else:
-                image = checkpoint(pipe.vqvae.decode, latents, use_reentrant=False)
+                image = checkpoint(pipe.vqvae.decode, latents, use_reentrant=False).sample
 
             image = (image / 2 + 0.5).clamp(0, 1)
             image = image.permute(0, 2, 3, 1)
@@ -100,12 +111,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             return image, has_nsfw_concept
 
         all_generated_images = [] if get_images_for_all_inference_steps else None
-        for i, t in tqdm(
-            enumerate(self.pipe.scheduler.timesteps),
-            total=len(self.pipe.scheduler.timesteps),
-            desc="Diffusion process",
-            disable=not self.verbose
-        ):
+        for i, t in enumerate(self.pipe.progress_bar(self.pipe.scheduler.timesteps)):
 
             if n_last_diffusion_steps_to_consider_for_attributions:
                 if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
@@ -132,11 +138,11 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
 
             # predict the noise residual
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                noise_pred = self.pipe.unet(latents_input, t, context)["sample"]
+                noise_pred = self.pipe.unet(latents_input, t, context).sample
             else:
                 noise_pred = checkpoint(
                     self.pipe.unet.forward, latents_input, t, context, use_reentrant=False
-                )["sample"]
+                ).sample
 
             # perform guidance
             if guidance_scale != 1.0:
@@ -144,7 +150,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
                 noise_pred = noise_pred_uncond + guidance_scale * (noise_prediction_text - noise_pred_uncond)
 
             # compute the previous noisy sample x_t -> x_t-1
-            latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_kwargs)["prev_sample"]
+            latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_kwargs).prev_sample
 
         image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
         if all_generated_images:
@@ -157,8 +163,7 @@ class LDMTextToImagePipelineExplainer(BasePipelineExplainer):
             else:
                 image = transform_images_to_pil_format([image], self.pipe)[0]
 
-        return {
-            "sample": image,
-            "nsfw_content_detected": has_nsfw_concept,
-            "all_samples_during_generation": all_generated_images
-        }
+        return  BaseMimicPipelineCallOutput(
+            images=image, nsfw_content_detected=has_nsfw_concept,
+            all_images_during_generation=all_generated_images
+        )

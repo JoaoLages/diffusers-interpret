@@ -150,7 +150,7 @@ class CorePipelineExplainer(ABC):
                 text_embeddings=text_embeddings,
                 explanation_2d_bounding_box=explanation_2d_bounding_box,
                 consider_special_tokens=consider_special_tokens,
-                clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
+                clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
                 **kwargs
             )
         else:
@@ -365,7 +365,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             text_embeddings=text_embeddings,
             explanation_2d_bounding_box=explanation_2d_bounding_box,
             consider_special_tokens=consider_special_tokens,
-            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
+            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
             **kwargs
         )
 

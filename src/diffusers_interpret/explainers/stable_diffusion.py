@@ -1,7 +1,5 @@
 import inspect
-from typing import List, Optional, Union, Dict, Any, Tuple
-
-from tqdm.auto import tqdm
+from typing import List, Optional, Union, Tuple
 
 import torch
 from torch.utils.checkpoint import checkpoint
@@ -9,6 +7,7 @@ from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
+from diffusers_interpret.explainer import BaseMimicPipelineCallOutput
 from diffusers_interpret.utils import transform_images_to_pil_format
 
 
@@ -50,15 +49,22 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
         generator: Optional[torch.Generator] = None,
+        latents: Optional[torch.FloatTensor] = None,
         output_type: Optional[str] = 'pil',
+        return_dict: bool = True,
         run_safety_checker: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
-    ) -> Dict[str, Any]:
+    ) -> BaseMimicPipelineCallOutput:
         # TODO: add description
 
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
+
+        if return_dict:
+            raise NotImplementedError(
+                "`return_dict=True` not available in StableDiffusionPipelineExplainer._mimic_pipeline_call"
+            )
 
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
@@ -76,12 +82,22 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             # to avoid doing two forward passes
             text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
 
-        # get the initial random noise
-        latents = torch.randn(
-            (batch_size, self.pipe.unet.in_channels, height // 8, width // 8),
-            generator=generator,
-            device=self.pipe.device,
-        )
+        # get the initial random noise unless the user supplied it
+        # Unlike in other pipelines, latents need to be generated in the target device
+        # for 1-to-1 results reproducibility with the CompVis implementation.
+        # However this currently doesn't work in `mps`.
+        latents_device = "cpu" if self.pipe.device.type == "mps" else self.pipe.device
+        latents_shape = (batch_size, self.pipe.unet.in_channels, height // 8, width // 8)
+        if latents is None:
+            latents = torch.randn(
+                latents_shape,
+                generator=generator,
+                device=latents_device,
+            )
+        else:
+            if latents.shape != latents_shape:
+                raise ValueError(f"Unexpected latents shape, got {latents.shape}, expected {latents_shape}")
+        latents = latents.to(self.pipe.device)
 
         # set timesteps
         accepts_offset = "offset" in set(inspect.signature(self.pipe.scheduler.set_timesteps).parameters.keys())
@@ -104,11 +120,11 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[bool]]:
+        def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[List[bool]]]:
             # scale and decode the image latents with vae
             latents = 1 / 0.18215 * latents
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                image = pipe.vae.decode(latents)
+                image = pipe.vae.decode(latents).sample
             else:
                 image = checkpoint(pipe.vae.decode, latents, use_reentrant=False)
 
@@ -128,12 +144,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             return image, has_nsfw_concept
 
         all_generated_images = [] if get_images_for_all_inference_steps else None
-        for i, t in tqdm(
-            enumerate(self.pipe.scheduler.timesteps),
-            total=len(self.pipe.scheduler.timesteps),
-            desc="Diffusion process",
-            disable=not self.verbose
-        ):
+        for i, t in enumerate(self.progress_bar(self.pipe.scheduler.timesteps, disable=not self.verbose)):
 
             if n_last_diffusion_steps_to_consider_for_attributions:
                 if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
@@ -155,11 +166,11 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
             # predict the noise residual
             if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                noise_pred = self.pipe.unet(latent_model_input, t, text_embeddings)["sample"]
+                noise_pred = self.pipe.unet(latent_model_input, t, text_embeddings).sample
             else:
                 noise_pred = checkpoint(
                     self.pipe.unet.forward, latent_model_input, t, text_embeddings, use_reentrant=False
-                )["sample"]
+                ).sample
 
             # perform guidance
             if do_classifier_free_guidance:
@@ -168,9 +179,9 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
 
             # compute the previous noisy sample x_t -> x_t-1
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):
-                latents = self.pipe.scheduler.step(noise_pred, i, latents, **extra_step_kwargs)["prev_sample"]
+                latents = self.pipe.scheduler.step(noise_pred, i, latents, **extra_step_kwargs).prev_sample
             else:
-                latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs)["prev_sample"]
+                latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
         image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
         if all_generated_images:
@@ -183,8 +194,7 @@ class StableDiffusionPipelineExplainer(BasePipelineExplainer):
             else:
                 image = transform_images_to_pil_format([image], self.pipe)[0]
 
-        return {
-            "sample": image,
-            "nsfw_content_detected": has_nsfw_concept,
-            "all_samples_during_generation": all_generated_images
-        }
+        return  BaseMimicPipelineCallOutput(
+            images=image, nsfw_content_detected=has_nsfw_concept,
+            all_images_during_generation=all_generated_images
+        )

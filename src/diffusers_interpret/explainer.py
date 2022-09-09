@@ -59,7 +59,10 @@ class BasePipelineExplainer(ABC):
     def __init__(self, pipe: DiffusionPipeline, verbose: bool = True, gradient_checkpointing: bool = False) -> None:
         self.pipe = pipe
         self.verbose = verbose
-        self.pipe._progress_bar_config = {**self.pipe._progress_bar_config, 'disable': not verbose}
+        self.pipe._progress_bar_config = {
+            **(getattr(self.pipe, '_progress_bar_config', {}) or {}),
+            'disable': not verbose
+        }
         self.gradient_checkpointing = gradient_checkpointing
         if self.gradient_checkpointing:
             self.gradient_checkpointing_enable()

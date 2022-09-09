@@ -341,6 +341,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             raise TypeError("missing 1 required positional argument: 'init_image'")
 
         kwargs['init_image'] = preprocess(kwargs['init_image'])
+        kwargs['init_image'].required_grad = True
 
         return kwargs
 

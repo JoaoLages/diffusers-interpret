@@ -320,7 +320,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             t_index = t_start + i
 
             if n_last_diffusion_steps_to_consider_for_attributions:
-                if i < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
+                if t_index < len(self.pipe.scheduler.timesteps) - n_last_diffusion_steps_to_consider_for_attributions:
                     torch.set_grad_enabled(False)
                 else:
                     torch.set_grad_enabled(True)

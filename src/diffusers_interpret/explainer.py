@@ -199,6 +199,7 @@ class CorePipelineExplainer(ABC):
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
+        retain_graph: bool = False,
         **kwargs
     ) -> PipelineExplainerOutput:
         if self.verbose:
@@ -206,7 +207,8 @@ class CorePipelineExplainer(ABC):
 
         token_attributions = gradient_x_inputs_attribution(
             pred_logits=output.image, input_embeds=text_embeddings,
-            explanation_2d_bounding_box=explanation_2d_bounding_box
+            explanation_2d_bounding_box=explanation_2d_bounding_box,
+            retain_graph=retain_graph
         ).detach().cpu().numpy()
 
         # remove special tokens
@@ -353,6 +355,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
+        retain_graph: bool = False,
         **kwargs
     ) -> PipelineExplainerOutput:
 
@@ -367,6 +370,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             explanation_2d_bounding_box=explanation_2d_bounding_box,
             consider_special_tokens=consider_special_tokens,
             clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
+            retain_graph=True,
             **kwargs
         )
 
@@ -375,7 +379,8 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
 
         pixel_attributions = gradient_x_inputs_attribution(
             pred_logits=output.image, input_embeds=init_image,
-            explanation_2d_bounding_box=explanation_2d_bounding_box
+            explanation_2d_bounding_box=explanation_2d_bounding_box,
+            retain_graph=retain_graph
         ).detach().cpu().numpy()
 
         import ipdb; ipdb.set_trace()

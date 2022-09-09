@@ -6,7 +6,8 @@ import torch
 def gradient_x_inputs_attribution(
     pred_logits: torch.Tensor,
     input_embeds: torch.Tensor,
-    explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None
+    explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+    retain_graph: bool = False
 ) -> torch.Tensor:
     # TODO: add description
 
@@ -26,7 +27,7 @@ def gradient_x_inputs_attribution(
     tuple_of_pred_logits = tuple(tuple_of_pred_logits)
 
     # get the sum of back-prop gradients for all predictions with respect to the inputs
-    grad = torch.autograd.grad(tuple_of_pred_logits, input_embeds)[0]
+    grad = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)[0]
 
     # Grad X Input
     grad_x_input = grad * input_embeds

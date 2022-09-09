@@ -151,6 +151,7 @@ class CorePipelineExplainer(ABC):
                 explanation_2d_bounding_box=explanation_2d_bounding_box,
                 consider_special_tokens=consider_special_tokens,
                 clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
+                n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
                 **kwargs
             )
         else:
@@ -199,6 +200,7 @@ class CorePipelineExplainer(ABC):
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         retain_graph: bool = False,
         **kwargs
     ) -> PipelineExplainerOutput:
@@ -355,6 +357,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         retain_graph: bool = False,
         **kwargs
     ) -> PipelineExplainerOutput:
@@ -374,13 +377,30 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             **kwargs
         )
 
-        if self.verbose:
-            print("Calculating image pixel attributions... ", end='')
+        if n_last_diffusion_steps_to_consider_for_attributions is not None:
 
-        pixel_attributions = gradient_x_inputs_attribution(
-            pred_logits=output.image, input_embeds=init_image,
-            explanation_2d_bounding_box=explanation_2d_bounding_box,
-            retain_graph=retain_graph
-        ).detach().cpu().numpy()
+            if self.verbose:
+                print("Calculating image pixel attributions... ", end='')
 
-        import ipdb; ipdb.set_trace()
+            pixel_attributions = gradient_x_inputs_attribution(
+                pred_logits=output.image, input_embeds=init_image,
+                explanation_2d_bounding_box=explanation_2d_bounding_box,
+                retain_graph=retain_graph
+            ).detach().cpu().numpy()
+
+            # TODO
+            import ipdb; ipdb.set_trace()
+
+            if self.verbose:
+                print("Done!")
+
+        else:
+            if self.verbose:
+                print(
+                    "Can't calculate image pixel attributions "
+                    "with a specified `n_last_diffusion_steps_to_consider_for_attributions`. "
+                    "Set `n_last_diffusion_steps_to_consider_for_attributions=None` "
+                    "if you wish to calculate image pixel attributions"
+                )
+
+        return output

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
 import torch
-import numpy as np
 from PIL import ImageDraw
 from PIL.Image import Image
 from diffusers import DiffusionPipeline
@@ -32,7 +31,7 @@ class BaseMimicPipelineCallOutput:
     """
     images: Union[List[Image], torch.Tensor]
     nsfw_content_detected: Optional[List[bool]] = None
-    all_images_during_generation: Optional[Union[List[List[Image]]], List[torch.Tensor]] = None
+    all_images_during_generation: Optional[Union[List[List[Image]], List[torch.Tensor]]] = None
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -45,7 +44,7 @@ class BaseMimicPipelineCallOutput:
 class PipelineExplainerOutput:
     image: Union[Image, torch.Tensor]
     nsfw_content_detected: Optional[List[bool]] = None
-    all_images_during_generation: Optional[Union[GeneratedImages], List[torch.Tensor]] = None
+    all_images_during_generation: Optional[Union[GeneratedImages, List[torch.Tensor]]] = None
     token_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
 

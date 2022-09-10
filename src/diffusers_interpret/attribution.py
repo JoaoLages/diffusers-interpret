@@ -40,7 +40,7 @@ def gradient_x_inputs_attribution(
 
     # Turn into a scalar value for each input token by taking L2 norm
     feature_importance = [
-        torch.norm(grad_x_input, dim=-1) if mult else grads_x_input
+        torch.norm(grad_x_input, dim=-1) if mult else grad_x_input
         for grad_x_input, mult in zip(grads_x_input, multiply)
     ]
 

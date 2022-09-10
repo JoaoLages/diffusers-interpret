@@ -408,6 +408,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         attributions = gradient_x_inputs_attribution(
             pred_logits=output.image,
             input_embeds=input_embeds,
+            multiply=[True, False],
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )
         token_attributions = attributions[0].detach().cpu().numpy()
@@ -430,8 +431,11 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             token_attributions=output.token_attributions,
             normalized_token_attributions=output.normalized_token_attributions,
             pixel_attributions=pixel_attributions,
-            normalized_pixel_attributions=None, # TODO
-            pixel_attributions_heatmap=None
+            normalized_pixel_attributions=100 * (pixel_attributions / pixel_attributions.sum()),
+            pixel_attributions_heatmap=None # TODO
         )
+
+        if self.verbose:
+            print("Done!")
 
         return output

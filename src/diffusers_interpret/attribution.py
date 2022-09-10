@@ -6,7 +6,6 @@ import torch
 def gradient_x_inputs_attribution(
     pred_logits: torch.Tensor,
     input_embeds: Tuple[torch.Tensor],
-    multiply: Optional[List[bool]] = None,
     explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
     retain_graph: bool = False
 ) -> List[torch.Tensor]:
@@ -17,7 +16,6 @@ def gradient_x_inputs_attribution(
         upper_left, bottom_right = explanation_2d_bounding_box
         pred_logits = pred_logits[upper_left[0]: bottom_right[0], upper_left[1]: bottom_right[1], :]
 
-    multiply = multiply or [True] * len(input_embeds)
 
     # Construct tuple of scalar tensors with all `pred_logits`
     # The code below is equivalent to `tuple_of_pred_logits = tuple(torch.flatten(pred_logits))`,
@@ -34,14 +32,14 @@ def gradient_x_inputs_attribution(
 
     # Grad X Input
     grads_x_input = [
-        grad * inp if mult else grad
-        for grad, inp, mult in zip(grads, input_embeds, multiply)
+        grad * inp
+        for grad, inp in zip(grads, input_embeds)
     ]
 
     # Turn into a scalar value for each input token by taking L2 norm
     feature_importance = [
-        torch.norm(grad_x_input, dim=-1) if mult else grad_x_input
-        for grad_x_input, mult in zip(grads_x_input, multiply)
+        torch.norm(grad_x_input, dim=-1)
+        for grad_x_input in grads_x_input
     ]
 
     return feature_importance

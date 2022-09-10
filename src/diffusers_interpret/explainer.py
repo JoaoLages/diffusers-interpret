@@ -408,7 +408,6 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         attributions = gradient_x_inputs_attribution(
             pred_logits=output.image,
             input_embeds=input_embeds,
-            multiply=[True, False],
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )
         token_attributions = attributions[0].detach().cpu().numpy()

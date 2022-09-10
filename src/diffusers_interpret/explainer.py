@@ -21,18 +21,18 @@ class BaseMimicPipelineCallOutput:
     Output class for BasePipelineExplainer._mimic_pipeline_call
 
     Args:
-        images (`List[Image]` or `np.ndarray`)
+        images (`List[Image]` or `torch.Tensor`)
             List of denoised PIL images of length `batch_size` or numpy array of shape `(batch_size, height, width,
             num_channels)`. PIL images or numpy array present the denoised images of the diffusion pipeline.
-        nsfw_content_detected (`List[bool]`)
+        nsfw_content_detected (`Optional[List[bool]]`)
             List of flags denoting whether the corresponding generated image likely represents "not-safe-for-work"
             (nsfw) content.
-        all_images_during_generation (`Optional[List[List[Image]]]`)
+        all_images_during_generation (`Optional[Union[List[List[Image]]], List[torch.Tensor]]`)
             A list with all the batch images generated during diffusion
     """
-    images: Union[List[Image], np.ndarray, torch.Tensor]
-    nsfw_content_detected: List[bool]
-    all_images_during_generation: Optional[List[List[Image]]]
+    images: Union[List[Image], torch.Tensor]
+    nsfw_content_detected: Optional[List[bool]] = None
+    all_images_during_generation: Optional[Union[List[List[Image]]], List[torch.Tensor]] = None
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -43,9 +43,9 @@ class BaseMimicPipelineCallOutput:
 
 @dataclass
 class PipelineExplainerOutput:
-    image: Union[Image, np.ndarray, torch.Tensor]
-    nsfw_content_detected: List[bool]
-    all_images_during_generation: Optional[GeneratedImages]
+    image: Union[Image, torch.Tensor]
+    nsfw_content_detected: Optional[List[bool]] = None
+    all_images_during_generation: Optional[Union[GeneratedImages], List[torch.Tensor]] = None
     token_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
 

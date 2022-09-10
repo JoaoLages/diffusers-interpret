@@ -11,6 +11,35 @@ from diffusers_interpret.explainer import BaseMimicPipelineCallOutput, BasePipel
 from diffusers_interpret.utils import transform_images_to_pil_format
 
 
+def decode_latents(
+    latents: torch.Tensor,
+    pipe: Union[StableDiffusionImg2ImgPipeline, StableDiffusionPipeline],
+    gradient_checkpointing: bool,
+    run_safety_checker: bool
+) -> Tuple[torch.Tensor, Optional[List[bool]]]:
+    # scale and decode the image latents with vae
+    latents = 1 / 0.18215 * latents
+    if not gradient_checkpointing or not torch.is_grad_enabled():
+        image = pipe.vae.decode(latents.to(pipe.vae.dtype)).sample
+    else:
+        image = checkpoint(pipe.vae.decode, latents.to(pipe.vae.dtype), use_reentrant=False).sample
+
+    image = (image / 2 + 0.5).clamp(0, 1)
+    image = image.permute(0, 2, 3, 1)
+
+    has_nsfw_concept = None
+    if run_safety_checker:
+        image = image.detach().cpu().numpy()
+        safety_cheker_input = pipe.feature_extractor(
+            pipe.numpy_to_pil(image), return_tensors="pt"
+        ).to(pipe.device)
+        image, has_nsfw_concept = pipe.safety_checker(
+            images=image, clip_input=safety_cheker_input.pixel_values
+        )
+
+    return image, has_nsfw_concept
+
+
 class BaseStableDiffusionPipelineExplainer(BasePipelineExplainer):
     pipe: Union[StableDiffusionPipeline, StableDiffusionImg2ImgPipeline]
 
@@ -125,29 +154,6 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        def decode_latents(latents: torch.Tensor, pipe: StableDiffusionPipeline) -> Tuple[torch.Tensor, Optional[List[bool]]]:
-            # scale and decode the image latents with vae
-            latents = 1 / 0.18215 * latents
-            if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                image = pipe.vae.decode(latents).sample
-            else:
-                image = checkpoint(pipe.vae.decode, latents, use_reentrant=False).sample
-
-            image = (image / 2 + 0.5).clamp(0, 1)
-            image = image.permute(0, 2, 3, 1)
-
-            has_nsfw_concept = None
-            if run_safety_checker:
-                image = image.detach().cpu().numpy()
-                safety_cheker_input = pipe.feature_extractor(
-                    pipe.numpy_to_pil(image), return_tensors="pt"
-                ).to(pipe.device)
-                image, has_nsfw_concept = pipe.safety_checker(
-                    images=image, clip_input=safety_cheker_input.pixel_values
-                )
-
-            return image, has_nsfw_concept
-
         all_generated_images = [] if get_images_for_all_inference_steps else None
         for i, t in enumerate(self.pipe.progress_bar(self.pipe.scheduler.timesteps)):
 
@@ -160,7 +166,10 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
             # decode latents
             if get_images_for_all_inference_steps:
                 with torch.no_grad():
-                    image, _ = decode_latents(latents=latents, pipe=self.pipe)
+                    image, _ = decode_latents(
+                        latents=latents, pipe=self.pipe,
+                        gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
+                    )
                     all_generated_images.append(image)
 
             # expand the latents if we are doing classifier free guidance
@@ -188,7 +197,10 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
             else:
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
-        image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
+        image, has_nsfw_concept = decode_latents(
+            latents=latents, pipe=self.pipe,
+            gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
+        )
         if all_generated_images:
             all_generated_images.append(image)
 
@@ -241,6 +253,9 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
 
         self.pipe.scheduler.set_timesteps(num_inference_steps, **extra_set_kwargs)
 
+        # save all generated images during diffusion
+        all_generated_images = [init_image] if get_images_for_all_inference_steps else None
+
         # encode the init image into latents and scale the latents
         init_latent_dist = self.pipe.vae.encode(init_image).latent_dist
         init_latents = init_latent_dist.sample(generator=generator)
@@ -248,6 +263,15 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
 
         # expand init_latents for batch_size
         init_latents = torch.cat([init_latents] * batch_size)
+
+        if get_images_for_all_inference_steps:
+            # Add first VAE encoding of the image
+            with torch.no_grad():
+                image, _ = decode_latents(
+                    latents=init_latents, pipe=self.pipe,
+                    gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
+                )
+                all_generated_images.append(image)
 
         # get the original timestep using init_timestep
         init_timestep = int(num_inference_steps * strength) + offset
@@ -290,31 +314,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         if accepts_eta:
             extra_step_kwargs["eta"] = eta
 
-        def decode_latents(latents: torch.Tensor, pipe: StableDiffusionImg2ImgPipeline) -> Tuple[torch.Tensor, Optional[List[bool]]]:
-            # scale and decode the image latents with vae
-            latents = 1 / 0.18215 * latents
-            if not self.gradient_checkpointing or not torch.is_grad_enabled():
-                image = pipe.vae.decode(latents.to(self.pipe.vae.dtype)).sample
-            else:
-                image = checkpoint(pipe.vae.decode, latents.to(self.pipe.vae.dtype), use_reentrant=False).sample
-
-            image = (image / 2 + 0.5).clamp(0, 1)
-            image = image.permute(0, 2, 3, 1)
-
-            has_nsfw_concept = None
-            if run_safety_checker:
-                image = image.detach().cpu().numpy()
-                safety_cheker_input = pipe.feature_extractor(
-                    pipe.numpy_to_pil(image), return_tensors="pt"
-                ).to(pipe.device)
-                image, has_nsfw_concept = pipe.safety_checker(
-                    images=image, clip_input=safety_cheker_input.pixel_values
-                )
-
-            return image, has_nsfw_concept
-
         latents = init_latents
-        all_generated_images = [] if get_images_for_all_inference_steps else None
         t_start = max(num_inference_steps - init_timestep + offset, 0)
         for i, t in enumerate(self.pipe.progress_bar(self.pipe.scheduler.timesteps[t_start:])):
             t_index = t_start + i
@@ -328,7 +328,10 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             # decode latents
             if get_images_for_all_inference_steps:
                 with torch.no_grad():
-                    image, _ = decode_latents(latents=latents, pipe=self.pipe)
+                    image, _ = decode_latents(
+                        latents=latents, pipe=self.pipe,
+                        gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
+                    )
                     all_generated_images.append(image)
 
             # expand the latents if we are doing classifier free guidance
@@ -361,7 +364,10 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             else:
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
-        image, has_nsfw_concept = decode_latents(latents=latents, pipe=self.pipe)
+        image, has_nsfw_concept = decode_latents(
+            latents=latents, pipe=self.pipe,
+            gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
+        )
         if all_generated_images:
             all_generated_images.append(image)
 

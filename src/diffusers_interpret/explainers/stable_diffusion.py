@@ -253,8 +253,9 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
 
         self.pipe.scheduler.set_timesteps(num_inference_steps, **extra_set_kwargs)
 
-        # save all generated images during diffusion
-        all_generated_images = [init_image.permute(0, 2, 3, 1)] if get_images_for_all_inference_steps else None
+        # save all generated images during diffusion, if get_images_for_all_inference_steps
+        all_generated_images = [(init_image / 2 + 0.5).clamp(0, 1).permute(0, 2, 3, 1)] \
+            if get_images_for_all_inference_steps else None
 
         # encode the init image into latents and scale the latents
         init_latent_dist = self.pipe.vae.encode(init_image).latent_dist

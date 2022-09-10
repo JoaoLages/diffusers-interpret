@@ -377,7 +377,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             **kwargs
         )
 
-        if n_last_diffusion_steps_to_consider_for_attributions is not None:
+        if n_last_diffusion_steps_to_consider_for_attributions is None:
 
             if self.verbose:
                 print("Calculating image pixel attributions... ", end='')

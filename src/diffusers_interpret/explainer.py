@@ -9,7 +9,7 @@ from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import preprocess
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
-from diffusers_interpret.attribution import gradient_x_inputs_attribution
+from diffusers_interpret.attribution import gradients_attribution
 from diffusers_interpret.generated_images import GeneratedImages
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
@@ -251,7 +251,7 @@ class CorePipelineExplainer(ABC):
         if self.verbose:
             print("Calculating token attributions... ", end='')
 
-        token_attributions = gradient_x_inputs_attribution(
+        token_attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=(text_embeddings,),
             explanation_2d_bounding_box=explanation_2d_bounding_box
@@ -405,15 +405,17 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
                 )
                 print("Calculating token attributions... ", end='')
 
-        attributions = gradient_x_inputs_attribution(
+        attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=input_embeds,
+            multiply=[True, False],
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )
         token_attributions = attributions[0].detach().cpu().numpy()
         pixel_attributions = None
         if n_last_diffusion_steps_to_consider_for_attributions is None:
             pixel_attributions = attributions[1].detach().cpu().numpy()
+            pixel_attributions = pixel_attributions.max(-1) # get maximum value on channel dimension
 
         output = self._post_process_token_attributions(
             output=output,

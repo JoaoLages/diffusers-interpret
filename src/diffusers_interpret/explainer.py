@@ -55,6 +55,13 @@ class PipelineExplainerOutput:
         setattr(self, key, value)
 
 
+@dataclass
+class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
+    pixel_attributions: Optional[List[Tuple[str, float]]] = None
+    normalized_pixel_attributions: Optional[List[Tuple[str, float]]] = None
+    pixel_attributions_heatmap = None #TODO: add typing
+
+
 class CorePipelineExplainer(ABC):
     """
     Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines
@@ -86,7 +93,7 @@ class CorePipelineExplainer(ABC):
         get_images_for_all_inference_steps: bool = True,
         output_type: Optional[str] = 'pil',
         **kwargs
-    ) -> PipelineExplainerOutput:
+    ) -> Union[PipelineExplainerOutput, PipelineImg2ImgExplainerOutput]:
         # TODO: add description
 
         if attribution_method != 'grad_x_input':
@@ -159,8 +166,9 @@ class CorePipelineExplainer(ABC):
 
         if batch_size == 1:
             # squash batch dimension
-            for k in ['image', 'token_attributions', 'normalized_token_attributions']:
-                if output[k] is not None:
+            for k in ['image', 'token_attributions', 'normalized_token_attributions', 'pixel_attributions',
+                      'normalized_pixel_attributions', 'pixel_attributions_heatmap']:
+                if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
                 output.all_images_during_generation = [b[0] for b in output.all_images_during_generation]
@@ -375,22 +383,37 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         **kwargs
-    ) -> PipelineExplainerOutput:
+    ) -> PipelineImg2ImgExplainerOutput:
 
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
         init_image: torch.Tensor = kwargs['init_image']
 
-        if self.verbose:
-            print("Calculating token and image pixel attributions... ", end='')
+        input_embeds = (text_embeddings,)
+        if n_last_diffusion_steps_to_consider_for_attributions is None:
+            input_embeds = (text_embeddings, init_image)
 
-        (token_attributions, pixel_attributions) = gradient_x_inputs_attribution(
+        if self.verbose:
+            if n_last_diffusion_steps_to_consider_for_attributions is None:
+                print("Calculating token and image pixel attributions... ", end='')
+            else:
+                print(
+                    "Can't calculate image pixel attributions "
+                    "with a specified `n_last_diffusion_steps_to_consider_for_attributions`. "
+                    "Set `n_last_diffusion_steps_to_consider_for_attributions=None` "
+                    "if you wish to calculate image pixel attributions"
+                )
+                print("Calculating token attributions... ", end='')
+
+        attributions = gradient_x_inputs_attribution(
             pred_logits=output.image,
-            input_embeds=(text_embeddings, init_image),
+            input_embeds=input_embeds,
             explanation_2d_bounding_box=explanation_2d_bounding_box,
-        )#[0].detach().cpu().numpy()
-        token_attributions = token_attributions.detach().cpu().numpy()
-        pixel_attributions = pixel_attributions.detach().cpu().numpy()
+        )
+        token_attributions = attributions[0].detach().cpu().numpy()
+        pixel_attributions = None
+        if n_last_diffusion_steps_to_consider_for_attributions is None:
+            pixel_attributions = attributions[1].detach().cpu().numpy()
 
         output = self._post_process_token_attributions(
             output=output,
@@ -400,22 +423,15 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
         )
 
-        import ipdb; ipdb.set_trace()
-
-        if self.verbose:
-            print("Done!")
-
-
-
-            if self.verbose:
-                print("Done!")
-
-            if self.verbose:
-                print(
-                    "Can't calculate image pixel attributions "
-                    "with a specified `n_last_diffusion_steps_to_consider_for_attributions`. "
-                    "Set `n_last_diffusion_steps_to_consider_for_attributions=None` "
-                    "if you wish to calculate image pixel attributions"
-                )
+        output = PipelineImg2ImgExplainerOutput(
+            image=output.image,
+            nsfw_content_detected=output.nsfw_content_detected,
+            all_images_during_generation=output.all_images_during_generation,
+            token_attributions=output.token_attributions,
+            normalized_token_attributions=output.normalized_token_attributions,
+            pixel_attributions=pixel_attributions,
+            normalized_pixel_attributions=None, # TODO
+            pixel_attributions_heatmap=None
+        )
 
         return output

@@ -59,7 +59,7 @@ class PipelineExplainerOutput:
 class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
     pixel_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_pixel_attributions: Optional[List[Tuple[str, float]]] = None
-    pixel_attributions_heatmap = None #TODO: add typing
+    pixel_attributions_heatmap: Optional[Any] = None #TODO: add typing
 
 
 class CorePipelineExplainer(ABC):

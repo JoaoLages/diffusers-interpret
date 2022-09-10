@@ -142,19 +142,20 @@ class CorePipelineExplainer(ABC):
             )
 
         # Calculate primary attribution scores
-        if calculate_attributions and attribution_method == 'grad_x_input':
-            output = self._get_attributions(
-                output=output,
-                tokens=tokens,
-                text_embeddings=text_embeddings,
-                explanation_2d_bounding_box=explanation_2d_bounding_box,
-                consider_special_tokens=consider_special_tokens,
-                clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
-                n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
-                **kwargs
-            )
-        else:
-            raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+        if calculate_attributions:
+            if attribution_method == 'grad_x_input':
+                output = self._get_attributions(
+                    output=output,
+                    tokens=tokens,
+                    text_embeddings=text_embeddings,
+                    explanation_2d_bounding_box=explanation_2d_bounding_box,
+                    consider_special_tokens=consider_special_tokens,
+                    clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
+                    n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
+                    **kwargs
+                )
+            else:
+                raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
 
         if batch_size == 1:
             # squash batch dimension

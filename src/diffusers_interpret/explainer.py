@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
 import torch
@@ -10,56 +9,10 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img impo
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradients_attribution
+from diffusers_interpret.data import PipelineExplainerOutput, PipelineImg2ImgExplainerOutput, \
+    BaseMimicPipelineCallOutput, AttributionMethod
 from diffusers_interpret.generated_images import GeneratedImages
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
-
-
-@dataclass
-class BaseMimicPipelineCallOutput:
-    """
-    Output class for BasePipelineExplainer._mimic_pipeline_call
-
-    Args:
-        images (`List[Image]` or `torch.Tensor`)
-            List of denoised PIL images of length `batch_size` or numpy array of shape `(batch_size, height, width,
-            num_channels)`. PIL images or numpy array present the denoised images of the diffusion pipeline.
-        nsfw_content_detected (`Optional[List[bool]]`)
-            List of flags denoting whether the corresponding generated image likely represents "not-safe-for-work"
-            (nsfw) content.
-        all_images_during_generation (`Optional[Union[List[List[Image]]], List[torch.Tensor]]`)
-            A list with all the batch images generated during diffusion
-    """
-    images: Union[List[Image], torch.Tensor]
-    nsfw_content_detected: Optional[List[bool]] = None
-    all_images_during_generation: Optional[Union[List[List[Image]], List[torch.Tensor]]] = None
-
-    def __getitem__(self, item):
-        return getattr(self, item)
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-
-@dataclass
-class PipelineExplainerOutput:
-    image: Union[Image, torch.Tensor]
-    nsfw_content_detected: Optional[List[bool]] = None
-    all_images_during_generation: Optional[Union[GeneratedImages, List[torch.Tensor]]] = None
-    token_attributions: Optional[List[Tuple[str, float]]] = None
-    normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
-
-    def __getitem__(self, item):
-        return getattr(self, item)
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-
-@dataclass
-class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
-    pixel_attributions: Optional[List[Tuple[str, float]]] = None
-    normalized_pixel_attributions: Optional[List[Tuple[str, float]]] = None
-    pixel_attributions_heatmap: Optional[Any] = None #TODO: add typing
 
 
 class CorePipelineExplainer(ABC):
@@ -84,7 +37,7 @@ class CorePipelineExplainer(ABC):
     def __call__(
         self,
         prompt: str,
-        attribution_method: str = 'grad_x_input',
+        attribution_method: Union[str, AttributionMethod] = None,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
@@ -96,8 +49,17 @@ class CorePipelineExplainer(ABC):
     ) -> Union[PipelineExplainerOutput, PipelineImg2ImgExplainerOutput]:
         # TODO: add description
 
-        if attribution_method != 'grad_x_input':
-            raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+        attribution_method = attribution_method or AttributionMethod()
+
+        if isinstance(attribution_method, str):
+            attribution_method = AttributionMethod(
+                tokens_attribution_method=attribution_method,
+                pixels_attribution_method=attribution_method
+            )
+
+        if attribution_method.tokens_attribution_method not in ['grad_x_input', 'max_grad'] \
+                or attribution_method.pixels_attribution_method not in ['grad_x_input', 'max_grad']:
+            raise NotImplementedError("Only 'grad_x_input' or 'max_grad' are implemented for `attribution_method`")
 
         if isinstance(prompt, str):
             batch_size = 1 # TODO: make compatible with bigger batch sizes
@@ -150,19 +112,17 @@ class CorePipelineExplainer(ABC):
 
         # Calculate primary attribution scores
         if calculate_attributions:
-            if attribution_method == 'grad_x_input':
-                output = self._get_attributions(
-                    output=output,
-                    tokens=tokens,
-                    text_embeddings=text_embeddings,
-                    explanation_2d_bounding_box=explanation_2d_bounding_box,
-                    consider_special_tokens=consider_special_tokens,
-                    clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
-                    n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
-                    **kwargs
-                )
-            else:
-                raise NotImplementedError("Only `attribution_method='grad_x_input'` is implemented for now")
+            output = self._get_attributions(
+                output=output,
+                attribution_method=attribution_method,
+                tokens=tokens,
+                text_embeddings=text_embeddings,
+                explanation_2d_bounding_box=explanation_2d_bounding_box,
+                consider_special_tokens=consider_special_tokens,
+                clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
+                n_last_diffusion_steps_to_consider_for_attributions=n_last_diffusion_steps_to_consider_for_attributions,
+                **kwargs
+            )
 
         if batch_size == 1:
             # squash batch dimension
@@ -240,6 +200,7 @@ class CorePipelineExplainer(ABC):
     def _get_attributions(
         self,
         output: PipelineExplainerOutput,
+        attribution_method: AttributionMethod,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
@@ -254,8 +215,12 @@ class CorePipelineExplainer(ABC):
         token_attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=(text_embeddings,),
+            multiply=[attribution_method.tokens_attribution_method == 'grad_x_input'],
             explanation_2d_bounding_box=explanation_2d_bounding_box
         )[0].detach().cpu().numpy()
+
+        if attribution_method.tokens_attribution_method == 'max_grad':
+            token_attributions = token_attributions.max(-1)
 
         output = self._post_process_token_attributions(
             output=output,
@@ -376,6 +341,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
     def _get_attributions(
         self,
         output: PipelineExplainerOutput,
+        attribution_method: AttributionMethod,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
@@ -408,14 +374,22 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=input_embeds,
-            multiply=[True, False],
+            multiply=[
+                attribution_method.tokens_attribution_method == 'grad_x_input',
+                attribution_method.pixels_attribution_method == 'grad_x_input',
+            ],
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )
+
         token_attributions = attributions[0].detach().cpu().numpy()
+        if attribution_method.tokens_attribution_method == 'max_grad':
+            token_attributions = token_attributions.max(-1)
+
         pixel_attributions = None
         if n_last_diffusion_steps_to_consider_for_attributions is None:
             pixel_attributions = attributions[1].detach().cpu().numpy()
-            pixel_attributions = pixel_attributions.max(-1) # get maximum value on channel dimension
+            if attribution_method.pixels_attribution_method == 'max_grad':
+                pixel_attributions = pixel_attributions.max(-1) # get maximum value on channel dimension
 
         output = self._post_process_token_attributions(
             output=output,

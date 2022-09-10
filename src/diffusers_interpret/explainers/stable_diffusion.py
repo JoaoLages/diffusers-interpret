@@ -265,15 +265,6 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         # expand init_latents for batch_size
         init_latents = torch.cat([init_latents] * batch_size)
 
-        if get_images_for_all_inference_steps:
-            # Add first VAE encoding of the image
-            with torch.no_grad():
-                image, _ = decode_latents(
-                    latents=init_latents, pipe=self.pipe,
-                    gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
-                )
-                all_generated_images.append(image)
-
         # get the original timestep using init_timestep
         init_timestep = int(num_inference_steps * strength) + offset
         init_timestep = min(init_timestep, num_inference_steps)

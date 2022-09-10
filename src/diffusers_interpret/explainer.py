@@ -192,27 +192,14 @@ class CorePipelineExplainer(ABC):
 
         return output
 
-    def _get_attributions(
+    def _post_process_token_attributions(
         self,
         output: PipelineExplainerOutput,
         tokens: List[List[str]],
-        text_embeddings: torch.Tensor,
-        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
-        consider_special_tokens: bool = False,
-        clean_token_prefixes_and_suffixes: bool = True,
-        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
-        retain_graph: bool = False,
-        **kwargs
+        token_attributions: torch.Tensor,
+        consider_special_tokens: bool,
+        clean_token_prefixes_and_suffixes: bool
     ) -> PipelineExplainerOutput:
-        if self.verbose:
-            print("Calculating token attributions... ", end='')
-
-        token_attributions = gradient_x_inputs_attribution(
-            pred_logits=output.image, input_embeds=text_embeddings,
-            explanation_2d_bounding_box=explanation_2d_bounding_box,
-            retain_graph=retain_graph
-        ).detach().cpu().numpy()
-
         # remove special tokens
         assert len(token_attributions) == len(tokens)
         output.token_attributions = []
@@ -240,6 +227,35 @@ class CorePipelineExplainer(ABC):
                     for token, attr in output.token_attributions[-1]
                 ]
             )
+        return output
+
+    def _get_attributions(
+        self,
+        output: PipelineExplainerOutput,
+        tokens: List[List[str]],
+        text_embeddings: torch.Tensor,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        consider_special_tokens: bool = False,
+        clean_token_prefixes_and_suffixes: bool = True,
+        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
+        **kwargs
+    ) -> PipelineExplainerOutput:
+        if self.verbose:
+            print("Calculating token attributions... ", end='')
+
+        token_attributions = gradient_x_inputs_attribution(
+            pred_logits=output.image,
+            input_embeds=(text_embeddings,),
+            explanation_2d_bounding_box=explanation_2d_bounding_box
+        )[0].detach().cpu().numpy()
+
+        output = self._post_process_token_attributions(
+            output=output,
+            tokens=tokens,
+            token_attributions=token_attributions,
+            consider_special_tokens=consider_special_tokens,
+            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
+        )
 
         if self.verbose:
             print("Done!")
@@ -358,43 +374,42 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
-        retain_graph: bool = False,
         **kwargs
     ) -> PipelineExplainerOutput:
 
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
-        init_image = kwargs['init_image']
+        init_image: torch.Tensor = kwargs['init_image']
 
-        output = super()._get_attributions(
+        if self.verbose:
+            print("Calculating token and image pixel attributions... ", end='')
+
+        (token_attributions, pixel_attributions) = gradient_x_inputs_attribution(
+            pred_logits=output.image,
+            input_embeds=(text_embeddings, init_image.permute(0, 2, 3, 1)),
+            explanation_2d_bounding_box=explanation_2d_bounding_box,
+        )#[0].detach().cpu().numpy()
+        token_attributions = token_attributions.detach().cpu().numpy()
+        pixel_attributions = pixel_attributions.detach().cpu().numpy()
+
+        output = self._post_process_token_attributions(
             output=output,
             tokens=tokens,
-            text_embeddings=text_embeddings,
-            explanation_2d_bounding_box=explanation_2d_bounding_box,
+            token_attributions=token_attributions,
             consider_special_tokens=consider_special_tokens,
-            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
-            retain_graph=True,
-            **kwargs
+            clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
         )
 
-        if n_last_diffusion_steps_to_consider_for_attributions is None:
+        import ipdb; ipdb.set_trace()
 
-            if self.verbose:
-                print("Calculating image pixel attributions... ", end='')
+        if self.verbose:
+            print("Done!")
 
-            pixel_attributions = gradient_x_inputs_attribution(
-                pred_logits=output.image, input_embeds=init_image,
-                explanation_2d_bounding_box=explanation_2d_bounding_box,
-                retain_graph=retain_graph
-            ).detach().cpu().numpy()
 
-            # TODO
-            import ipdb; ipdb.set_trace()
 
             if self.verbose:
                 print("Done!")
 
-        else:
             if self.verbose:
                 print(
                     "Can't calculate image pixel attributions "

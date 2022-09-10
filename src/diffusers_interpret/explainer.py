@@ -360,7 +360,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
 
-        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device)
+        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
         kwargs['init_image'].requires_grad = True
 
         return kwargs
@@ -386,7 +386,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
 
         (token_attributions, pixel_attributions) = gradient_x_inputs_attribution(
             pred_logits=output.image,
-            input_embeds=(text_embeddings, init_image.permute(0, 2, 3, 1)),
+            input_embeds=(text_embeddings, init_image),
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )#[0].detach().cpu().numpy()
         token_attributions = token_attributions.detach().cpu().numpy()

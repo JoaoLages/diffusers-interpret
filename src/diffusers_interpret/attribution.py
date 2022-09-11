@@ -32,11 +32,12 @@ def gradients_attribution(
     tuple_of_pred_logits = tuple(tuple_of_pred_logits)
 
     # get the sum of back-prop gradients for all predictions with respect to the inputs
-    grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=True)
-    if torch.isnan(grads[-1]).any():
-        with torch.autocast('cuda', enabled=False):
-            grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=True)
-        import ipdb; ipdb.set_trace()
+    if torch.is_autocast_enabled():
+        # FP16 causes NaN loss https://github.com/pytorch/pytorch/issues/40497
+        with torch.autocast(input_embeds.device, enabled=False):
+            grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
+    else:
+        grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
 
     # Aggregate
     aggregated_grads = []

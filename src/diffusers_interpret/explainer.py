@@ -400,6 +400,13 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         # removes preprocessing done in diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.preprocess
         init_image = (init_image + 1.0) / 2.0
 
+        # get masks and add batch dimension if needed
+        masks = kwargs.get('mask_image')
+        if isinstance(masks, Image):
+            masks = [masks]
+        elif torch.is_tensor(masks) and len(masks.shape) == 3:
+            masks = masks.unsqueeze(0)
+
         normalized_pixel_attributions = 100 * (pixel_attributions / pixel_attributions.sum())
         output = PipelineImg2ImgExplainerOutput(
             image=output.image,
@@ -412,7 +419,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             input_saliency_map=SaliencyMap(
                 images=init_image.detach().cpu().numpy(),
                 pixel_attributions=pixel_attributions,
-                masks=kwargs.get('mask_image')
+                masks=masks
             )
         )
 

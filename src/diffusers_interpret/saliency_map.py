@@ -5,18 +5,14 @@ from matplotlib import pyplot as plt
 
 
 class SaliencyMap:
-    def __init__(
-        self,
-        images: np.ndarray,
-        normalized_pixel_attributions: np.ndarray
-    ):
-        assert len(images) == len(normalized_pixel_attributions)
+    def __init__(self, images: np.ndarray, pixel_attributions: np.ndarray):
+        assert len(images) == len(pixel_attributions)
         self.imgs = np.float32(images)
-        self.normalized_pixel_attributions = normalized_pixel_attributions
+        self.pixel_attributions = pixel_attributions
 
     def show(self, cmap='jet', image_weight=0.5, tight=True, **kwargs) -> None:
-        for img, attrs in zip(self.imgs, self.normalized_pixel_attributions):
-            saliency_map = cv2.applyColorMap(np.uint8(255.0 * attrs), cmapy.cmap(cmap))
+        for img, attrs in zip(self.imgs, self.pixel_attributions):
+            saliency_map = cv2.applyColorMap(np.uint8(attrs), cmapy.cmap(cmap))
             saliency_map = cv2.cvtColor(saliency_map, cv2.COLOR_BGR2RGB)
             saliency_map = np.float32(saliency_map) / 255.0
 

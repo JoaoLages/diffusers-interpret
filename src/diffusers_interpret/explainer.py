@@ -410,7 +410,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             normalized_pixel_attributions=normalized_pixel_attributions,
             input_saliency_map=SaliencyMap(
                 images=init_image.detach().cpu().numpy(),
-                normalized_pixel_attributions=normalized_pixel_attributions
+                pixel_attributions=pixel_attributions
             )
         )
 

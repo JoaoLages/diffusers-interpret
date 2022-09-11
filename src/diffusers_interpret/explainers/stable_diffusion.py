@@ -272,7 +272,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         mask = None
         if mask_image is not None:
             # preprocess mask
-            mask = preprocess_mask(mask_image).to(self.device)
+            mask = preprocess_mask(mask_image).to(self.pipe.device)
             mask = torch.cat([mask] * batch_size)
 
             # check sizes

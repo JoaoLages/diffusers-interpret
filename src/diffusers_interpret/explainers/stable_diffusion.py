@@ -9,8 +9,7 @@ from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, StableDiffu
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
-from diffusers_interpret.explainer import BaseMimicPipelineCallOutput, BasePipelineImg2ImgExplainer, \
-    BasePipelineInpaintExplainer
+from diffusers_interpret.explainer import BaseMimicPipelineCallOutput, BasePipelineImg2ImgExplainer
 from diffusers_interpret.utils import transform_images_to_pil_format
 
 

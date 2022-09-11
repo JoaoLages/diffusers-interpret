@@ -3,7 +3,6 @@ from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
 import torch
 from PIL import ImageDraw
-from PIL.Image import Image
 from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import preprocess
 from transformers import BatchEncoding, PreTrainedTokenizerBase

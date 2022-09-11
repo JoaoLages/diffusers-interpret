@@ -33,7 +33,7 @@ def gradients_attribution(
 
     # get the sum of back-prop gradients for all predictions with respect to the inputs
     grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=True)
-    if torch.isnan([-1]).any():
+    if torch.isnan(grads[-1]).any():
         import ipdb; ipdb.set_trace()
 
     # Aggregate

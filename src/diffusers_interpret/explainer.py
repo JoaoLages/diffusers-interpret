@@ -89,7 +89,7 @@ class CorePipelineExplainer(ABC):
             torch.set_grad_enabled(True)
 
         # Get prediction with their associated gradients
-        output = self._mimic_pipeline_call(
+        output: BaseMimicPipelineCallOutput = self._mimic_pipeline_call(
             text_input=text_input,
             text_embeddings=text_embeddings,
             batch_size=batch_size,
@@ -101,7 +101,7 @@ class CorePipelineExplainer(ABC):
         )
 
         # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput
-        output = PipelineExplainerOutput(
+        output: PipelineExplainerOutput = PipelineExplainerOutput(
             image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
             all_images_during_generation=output.all_images_during_generation
         )
@@ -114,7 +114,7 @@ class CorePipelineExplainer(ABC):
 
         # Calculate primary attribution scores
         if calculate_attributions:
-            output = self._get_attributions(
+            output: Union[PipelineExplainerOutput, PipelineImg2ImgExplainerOutput] = self._get_attributions(
                 output=output,
                 attribution_method=attribution_method,
                 tokens=tokens,
@@ -128,12 +128,15 @@ class CorePipelineExplainer(ABC):
 
         if batch_size == 1:
             # squash batch dimension
-            for k in ['image', 'token_attributions', 'normalized_token_attributions', 'pixel_attributions',
+            for k in ['token_attributions', 'normalized_token_attributions', 'pixel_attributions',
                       'normalized_pixel_attributions']:
                 if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
                 output.all_images_during_generation = [b[0] for b in output.all_images_during_generation]
+            if getattr(output, 'saliency_map'):
+                output: PipelineImg2ImgExplainerOutput
+                output.saliency_map.normalized_pixel_attributions = output.saliency_map.normalized_pixel_attributions[0]
 
         else:
             raise NotImplementedError

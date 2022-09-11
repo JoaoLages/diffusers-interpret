@@ -34,10 +34,18 @@ def gradients_attribution(
     # get the sum of back-prop gradients for all predictions with respect to the inputs
     if torch.is_autocast_enabled():
         # FP16 may cause NaN gradients https://github.com/pytorch/pytorch/issues/40497
+        # TODO: this is still an issue, the code below does not solve it
         with torch.autocast(input_embeds[0].device.type, enabled=False):
             grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
     else:
         grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
+
+    if torch.isnan(grads[-1]).any():
+        raise RuntimeError(
+            "Found NaNs when calculating gradients. "
+            "This is a known issue of FP16 (https://github.com/pytorch/pytorch/issues/40497).\n"
+            "Try to rerun the code or deactivate FP16 to not face this issue again."
+        )
 
     # Aggregate
     aggregated_grads = []

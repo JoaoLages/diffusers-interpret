@@ -38,10 +38,8 @@ class SaliencyMap:
             ax[2].axis('off')
             ax[2].title.set_text('Image Overlayed')
 
-            ax[3].imshow(np.array([[0,1]]), cmap=cmap)
+            ax[3].imshow(np.array([0,0.25,0.5,0.75,1]), cmap=cmap, aspect='auto', origin="lower")
             ax[3].axis('off')
-            ax[3].set_visible(False)
-            plt.colorbar(ax=ax[3], orientation="vertical")
 
             if tight:
                 plt.tight_layout()

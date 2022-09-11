@@ -220,7 +220,7 @@ class CorePipelineExplainer(ABC):
         token_attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=(text_embeddings,),
-            multiply=[attribution_method.tokens_attribution_method == 'grad_x_input'],
+            attribution_algorithms=[attribution_method.tokens_attribution_method],
             explanation_2d_bounding_box=explanation_2d_bounding_box
         )[0].detach().cpu().numpy()
 
@@ -379,9 +379,8 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=input_embeds,
-            multiply=[
-                attribution_method.tokens_attribution_method == 'grad_x_input',
-                attribution_method.pixels_attribution_method == 'grad_x_input',
+            attribution_algorithms=[
+                attribution_method.tokens_attribution_method, attribution_method.pixels_attribution_method
             ],
             explanation_2d_bounding_box=explanation_2d_bounding_box,
         )

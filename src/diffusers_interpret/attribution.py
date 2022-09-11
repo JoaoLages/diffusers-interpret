@@ -2,11 +2,13 @@ from typing import Tuple, Optional, List
 
 import torch
 
+from diffusers_interpret.data import AttributionAlgorithm
+
 
 def gradients_attribution(
     pred_logits: torch.Tensor,
     input_embeds: Tuple[torch.Tensor],
-    multiply: Optional[List[bool]] = None,
+    attribution_algorithms: List[AttributionAlgorithm],
     explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
     retain_graph: bool = False
 ) -> List[torch.Tensor]:
@@ -17,8 +19,7 @@ def gradients_attribution(
         upper_left, bottom_right = explanation_2d_bounding_box
         pred_logits = pred_logits[upper_left[0]: bottom_right[0], upper_left[1]: bottom_right[1], :]
 
-    multiply = multiply or [True] * len(input_embeds)
-    assert len(input_embeds) == len(multiply)
+    assert len(input_embeds) == len(attribution_algorithms)
 
     # Construct tuple of scalar tensors with all `pred_logits`
     # The code below is equivalent to `tuple_of_pred_logits = tuple(torch.flatten(pred_logits))`,
@@ -33,16 +34,19 @@ def gradients_attribution(
     # get the sum of back-prop gradients for all predictions with respect to the inputs
     grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
 
-    # Grad X Input
-    grads_x_input = [
-        grad * inp if mult else grad
-        for grad, inp, mult in zip(grads, input_embeds, multiply)
-    ]
+    # Aggregate
+    aggregated_grads = []
+    for grad, inp, attr_alg in zip(grads, input_embeds, attribution_algorithms):
 
-    # Turn into a scalar value for each input token by taking L2 norm
-    feature_importance = [
-        torch.norm(grad_x_input, dim=-1) if mult else grad_x_input
-        for grad_x_input, mult in zip(grads_x_input, multiply)
-    ]
+        if attr_alg == AttributionAlgorithm.GRAD_X_INPUT:
+            aggregated_grads.append(torch.norm(grad * inp, -1))
+        elif attr_alg == AttributionAlgorithm.MAX_GRAD:
+            aggregated_grads.append(grad.abs().max(-1))
+        elif attr_alg == AttributionAlgorithm.MEAN_GRAD:
+            aggregated_grads.append(grad.abs().mean(-1))
+        elif attr_alg == AttributionAlgorithm.MIN_GRAD:
+            aggregated_grads.append(grad.abs().min(-1))
+        else:
+            raise NotImplementedError(f"aggregation type `{attr_alg}` not implemented")
 
-    return feature_importance
+    return aggregated_grads

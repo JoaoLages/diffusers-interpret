@@ -2,12 +2,15 @@ import inspect
 from typing import List, Optional, Union, Tuple
 
 import torch
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import preprocess_mask
 from torch.utils.checkpoint import checkpoint
-from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, StableDiffusionImg2ImgPipeline
+from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, StableDiffusionImg2ImgPipeline, \
+    StableDiffusionInpaintPipeline
 from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret import BasePipelineExplainer
-from diffusers_interpret.explainer import BaseMimicPipelineCallOutput, BasePipelineImg2ImgExplainer
+from diffusers_interpret.explainer import BaseMimicPipelineCallOutput, BasePipelineImg2ImgExplainer, \
+    BasePipelineInpaintExplainer
 from diffusers_interpret.utils import transform_images_to_pil_format
 
 
@@ -218,7 +221,7 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
 
 
 class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, BaseStableDiffusionPipelineExplainer):
-    pipe: StableDiffusionImg2ImgPipeline
+    pipe: Union[StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline]
 
     def _mimic_pipeline_call(
         self,
@@ -226,6 +229,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         text_embeddings: torch.Tensor,
         batch_size: int,
         init_image: torch.FloatTensor,
+        mask_image: Optional[torch.FloatTensor] = None,
         strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,
@@ -263,6 +267,17 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
 
         # expand init_latents for batch_size
         init_latents = torch.cat([init_latents] * batch_size)
+        init_latents_orig = init_latents
+
+        mask = None
+        if mask_image is not None:
+            # preprocess mask
+            mask = preprocess_mask(mask_image).to(self.device)
+            mask = torch.cat([mask] * batch_size)
+
+            # check sizes
+            if not mask.shape == init_latents.shape:
+                raise ValueError("The mask and init_image should be the same size!")
 
         # get the original timestep using init_timestep
         init_timestep = int(num_inference_steps * strength) + offset
@@ -328,7 +343,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             # expand the latents if we are doing classifier free guidance
             latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
 
-            # if we use LMSDiscreteScheduler, let's make sure latents are mulitplied by sigmas
+            # if we use LMSDiscreteScheduler, let's make sure latents are multiplied by sigmas
             if isinstance(self.pipe.scheduler, LMSDiscreteScheduler):
                 sigma = self.pipe.scheduler.sigmas[t_index]
                 # the model input needs to be scaled to match the continuous ODE formulation in K-LMS
@@ -355,6 +370,11 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             else:
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
+            # masking
+            if mask:
+                init_latents_proper = self.scheduler.add_noise(init_latents_orig, noise, t)
+                latents = (init_latents_proper * mask) + (latents * (1 - mask))
+
         image, has_nsfw_concept = decode_latents(
             latents=latents, pipe=self.pipe,
             gradient_checkpointing=self.gradient_checkpointing, run_safety_checker=run_safety_checker
@@ -373,3 +393,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             images=image, nsfw_content_detected=has_nsfw_concept,
             all_images_during_generation=all_generated_images
         )
+
+class StableDiffusionInpaintPipelineExplainer(StableDiffusionImg2ImgPipelineExplainer):
+    # Actually the same as StableDiffusionImg2ImgPipelineExplainer
+    pass

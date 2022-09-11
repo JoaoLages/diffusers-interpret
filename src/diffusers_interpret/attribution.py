@@ -42,7 +42,7 @@ def gradients_attribution(
 
     if torch.isnan(grads[-1]).any():
         raise RuntimeError(
-            "Found NaNs when calculating gradients. "
+            "Found NaNs while calculating gradients. "
             "This is a known issue of FP16 (https://github.com/pytorch/pytorch/issues/40497).\n"
             "Try to rerun the code or deactivate FP16 to not face this issue again."
         )

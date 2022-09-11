@@ -37,6 +37,9 @@ pipe = StableDiffusionPipeline.from_pretrained(
     torch_dtype=torch.float16 if device != 'cpu' else None
 ).to(device)
 
+# optional: reduce VRAM requirement with the trade off of 10% speed
+pipe.enable_attention_slicing() if device != 'cpu' else None
+
 # pass pipeline to the explainer class
 explainer = StableDiffusionPipelineExplainer(pipe)
 

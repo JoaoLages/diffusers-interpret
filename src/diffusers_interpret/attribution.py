@@ -41,11 +41,11 @@ def gradients_attribution(
         if attr_alg == AttributionAlgorithm.GRAD_X_INPUT:
             aggregated_grads.append(torch.norm(grad * inp, -1))
         elif attr_alg == AttributionAlgorithm.MAX_GRAD:
-            aggregated_grads.append(grad.abs().max(-1))
+            aggregated_grads.append(grad.abs().max(-1).values)
         elif attr_alg == AttributionAlgorithm.MEAN_GRAD:
-            aggregated_grads.append(grad.abs().mean(-1))
+            aggregated_grads.append(grad.abs().mean(-1).values)
         elif attr_alg == AttributionAlgorithm.MIN_GRAD:
-            aggregated_grads.append(grad.abs().min(-1))
+            aggregated_grads.append(grad.abs().min(-1).values)
         else:
             raise NotImplementedError(f"aggregation type `{attr_alg}` not implemented")
 

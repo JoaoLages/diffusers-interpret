@@ -25,7 +25,7 @@ class SaliencyMap:
             overlayed = np.uint8(255 * overlayed)
 
             # Visualize the image and the saliency map
-            fig, ax = plt.subplots(1, 4, **kwargs)
+            fig, ax = plt.subplots(1, 3, **kwargs)
             ax[0].imshow(img)
             ax[0].axis('off')
             ax[0].title.set_text('Image')
@@ -37,9 +37,6 @@ class SaliencyMap:
             ax[2].imshow(overlayed)
             ax[2].axis('off')
             ax[2].title.set_text('Image Overlayed')
-
-            ax[3].imshow(np.array([0,0.25,0.5,0.75,1]), cmap=cmap, aspect='auto', origin="lower")
-            ax[3].axis('off')
 
             if tight:
                 plt.tight_layout()

@@ -3,6 +3,7 @@ from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
 import torch
 from PIL import ImageDraw
+from PIL.Image import Image
 from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import preprocess
 from transformers import BatchEncoding, PreTrainedTokenizerBase
@@ -313,7 +314,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         text_embeddings: torch.Tensor,
         batch_size: int,
         init_image: torch.FloatTensor,
-        mask_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,

@@ -2,6 +2,7 @@ import inspect
 from typing import List, Optional, Union, Tuple
 
 import torch
+from PIL.Image import Image
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import preprocess_mask
 from torch.utils.checkpoint import checkpoint
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler, StableDiffusionImg2ImgPipeline, \
@@ -228,7 +229,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         text_embeddings: torch.Tensor,
         batch_size: int,
         init_image: torch.FloatTensor,
-        mask_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,

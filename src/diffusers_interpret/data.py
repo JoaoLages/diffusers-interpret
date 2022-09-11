@@ -40,6 +40,7 @@ class PipelineExplainerOutput:
     image: Union[Image, torch.Tensor]
     nsfw_content_detected: Optional[List[bool]] = None
     all_images_during_generation: Optional[Union[GeneratedImages, List[torch.Tensor]]] = None
+    explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None  # (upper left corner, bottom right corner)
     token_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
 

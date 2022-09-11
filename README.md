@@ -2,7 +2,7 @@
 
 # Diffusers-Interpret 🤗🧨🕵️‍♀️
 
-![PyPI Latest Package Version](https://img.shields.io/pypi/v/diffusers-interpret?logo=pypi&style=flat&color=orange) ![GitHub License](https://img.shields.io/github/license/JoaoLages/diffusers-interpret?logo=github&style=flat&color=green) [![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb) 
+![PyPI Latest Package Version](https://img.shields.io/pypi/v/diffusers-interpret?logo=pypi&style=flat&color=orange) ![GitHub License](https://img.shields.io/github/license/JoaoLages/diffusers-interpret?logo=github&style=flat&color=green) 
 
 `diffusers-interpret` is a model explainability tool built on top of [🤗 Diffusers](https://github.com/huggingface/diffusers)
 </div>
@@ -17,10 +17,10 @@ Install directly from PyPI:
 
 Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https://github.com/huggingface/diffusers#new--stable-diffusion-is-now-fully-compatible-with-diffusers)!**
 
-**NEW**: <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+### Explanations for `StableDiffusionPipeline`
+<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
 
 ```python
-# make sure you're logged in with `huggingface-cli login`
 import torch
 from contextlib import nullcontext
 from diffusers import StableDiffusionPipeline
@@ -37,8 +37,14 @@ pipe = StableDiffusionPipeline.from_pretrained(
     torch_dtype=torch.float16 if device != 'cpu' else None
 ).to(device)
 
+# Enabling attention slicing to require less GPU memory
+pipe.enable_attention_slicing()
+
 # pass pipeline to the explainer class
-explainer = StableDiffusionPipelineExplainer(pipe)
+explainer = StableDiffusionPipelineExplainer(
+    pipe, 
+    gradient_checkpointing=True # this also reduces GPU memory usage, but makes computation slower
+)
 
 # generate an image with `explainer`
 prompt = "A cute corgi with the Eiffel Tower in the background"
@@ -51,6 +57,19 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
     )
 ```
 
+If you are still having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
+```python
+output = explainer(
+    prompt, 
+    num_inference_steps=15,
+    generator=generator,
+    height=448,
+    width=448,
+    n_last_diffusion_steps_to_consider_for_attributions=5
+)
+```
+You can completely deactivate token/pixel attributions computation by passing `n_last_diffusion_steps_to_consider_for_attributions=0`.  
+
 To see the final generated image:
 ```python
 output.image
@@ -59,6 +78,9 @@ output.image
 ![](assets/corgi_eiffel_tower.png)
 
 You can also check all the images that the diffusion process generated at the end of each step.
+```python
+output.all_images_during_generation.show()
+```
 ![](assets/image_slider.gif)
 
 To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
@@ -91,7 +113,7 @@ Or their computed normalized version, in percentage:
  ('background', 14.607)]
 ```
 
-`diffusers-interpret` also computes these token attributions for generating a particular part of the image. 
+`diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
 
@@ -110,7 +132,7 @@ output.image
 
 The generated image now has a <span style="color:red"> **red bounding box** </span> to indicate the region of the image that is being explained.
 
-The token attributions are now computed only for the area specified in the image.
+The attributions are now computed only for the area specified in the image.
 
 ```python
 >>> output.normalized_token_attributions # (token, attribution_percentage)
@@ -126,16 +148,142 @@ The token attributions are now computed only for the area specified in the image
  ('background', 23.05)]
 ```
 
+### Explanations for `StableDiffusionImg2ImgPipeline`
+<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+
+```python
+import torch
+import requests
+from PIL import Image
+from io import BytesIO
+from diffusers import StableDiffusionImg2ImgPipeline
+from diffusers_interpret import StableDiffusionImg2ImgPipelineExplainer
+
+
+pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+    "CompVis/stable-diffusion-v1-4", 
+    use_auth_token=True,
+).to('cuda')
+
+explainer = StableDiffusionImg2ImgPipelineExplainer(pipe)
+
+prompt = "A fantasy landscape, trending on artstation"
+
+# let's download an initial image
+url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg"
+
+response = requests.get(url)
+init_image = Image.open(BytesIO(response.content)).convert("RGB")
+init_image = init_image.resize((384, 256))
+
+with torch.autocast('cuda'):
+    output = explainer(
+        prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5
+    )
+```
+
+`output` will have all the properties that were presented for `StableDiffusionPipeline`.  
+Additionally, it is also possible to visualize pixel attributions of the input image as a saliency map:
+```python
+output.input_saliency_map.show()
+```
+![](assets/pixel_attributions_1.png)
+
+or access their values directly:
+```python
+>>> output.pixel_attributions
+array([[ 0.90722656,  1.7353516 ,  5.0039062 , ...,  8.671875  ,
+         5.3554688 ,  3.9589844 ],
+       [ 1.6640625 ,  5.3867188 , 12.3046875 , ..., 11.3515625 ,
+         5.25      ,  4.71875   ],
+       [ 7.2617188 ,  4.28125   , 28.171875  , ..., 52.1875    ,
+        28.296875  , 18.578125  ],
+       ...,
+       [12.8828125 , 13.3046875 , 45.4375    , ..., 74.625     ,
+        39.625     , 54.65625   ],
+       [ 8.4453125 , 14.46875   , 23.40625   , ..., 44.34375   ,
+        36.96875   , 37.96875   ],
+       [ 3.0351562 ,  8.859375  , 12.171875  , ..., 37.8125    ,
+        13.7421875 , 10.328125  ]], dtype=float32)
+```
+or the normalized version:
+```python
+>>> output.normalized_pixel_attributions
+array([[1.72888940e-05, 3.30703624e-05, 9.53587733e-05, ...,
+        1.65258753e-04, 1.02058446e-04, 7.54458379e-05],
+       [3.17118138e-05, 1.02653976e-04, 2.34488791e-04, ...,
+        2.16325207e-04, 1.00048543e-04, 8.99245861e-05],
+       [1.38385600e-04, 8.15872045e-05, 5.36867650e-04, ...,
+        9.94530157e-04, 5.39249799e-04, 3.54040851e-04],
+       ...,
+       [2.45506031e-04, 2.53545644e-04, 8.65896349e-04, ...,
+        1.42211863e-03, 7.55128276e-04, 1.04157685e-03],
+       [1.60941199e-04, 2.75729020e-04, 4.46049758e-04, ...,
+        8.45052884e-04, 7.04508508e-04, 7.23565405e-04],
+       [5.78405670e-05, 1.68831917e-04, 2.31957805e-04, ...,
+        7.20587734e-04, 2.61883019e-04, 1.96821697e-04]], dtype=float32)
+```
+
+**Note:** Passing `explanation_2d_bounding_box` to the `explainer` will also change these values to explain a specific part of the **output** image. 
+<ins>The attributions are always calculated for the model's input with respect to the output image.</ins>
+
+### Explanations for `StableDiffusionInpaintPipeline`
+<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+Same as `StableDiffusionImg2ImgPipeline`, but now we also pass a `mask_image` argument to `explainer`.
+
+```python
+import torch
+import requests
+from PIL import Image
+from io import BytesIO
+from diffusers import StableDiffusionImg2ImgPipeline
+from diffusers_interpret import StableDiffusionImg2ImgPipelineExplainer
+
+
+def download_image(url):
+    response = requests.get(url)
+    return Image.open(BytesIO(response.content)).convert("RGB")
+
+
+pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+    "CompVis/stable-diffusion-v1-4", 
+    use_auth_token=True,
+).to('cuda')
+
+explainer = StableDiffusionImg2ImgPipelineExplainer(pipe)
+
+prompt = "a cat sitting on a bench"
+
+img_url = "https://raw.githubusercontent.com/CompVis/latent-diffusion/main/data/inpainting_examples/overture-creations-5sI6fQgYIuo.png"
+mask_url = "https://raw.githubusercontent.com/CompVis/latent-diffusion/main/data/inpainting_examples/overture-creations-5sI6fQgYIuo_mask.png"
+
+init_image = download_image(img_url).resize((384, 384))
+mask_image = download_image(mask_url).resize((384, 384))
+
+with torch.autocast('cuda'):
+    output = explainer(
+        prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5
+    )
+```
+
+`output` will have all the properties that were presented for `StableDiffusionImg2ImgPipeline`.  
+The only difference is that we can now see the masked part of the image:
+```python
+output.input_saliency_map.show()
+```
+![](assets/pixel_attributions_inpaint_1.png)
+
 Check other functionalities and more implementation examples in [here](https://github.com/JoaoLages/diffusers-interpret/blob/main/notebooks/).
 
 ## Future Development
 - [x] ~~Add interactive display of all the images that were generated in the diffusion process~~
-- [ ] Add explainer for StableDiffusionImg2ImgPipeline
-- [ ] Add explainer for StableDiffusionInpaintPipeline
-- [ ] Add interactive bounding-box and token attributions visualization
+- [x] ~~Add explainer for StableDiffusionImg2ImgPipeline~~
+- [x] ~~Add explainer for StableDiffusionInpaintPipeline~~
+- [ ] Add attentions visualization 
 - [ ] Add unit tests
-- [ ] Add example for `diffusers_interpret.LDMTextToImagePipelineExplainer`
+- [ ] Website for documentation
 - [ ] Do not require another generation every time the `explanation_2d_bounding_box` argument is changed
+- [ ] Add interactive bounding-box and token attributions visualization
 - [ ] Add more explainability methods
 
 ## Contributing

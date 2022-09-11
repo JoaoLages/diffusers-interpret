@@ -106,7 +106,8 @@ class CorePipelineExplainer(ABC):
         # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput
         output: PipelineExplainerOutput = PipelineExplainerOutput(
             image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
-            all_images_during_generation=output.all_images_during_generation
+            all_images_during_generation=output.all_images_during_generation,
+            explanation_2d_bounding_box=explanation_2d_bounding_box
         )
 
         if output.nsfw_content_detected:
@@ -412,6 +413,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             image=output.image,
             nsfw_content_detected=output.nsfw_content_detected,
             all_images_during_generation=output.all_images_during_generation,
+            explanation_2d_bounding_box=output.explanation_2d_bounding_box,
             token_attributions=output.token_attributions,
             normalized_token_attributions=output.normalized_token_attributions,
             pixel_attributions=pixel_attributions,

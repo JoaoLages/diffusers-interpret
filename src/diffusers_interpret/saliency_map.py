@@ -43,7 +43,7 @@ class SaliencyMap:
             if mask is not None and apply_mask:
                 img *= (1 - mask / 255)
                 saliency_map *= (1 - mask / 255)
-                overlayed *= (1 - overlayed / 255)
+                overlayed *= (1 - mask / 255)
 
             # Visualize the image and the saliency map
             fig, ax = plt.subplots(1, 3, **kwargs)

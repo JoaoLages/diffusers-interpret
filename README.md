@@ -129,6 +129,37 @@ The token attributions are now computed only for the area specified in the image
  ('background', 23.05)]
 ```
 
+> Note: if you encounter VRAM constraint, it is possible to limit or disable the token attribution as follows:
+
+
+```python
+from diffusers_interpret import StableDiffusionPipelineExplainer
+
+explainer = StableDiffusionPipelineExplainer(
+    pipe,
+    
+    # We pass `True` in here to be able to have a higher `n_last_diffusion_steps_to_consider_for_attributions` in the cell below
+    gradient_checkpointing=True 
+)
+
+prompt = "A cute corgi with the Eiffel Tower in the background"
+
+generator = torch.Generator(device).manual_seed(2023)
+with torch.autocast('cuda') if device == 'cuda' else nullcontext():
+    output = explainer(
+        prompt, 
+        num_inference_steps=50, 
+        generator=generator,
+        height=448,
+        width=448,
+        
+        # for this model, the GPU VRAM usage will raise drastically if we increase this argument. feel free to experiment with it
+        # if you are not interested in checking the token attributions, you can pass 0 instead
+        n_last_diffusion_steps_to_consider_for_attributions=5
+    )
+
+```
+
 Check other functionalities and more implementation examples in [here](https://github.com/JoaoLages/diffusers-interpret/blob/main/notebooks/).
 
 ## Future Development

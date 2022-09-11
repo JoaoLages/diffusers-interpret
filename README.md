@@ -61,8 +61,11 @@ output.image
 
 ![](assets/corgi_eiffel_tower.png)
 
-You can also check all the images that the diffusion process generated at the end of each step.
-![](assets/image_slider.gif)
+You can also check all the images that the diffusion process generated at the end of each step:
+```python
+output.all_images_during_generation.show()
+```
+![](assets/image_slider_cropped.gif)
 
 To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
 ```python

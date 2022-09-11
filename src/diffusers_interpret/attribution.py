@@ -33,7 +33,7 @@ def gradients_attribution(
 
     # get the sum of back-prop gradients for all predictions with respect to the inputs
     if torch.is_autocast_enabled():
-        # FP16 causes NaN loss https://github.com/pytorch/pytorch/issues/40497
+        # FP16 may cause NaN gradients https://github.com/pytorch/pytorch/issues/40497
         with torch.autocast(input_embeds[0].device.type, enabled=False):
             grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
     else:
@@ -44,7 +44,7 @@ def gradients_attribution(
     for grad, inp, attr_alg in zip(grads, input_embeds, attribution_algorithms):
 
         if attr_alg == AttributionAlgorithm.GRAD_X_INPUT:
-            aggregated_grads.append(torch.norm(grad * inp, -1))
+            aggregated_grads.append(torch.norm(grad * inp, dim=-1))
         elif attr_alg == AttributionAlgorithm.MAX_GRAD:
             aggregated_grads.append(grad.abs().max(-1).values)
         elif attr_alg == AttributionAlgorithm.MEAN_GRAD:

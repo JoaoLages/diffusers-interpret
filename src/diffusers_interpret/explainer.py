@@ -134,9 +134,10 @@ class CorePipelineExplainer(ABC):
                     output[k] = output[k][0]
             if output.all_images_during_generation:
                 output.all_images_during_generation = [b[0] for b in output.all_images_during_generation]
-            if getattr(output, 'saliency_map'):
+            if getattr(output, 'input_saliency_map'):
                 output: PipelineImg2ImgExplainerOutput
-                output.saliency_map.normalized_pixel_attributions = output.saliency_map.normalized_pixel_attributions[0]
+                output.input_saliency_map.normalized_pixel_attributions = \
+                    output.input_saliency_map.normalized_pixel_attributions[0]
 
         else:
             raise NotImplementedError
@@ -413,8 +414,8 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             normalized_token_attributions=output.normalized_token_attributions,
             pixel_attributions=pixel_attributions,
             normalized_pixel_attributions=normalized_pixel_attributions,
-            saliency_map=SaliencyMap(
-                image=np.array(output.image) if isinstance(output.image, Image) else output.image.detach().cpu().numpy(),
+            input_saliency_map=SaliencyMap(
+                image=init_image.detach().cpu().numpy(),
                 normalized_pixel_attributions=normalized_pixel_attributions
             )
         )

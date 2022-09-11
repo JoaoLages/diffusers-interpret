@@ -53,7 +53,7 @@ class PipelineExplainerOutput:
 class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
     pixel_attributions: Optional[List[Tuple[str, float]]] = None
     normalized_pixel_attributions: Optional[List[Tuple[str, float]]] = None
-    saliency_map: Optional[SaliencyMap] = None
+    input_saliency_map: Optional[SaliencyMap] = None
 
 
 @dataclass

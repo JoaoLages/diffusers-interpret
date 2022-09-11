@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Union, List, Optional, Tuple, Any
 
 import torch
@@ -56,7 +57,27 @@ class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
     input_saliency_map: Optional[SaliencyMap] = None
 
 
+class ExplicitEnum(str, Enum):
+    """
+    Enum with more explicit error message for missing values.
+    """
+
+    @classmethod
+    def _missing_(cls, value):
+        raise ValueError(
+            f"{value} is not a valid {cls.__name__}, please select one of {list(cls._value2member_map_.keys())}"
+        )
+
+
+class AttributionAlgorithm(ExplicitEnum):
+    """
+    Possible values for `tokens_attribution_method` and `pixels_attribution_method` arguments in `AttributionMethods`
+    """
+    GRAD_X_INPUT = "grad_x_input"
+    MAX_GRAD = "max_grad"
+
+
 @dataclass
-class AttributionMethod:
-    tokens_attribution_method: str = 'grad_x_input'
-    pixels_attribution_method: Optional[str] = 'max_grad'
+class AttributionMethods:
+    tokens_attribution_method: Union[str, AttributionAlgorithm] = AttributionAlgorithm.GRAD_X_INPUT
+    pixels_attribution_method: Optional[Union[str, AttributionAlgorithm]] = AttributionAlgorithm.MAX_GRAD

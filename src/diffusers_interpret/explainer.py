@@ -10,7 +10,7 @@ from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradients_attribution
 from diffusers_interpret.data import PipelineExplainerOutput, PipelineImg2ImgExplainerOutput, \
-    BaseMimicPipelineCallOutput, AttributionMethod
+    BaseMimicPipelineCallOutput, AttributionMethods, AttributionAlgorithm
 from diffusers_interpret.generated_images import GeneratedImages
 from diffusers_interpret.saliency_map import SaliencyMap
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
@@ -38,7 +38,7 @@ class CorePipelineExplainer(ABC):
     def __call__(
         self,
         prompt: str,
-        attribution_method: Union[str, AttributionMethod] = None,
+        attribution_method: Union[str, AttributionMethods] = None,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
@@ -50,17 +50,21 @@ class CorePipelineExplainer(ABC):
     ) -> Union[PipelineExplainerOutput, PipelineImg2ImgExplainerOutput]:
         # TODO: add description
 
-        attribution_method = attribution_method or AttributionMethod()
+        attribution_method = attribution_method or AttributionMethods()
 
         if isinstance(attribution_method, str):
-            attribution_method = AttributionMethod(
-                tokens_attribution_method=attribution_method,
-                pixels_attribution_method=attribution_method
+            attribution_method = AttributionMethods(
+                tokens_attribution_method=AttributionAlgorithm(attribution_method),
+                pixels_attribution_method=AttributionAlgorithm(attribution_method)
             )
+        else:
+            if not isinstance(attribution_method, AttributionMethods):
+                raise ValueError("`attribution_method` has to be of type `str` or `AttributionMethods`")
 
-        if attribution_method.tokens_attribution_method not in ['grad_x_input', 'max_grad'] \
-                or attribution_method.pixels_attribution_method not in ['grad_x_input', 'max_grad']:
-            raise NotImplementedError("Only 'grad_x_input' or 'max_grad' are implemented for `attribution_method`")
+            for k in ['tokens_attribution_method', 'pixels_attribution_method']:
+                v = getattr(attribution_method, k)
+                if not isinstance(v, AttributionAlgorithm):
+                    setattr(attribution_method, k, AttributionAlgorithm(v))
 
         if isinstance(prompt, str):
             batch_size = 1 # TODO: make compatible with bigger batch sizes
@@ -201,7 +205,7 @@ class CorePipelineExplainer(ABC):
     def _get_attributions(
         self,
         output: PipelineExplainerOutput,
-        attribution_method: AttributionMethod,
+        attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
@@ -342,7 +346,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
     def _get_attributions(
         self,
         output: PipelineExplainerOutput,
-        attribution_method: AttributionMethod,
+        attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,

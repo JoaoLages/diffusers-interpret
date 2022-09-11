@@ -9,8 +9,8 @@ class SaliencyMap:
         image: np.ndarray,
         normalized_pixel_attributions: np.ndarray
     ):
-        self.img = image
-        self.img_greyscale = np.float32(image) / 255
+        self.img = np.float32(image)
+        self.img_greyscale = self.img / 255
         self.normalized_pixel_attributions = normalized_pixel_attributions
 
     def show(self, colormap=cv2.COLORMAP_JET, image_weight=0.5, tight=True, **kwargs) -> None:

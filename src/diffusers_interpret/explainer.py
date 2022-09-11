@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
-import numpy as np
 import torch
 from PIL import ImageDraw
 from PIL.Image import Image
@@ -134,10 +133,6 @@ class CorePipelineExplainer(ABC):
                     output[k] = output[k][0]
             if output.all_images_during_generation:
                 output.all_images_during_generation = [b[0] for b in output.all_images_during_generation]
-            if getattr(output, 'input_saliency_map'):
-                output: PipelineImg2ImgExplainerOutput
-                output.input_saliency_map.normalized_pixel_attributions = \
-                    output.input_saliency_map.normalized_pixel_attributions[0]
 
         else:
             raise NotImplementedError
@@ -415,7 +410,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             pixel_attributions=pixel_attributions,
             normalized_pixel_attributions=normalized_pixel_attributions,
             input_saliency_map=SaliencyMap(
-                image=init_image.detach().cpu().numpy(),
+                images=init_image.detach().cpu().numpy(),
                 normalized_pixel_attributions=normalized_pixel_attributions
             )
         )

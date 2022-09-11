@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union, Tuple, Set, Dict, Any
 
+import numpy as np
 import torch
 from PIL import ImageDraw
 from PIL.Image import Image
@@ -12,6 +13,7 @@ from diffusers_interpret.attribution import gradients_attribution
 from diffusers_interpret.data import PipelineExplainerOutput, PipelineImg2ImgExplainerOutput, \
     BaseMimicPipelineCallOutput, AttributionMethod
 from diffusers_interpret.generated_images import GeneratedImages
+from diffusers_interpret.saliency_map import SaliencyMap
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
@@ -127,7 +129,7 @@ class CorePipelineExplainer(ABC):
         if batch_size == 1:
             # squash batch dimension
             for k in ['image', 'token_attributions', 'normalized_token_attributions', 'pixel_attributions',
-                      'normalized_pixel_attributions', 'pixel_attributions_heatmap']:
+                      'normalized_pixel_attributions']:
                 if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
@@ -399,6 +401,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
         )
 
+        normalized_pixel_attributions = 100 * (pixel_attributions / pixel_attributions.sum())
         output = PipelineImg2ImgExplainerOutput(
             image=output.image,
             nsfw_content_detected=output.nsfw_content_detected,
@@ -406,8 +409,10 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             token_attributions=output.token_attributions,
             normalized_token_attributions=output.normalized_token_attributions,
             pixel_attributions=pixel_attributions,
-            normalized_pixel_attributions=100 * (pixel_attributions / pixel_attributions.sum()),
-            pixel_attributions_heatmap=None # TODO
+            normalized_pixel_attributions=normalized_pixel_attributions,
+            saliency_map=SaliencyMap(
+                image=np.array(output.image), normalized_pixel_attributions=normalized_pixel_attributions
+            )
         )
 
         if self.verbose:

@@ -11,14 +11,14 @@ class SaliencyMap:
     ):
         assert len(images) == len(normalized_pixel_attributions)
         self.imgs = np.float32(images)
-        self.imgs_greyscale = self.imgs / 255
+        self.imgs_greyscale = self.imgs / 255.0
         self.normalized_pixel_attributions = normalized_pixel_attributions
 
     def show(self, colormap=cv2.COLORMAP_JET, image_weight=0.5, tight=True, **kwargs) -> None:
         for img, img_greyscale, attrs in zip(self.imgs, self.imgs_greyscale, self.normalized_pixel_attributions):
-            saliency_map = cv2.applyColorMap(np.uint8(255 * attrs), colormap)
+            saliency_map = cv2.applyColorMap(np.uint8(255.0 * attrs), colormap)
             saliency_map = cv2.cvtColor(saliency_map, cv2.COLOR_BGR2RGB)
-            saliency_map = np.float32(saliency_map) / 255
+            saliency_map = np.float32(saliency_map) / 255.0
 
             overlayed = (1 - image_weight) * saliency_map + image_weight * img_greyscale
             overlayed = overlayed / np.max(overlayed)

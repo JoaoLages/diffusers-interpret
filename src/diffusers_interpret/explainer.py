@@ -400,6 +400,9 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes
         )
 
+        # removes preprocessing done in diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.preprocess
+        init_image = (init_image + 1.0) / 2.0
+
         normalized_pixel_attributions = 100 * (pixel_attributions / pixel_attributions.sum())
         output = PipelineImg2ImgExplainerOutput(
             image=output.image,

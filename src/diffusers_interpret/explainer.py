@@ -224,9 +224,6 @@ class CorePipelineExplainer(ABC):
             explanation_2d_bounding_box=explanation_2d_bounding_box
         )[0].detach().cpu().numpy()
 
-        if attribution_method.tokens_attribution_method == 'max_grad':
-            token_attributions = token_attributions.max(-1)
-
         output = self._post_process_token_attributions(
             output=output,
             tokens=tokens,
@@ -386,14 +383,10 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         )
 
         token_attributions = attributions[0].detach().cpu().numpy()
-        if attribution_method.tokens_attribution_method == 'max_grad':
-            token_attributions = token_attributions.max(-1)
 
         pixel_attributions = None
         if n_last_diffusion_steps_to_consider_for_attributions is None:
             pixel_attributions = attributions[1].detach().cpu().numpy()
-            if attribution_method.pixels_attribution_method == 'max_grad':
-                pixel_attributions = pixel_attributions.max(-1) # get maximum value on channel dimension
 
         output = self._post_process_token_attributions(
             output=output,

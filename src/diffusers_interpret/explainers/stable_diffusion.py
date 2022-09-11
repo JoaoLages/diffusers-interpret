@@ -371,7 +371,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
                 latents = self.pipe.scheduler.step(noise_pred, t, latents, **extra_step_kwargs).prev_sample
 
             # masking
-            if mask:
+            if mask is not None:
                 init_latents_proper = self.scheduler.add_noise(init_latents_orig, noise, t)
                 latents = (init_latents_proper * mask) + (latents * (1 - mask))
 

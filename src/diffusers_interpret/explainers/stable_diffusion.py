@@ -372,7 +372,7 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
 
             # masking
             if mask is not None:
-                init_latents_proper = self.scheduler.add_noise(init_latents_orig, noise, t)
+                init_latents_proper = self.pipe.scheduler.add_noise(init_latents_orig, noise, t)
                 latents = (init_latents_proper * mask) + (latents * (1 - mask))
 
         image, has_nsfw_concept = decode_latents(

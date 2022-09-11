@@ -1,14 +1,24 @@
+from typing import Optional, Union
+
 import cv2
 import cmapy
 import numpy as np
+import torch
+from PIL.Image import Image
 from matplotlib import pyplot as plt
 
 
 class SaliencyMap:
-    def __init__(self, images: np.ndarray, pixel_attributions: np.ndarray):
+    def __init__(
+        self,
+        images: np.ndarray,
+        pixel_attributions: np.ndarray,
+        masks: Optional[Union[torch.FloatTensor, Image]] = None
+    ):
         assert len(images) == len(pixel_attributions)
         self.imgs = np.float32(images)
         self.pixel_attributions = pixel_attributions
+        self.masks = masks
 
     def show(self, cmap='jet', image_weight=0.5, tight=True, **kwargs) -> None:
         for img, attrs in zip(self.imgs, self.pixel_attributions):

@@ -11,21 +11,20 @@ class SaliencyMap:
     ):
         assert len(images) == len(normalized_pixel_attributions)
         self.imgs = np.float32(images)
-        self.imgs_greyscale = self.imgs / 255.0
         self.normalized_pixel_attributions = normalized_pixel_attributions
 
-    def show(self, colormap=cv2.COLORMAP_JET, image_weight=0.5, tight=True, **kwargs) -> None:
-        for img, img_greyscale, attrs in zip(self.imgs, self.imgs_greyscale, self.normalized_pixel_attributions):
-            saliency_map = cv2.applyColorMap(np.uint8(255.0 * attrs), colormap)
+    def show(self, cmap=cv2.COLORMAP_JET, image_weight=0.5, tight=True, **kwargs) -> None:
+        for img, attrs in zip(self.imgs, self.normalized_pixel_attributions):
+            saliency_map = cv2.applyColorMap(np.uint8(255.0 * attrs), cmap)
             saliency_map = cv2.cvtColor(saliency_map, cv2.COLOR_BGR2RGB)
             saliency_map = np.float32(saliency_map) / 255.0
 
-            overlayed = (1 - image_weight) * saliency_map + image_weight * img_greyscale
+            overlayed = (1 - image_weight) * saliency_map + image_weight * img
             overlayed = overlayed / np.max(overlayed)
             overlayed = np.uint8(255 * overlayed)
 
             # Visualize the image and the saliency map
-            fig, ax = plt.subplots(1, 3, **kwargs)
+            fig, ax = plt.subplots(1, 4, **kwargs)
             ax[0].imshow(img)
             ax[0].axis('off')
             ax[0].title.set_text('Image')
@@ -37,6 +36,10 @@ class SaliencyMap:
             ax[2].imshow(overlayed)
             ax[2].axis('off')
             ax[2].title.set_text('Image Overlayed')
+
+            ax[3].imshow(np.array([[0,1]]), cmap=cmap)
+            ax[3].set_visible(False)
+            plt.colorbar(ax=ax[3], orientation="vertical")
 
             if tight:
                 plt.tight_layout()

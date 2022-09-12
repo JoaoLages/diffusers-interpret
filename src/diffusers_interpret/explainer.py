@@ -34,15 +34,6 @@ class BasePipelineExplainer(ABC):
             self.gradient_checkpointing_enable()
 
     def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
-        """
-        Converts input image to tensor
-        """
-        if 'init_image' not in kwargs:
-            raise TypeError("missing 1 required positional argument: 'init_image'")
-
-        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
-        kwargs['init_image'].requires_grad = True
-
         return kwargs
 
     def __call__(
@@ -439,6 +430,19 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
     """
     Core base class to explain img2img and inpaint pipelines
     """
+    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
+        """
+        Converts input image to tensor
+        """
+        kwargs = super()._preprocess_input(**kwargs)
+        if 'init_image' not in kwargs:
+            raise TypeError("missing 1 required positional argument: 'init_image'")
+
+        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
+        kwargs['init_image'].requires_grad = True
+
+        return kwargs
+
     def _get_attributions(
         self,
         output: Union[PipelineExplainerOutput, PipelineExplainerForBoundingBoxOutput],

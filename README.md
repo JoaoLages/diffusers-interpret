@@ -37,6 +37,9 @@ pipe = StableDiffusionPipeline.from_pretrained(
     torch_dtype=torch.float16 if device != 'cpu' else None
 ).to(device)
 
+# optional: reduce memory requirement with a speed trade off 
+pipe.enable_attention_slicing() 
+
 # pass pipeline to the explainer class
 explainer = StableDiffusionPipelineExplainer(pipe)
 
@@ -58,8 +61,11 @@ output.image
 
 ![](assets/corgi_eiffel_tower.png)
 
-You can also check all the images that the diffusion process generated at the end of each step.
-![](assets/image_slider.gif)
+You can also check all the images that the diffusion process generated at the end of each step:
+```python
+output.all_images_during_generation.show()
+```
+![](assets/image_slider_cropped.gif)
 
 To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
 ```python
@@ -126,6 +132,23 @@ The token attributions are now computed only for the area specified in the image
  ('background', 23.05)]
 ```
 
+If you are having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
+`
+output = explainer(
+    prompt, 
+    num_inference_steps=15,
+    generator=generator,
+    height=448,
+    width=448,
+    n_last_diffusion_steps_to_consider_for_attributions=5
+)
+`
+You can completely deactivate token/pixel attributions computation by passing `n_last_diffusion_steps_to_consider_for_attributions=0`.  
+
+Gradient checkpointing also reduces GPU usage, but makes computations a bit slower:
+`
+explainer = StableDiffusionPipelineExplainer(pipe, gradient_checkpointing=True)
+`
 Check other functionalities and more implementation examples in [here](https://github.com/JoaoLages/diffusers-interpret/blob/main/notebooks/).
 
 ## Future Development

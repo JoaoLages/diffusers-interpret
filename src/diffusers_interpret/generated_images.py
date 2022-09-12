@@ -158,10 +158,8 @@ class GeneratedImages:
         self[0].save(file_name,
                      save_all = True,
                      append_images = self[1:],
-
                      optimize = False,
                      duration = duration,
                      loop = 0)
         if show:
-            d.Image(file_name)
-
+            d.display(d.Image(file_name))

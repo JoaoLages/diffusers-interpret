@@ -10,13 +10,14 @@ from transformers import BatchEncoding, PreTrainedTokenizerBase
 
 from diffusers_interpret.attribution import gradients_attribution
 from diffusers_interpret.data import PipelineExplainerOutput, PipelineImg2ImgExplainerOutput, \
-    BaseMimicPipelineCallOutput, AttributionMethods, AttributionAlgorithm
+    BaseMimicPipelineCallOutput, AttributionMethods, AttributionAlgorithm, PipelineExplainerForBoundingBoxOutput, \
+    PipelineImg2ImgExplainerForBoundingBoxOutputOutput
 from diffusers_interpret.generated_images import GeneratedImages
 from diffusers_interpret.saliency_map import SaliencyMap
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
-class CorePipelineExplainer(ABC):
+class BasePipelineExplainer(ABC):
     """
     Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines
     """
@@ -33,13 +34,25 @@ class CorePipelineExplainer(ABC):
             self.gradient_checkpointing_enable()
 
     def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
+        """
+        Converts input image to tensor
+        """
+        kwargs = super()._preprocess_input(**kwargs)
+        if 'init_image' not in kwargs:
+            raise TypeError("missing 1 required positional argument: 'init_image'")
+
+        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
+        kwargs['init_image'].requires_grad = True
+
         return kwargs
 
     def __call__(
         self,
         prompt: str,
+        init_image: Optional[Union[torch.FloatTensor, Image]] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         attribution_method: Union[str, AttributionMethods] = None,
-        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None, # (upper left corner, bottom right corner)
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
         run_safety_checker: bool = False,
@@ -47,8 +60,60 @@ class CorePipelineExplainer(ABC):
         get_images_for_all_inference_steps: bool = True,
         output_type: Optional[str] = 'pil',
         **kwargs
-    ) -> Union[PipelineExplainerOutput, PipelineImg2ImgExplainerOutput]:
-        # TODO: add description
+    ) -> Union[
+        PipelineExplainerOutput,
+        PipelineExplainerForBoundingBoxOutput,
+        PipelineImg2ImgExplainerOutput,
+        PipelineImg2ImgExplainerForBoundingBoxOutputOutput
+    ]:
+        """
+        Calls a DiffusionPipeline and generates explanations for a given prompt.
+
+        Args:
+            prompt (`str`):
+                Input string for the diffusion model
+            init_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):
+                `Image`, or tensor representing an image batch, that will be used as the starting point for the process.
+                If provided, output will be of type `PipelineImg2ImgExplainerOutput` or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`.
+            mask_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):
+                `Image`, or tensor representing an image batch, to mask `init_image`. White pixels in the mask will be
+                replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be
+                converted to a single channel (luminance) before use.
+            attribution_method (`Union[str, AttributionMethods]`, *optional*):
+                `AttributionMethods` or `str` with the attribution algorithms to compute.
+                Only one algorithm per type of attribution. If `str` is provided, the same algorithm
+                will be applied to calculate both token and pixel attributions.
+            explanation_2d_bounding_box (`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*):
+                Tuple with the bounding box coordinates to calculate attributions for.
+                The tuple is like (upper left corner, bottom right corner). Example: `((0, 0), (300, 300))`
+                If this argument is provided, the output will be of type `PipelineExplainerForBoundingBoxOutput`
+                or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`-
+            consider_special_tokens (bool, defaults to `True`):
+                If True, token attributions will also show attributions for `pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES`
+            clean_token_prefixes_and_suffixes (bool, defaults to `True`):
+                If True, tries to clean prefixes and suffixes added by the `pipe.tokenizer`.
+            run_safety_checker (bool, defaults to `False`):
+                If True, will run the NSFW checker and return a black image if the safety checker says so.
+            n_last_diffusion_steps_to_consider_for_attributions (int, *optional*):
+                If not provided, it will calculate explanations for the output image based on all the diffusion steps.
+                If given a number, it will only use the last provided diffusion steps.
+                Set to `n_last_diffusion_steps_to_consider_for_attributions=0` for deactivating attributions calculation.
+            get_images_for_all_inference_steps (bool, defaults to `True`):
+                If True, will return all the images during diffusion in `output.all_images_during_generation`
+            output_type (str, *optional*, defaults to `"pil"`):
+                The output format of the generated image. Choose between
+                [PIL](https://pillow.readthedocs.io/en/stable/): `PIL.Image.Image` or `torch.Tensor`.
+            **kwargs:
+                Used to pass more arguments to DiffusionPipeline.__call__.
+        Returns:
+            [`PipelineExplainerOutput`], [`PipelineExplainerForBoundingBoxOutput`],
+            [`PipelineImg2ImgExplainerOutput`] or [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`]
+
+            [`PipelineExplainerOutput`] if `init_image=None` and `explanation_2d_bounding_box=None`
+            [`PipelineExplainerForBoundingBoxOutput`] if `init_image=None` and `explanation_2d_bounding_box is not None`
+            [`PipelineImg2ImgExplainerOutput`] if `init_image is not None` and `explanation_2d_bounding_box=None`
+            [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`] if `init_image is not None` and `explanation_2d_bounding_box is not None`
+        """
 
         attribution_method = attribution_method or AttributionMethods()
 
@@ -95,6 +160,8 @@ class CorePipelineExplainer(ABC):
         output: BaseMimicPipelineCallOutput = self._mimic_pipeline_call(
             text_input=text_input,
             text_embeddings=text_embeddings,
+            init_image=init_image,
+            mask_image=mask_image,
             batch_size=batch_size,
             output_type=None,
             run_safety_checker=run_safety_checker,
@@ -104,11 +171,17 @@ class CorePipelineExplainer(ABC):
         )
 
         # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput
-        output: PipelineExplainerOutput = PipelineExplainerOutput(
-            image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
-            all_images_during_generation=output.all_images_during_generation,
-            explanation_2d_bounding_box=explanation_2d_bounding_box
-        )
+        if explanation_2d_bounding_box is not None:
+            output: PipelineExplainerForBoundingBoxOutput = PipelineExplainerForBoundingBoxOutput(
+                image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
+                all_images_during_generation=output.all_images_during_generation,
+                explanation_2d_bounding_box=explanation_2d_bounding_box
+            )
+        else:
+            output: PipelineExplainerOutput = PipelineExplainerOutput(
+                image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
+                all_images_during_generation=output.all_images_during_generation
+            )
 
         if output.nsfw_content_detected:
             raise Exception(
@@ -132,8 +205,8 @@ class CorePipelineExplainer(ABC):
 
         if batch_size == 1:
             # squash batch dimension
-            for k in ['token_attributions', 'normalized_token_attributions', 'pixel_attributions',
-                      'normalized_pixel_attributions']:
+            for k in ['nsfw_content_detected', 'token_attributions', 'normalized_token_attributions',
+                      'pixel_attributions', 'normalized_pixel_attributions']:
                 if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
@@ -205,7 +278,7 @@ class CorePipelineExplainer(ABC):
 
     def _get_attributions(
         self,
-        output: PipelineExplainerOutput,
+        output: Union[PipelineExplainerOutput, PipelineExplainerForBoundingBoxOutput],
         attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
@@ -214,7 +287,12 @@ class CorePipelineExplainer(ABC):
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         **kwargs
-    ) -> PipelineExplainerOutput:
+    ) -> Union[
+        PipelineExplainerOutput,
+        PipelineExplainerForBoundingBoxOutput,
+        PipelineImg2ImgExplainerOutput,
+        PipelineImg2ImgExplainerForBoundingBoxOutputOutput
+    ]:
         if self.verbose:
             print("Calculating token attributions... ", end='')
 
@@ -278,21 +356,14 @@ class CorePipelineExplainer(ABC):
     @abstractmethod
     def _mimic_pipeline_call(
         self,
-        *args,
-        **kwargs
-    ) -> BaseMimicPipelineCallOutput:
-        raise NotImplementedError
-
-
-class BasePipelineExplainer(CorePipelineExplainer):
-    @abstractmethod
-    def _mimic_pipeline_call(
-        self,
         text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
         batch_size: int,
+        init_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
+        strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
@@ -303,48 +374,76 @@ class BasePipelineExplainer(CorePipelineExplainer):
         run_safety_checker: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
-    ) -> BaseMimicPipelineCallOutput:
+    ) -> Union[
+        BaseMimicPipelineCallOutput,
+        Tuple[Union[List[Image], torch.Tensor], Optional[Union[List[List[Image]], List[torch.Tensor]]], Optional[List[bool]]]
+    ]:
+        r"""
+        Mimics DiffusionPipeline.__call__ but adds extra functionality to calculate explanations.
+
+        Args:
+            text_input (`BatchEncoding`):
+                Tokenized input string.
+            text_embeddings (`torch.Tensor`):
+                Output of the text encoder.
+            batch_size (`int`):
+                Batch size to be used.
+            init_image (`torch.FloatTensor`, *optional*):
+                `Image`, or tensor representing an image batch, that will be used as the starting point for the
+                process.
+            mask_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):
+                `Image`, or tensor representing an image batch, to mask `init_image`. White pixels in the mask will be
+                replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be
+                converted to a single channel (luminance) before use.
+            strength (`float`, *optional*, defaults to 0.8):
+                Conceptually, indicates how much to inpaint the masked area. Must be between 0 and 1. When `strength`
+                is 1, the denoising process will be run on the masked area for the full number of iterations specified
+                in `num_inference_steps`. `init_image` will be used as a reference for the masked area, adding more
+                noise to that region the larger the `strength`. If `strength` is 0, no inpainting will occur.
+            num_inference_steps (`int`, *optional*, defaults to 50):
+                The reference number of denoising steps. More denoising steps usually lead to a higher quality image at
+                the expense of slower inference. This parameter will be modulated by `strength`, as explained above.
+            guidance_scale (`float`, *optional*, defaults to 7.5):
+                Guidance scale as defined in [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598).
+                `guidance_scale` is defined as `w` of equation 2. of [Imagen
+                Paper](https://arxiv.org/pdf/2205.11487.pdf). Guidance scale is enabled by setting `guidance_scale >
+                1`. Higher guidance scale encourages to generate images that are closely linked to the text `prompt`,
+                usually at the expense of lower image quality.
+            eta (`float`, *optional*, defaults to 0.0):
+                Corresponds to parameter eta (η) in the DDIM paper: https://arxiv.org/abs/2010.02502. Only applies to
+                [`schedulers.DDIMScheduler`], will be ignored for others.
+            generator (`torch.Generator`, *optional*):
+                A [torch generator](https://pytorch.org/docs/stable/generated/torch.Generator.html) to make generation
+                deterministic.
+            latents (`torch.FloatTensor`, *optional*):
+                Pre-generated noisy latents, sampled from a Gaussian distribution, to be used as inputs for image
+                generation. Can be used to tweak the same generation with different prompts. If not provided, a latents
+                tensor will ge generated by sampling using the supplied random `generator`.
+            output_type (`str`, *optional*, defaults to `"pil"`):
+                The output format of the generate image. Choose between
+                [PIL](https://pillow.readthedocs.io/en/stable/): `PIL.Image.Image` or `nd.array`.
+            return_dict (`bool`, *optional*, defaults to `True`):
+                Whether or not to return a [`~pipelines.stable_diffusion.StableDiffusionPipelineOutput`] instead of a
+                plain tuple.
+
+        Returns:
+            [`BaseMimicPipelineCallOutput`] or `tuple`:
+            [`BaseMimicPipelineCallOutput`] if `return_dict` is True, otherwise a `tuple`.
+            When returning a tuple, the first element is a list with the generated images,
+            the second element contains all the generated images during the diffusion process and the third element is a
+            list of `bool`s denoting whether the corresponding generated image likely represents "not-safe-for-work"
+            (nsfw) content, according to the `safety_checker` .
+        """
         raise NotImplementedError
 
 
-class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
-    @abstractmethod
-    def _mimic_pipeline_call(
-        self,
-        text_input: BatchEncoding,
-        text_embeddings: torch.Tensor,
-        batch_size: int,
-        init_image: torch.FloatTensor,
-        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
-        strength: float = 0.8,
-        num_inference_steps: Optional[int] = 50,
-        guidance_scale: Optional[float] = 7.5,
-        eta: Optional[float] = 0.0,
-        generator: Optional[torch.Generator] = None,
-        output_type: Optional[str] = 'pil',
-        return_dict: bool = True,
-        run_safety_checker: bool = True,
-        n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
-        get_images_for_all_inference_steps: bool = False
-    ) -> BaseMimicPipelineCallOutput:
-        raise NotImplementedError
-
-    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
-        """
-        Converts input image to tensor
-        """
-        kwargs = super()._preprocess_input(**kwargs)
-        if 'init_image' not in kwargs:
-            raise TypeError("missing 1 required positional argument: 'init_image'")
-
-        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
-        kwargs['init_image'].requires_grad = True
-
-        return kwargs
-
+class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
+    """
+    Core base class to explain img2img and inpaint pipelines
+    """
     def _get_attributions(
         self,
-        output: PipelineExplainerOutput,
+        output: Union[PipelineExplainerOutput, PipelineExplainerForBoundingBoxOutput],
         attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
@@ -353,8 +452,12 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         **kwargs
-    ) -> PipelineImg2ImgExplainerOutput:
-
+    ) -> Union[
+        PipelineExplainerOutput,
+        PipelineExplainerForBoundingBoxOutput,
+        PipelineImg2ImgExplainerOutput,
+        PipelineImg2ImgExplainerForBoundingBoxOutputOutput
+    ]:
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
         init_image: torch.Tensor = kwargs['init_image']
@@ -381,7 +484,7 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             attribution_algorithms=[
                 attribution_method.tokens_attribution_method, attribution_method.pixels_attribution_method
             ],
-            explanation_2d_bounding_box=explanation_2d_bounding_box,
+            explanation_2d_bounding_box=explanation_2d_bounding_box
         )
 
         token_attributions = attributions[0].detach().cpu().numpy()
@@ -409,21 +512,25 @@ class BasePipelineImg2ImgExplainer(CorePipelineExplainer):
             masks = masks.unsqueeze(0)
 
         normalized_pixel_attributions = 100 * (pixel_attributions / pixel_attributions.sum())
-        output = PipelineImg2ImgExplainerOutput(
-            image=output.image,
-            nsfw_content_detected=output.nsfw_content_detected,
-            all_images_during_generation=output.all_images_during_generation,
-            explanation_2d_bounding_box=output.explanation_2d_bounding_box,
-            token_attributions=output.token_attributions,
-            normalized_token_attributions=output.normalized_token_attributions,
-            pixel_attributions=pixel_attributions,
-            normalized_pixel_attributions=normalized_pixel_attributions,
-            input_saliency_map=SaliencyMap(
+        output_kwargs = {
+            'image': output.image,
+            'nsfw_content_detected': output.nsfw_content_detected,
+            'all_images_during_generation': output.all_images_during_generation,
+            'token_attributions': output.token_attributions,
+            'normalized_token_attributions': output.normalized_token_attributions,
+            'pixel_attributions': pixel_attributions,
+            'normalized_pixel_attributions': normalized_pixel_attributions,
+            'input_saliency_map': SaliencyMap(
                 images=init_image.detach().cpu().numpy(),
                 pixel_attributions=pixel_attributions,
                 masks=masks
             )
-        )
+        }
+        if explanation_2d_bounding_box is not None:
+            output_kwargs['explanation_2d_bounding_box'] = explanation_2d_bounding_box
+            output = PipelineImg2ImgExplainerForBoundingBoxOutputOutput(**output_kwargs)
+        else:
+            output = PipelineImg2ImgExplainerOutput(**output_kwargs)
 
         if self.verbose:
             print("Done!")

@@ -80,8 +80,11 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
         text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
         batch_size: int,
+        init_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         height: Optional[int] = 512,
         width: Optional[int] = 512,
+        strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
@@ -92,16 +95,25 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
         run_safety_checker: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
-    ) -> BaseMimicPipelineCallOutput:
-        # TODO: add description
-
+    ) -> Union[
+        BaseMimicPipelineCallOutput,
+        Tuple[Union[List[Image], torch.Tensor], Optional[Union[List[List[Image]], List[torch.Tensor]]], Optional[
+            List[bool]]]
+    ]:
         if height % 8 != 0 or width % 8 != 0:
             raise ValueError(f"`height` and `width` have to be divisible by 8 but are {height} and {width}.")
 
-        if not return_dict:
-            raise NotImplementedError(
-                "`return_dict=False` not available in StableDiffusionPipelineExplainer._mimic_pipeline_call"
-            )
+        if init_image is not None:
+            if mask_image is not None:
+                raise ValueError(
+                    "`init_image` and `mask_image` were passed to StableDiffusionPipelineExplainer and are not expected.\n"
+                    "Were you trying to use StableDiffusionInpaintPipelineExplainer ?"
+                )
+            else:
+                raise ValueError(
+                    "`init_image` was passed to StableDiffusionPipelineExplainer and is not expected.\n"
+                    "Were you trying to use StableDiffusionImg2ImgPipelineExplainer ?"
+                )
 
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
@@ -214,10 +226,13 @@ class StableDiffusionPipelineExplainer(BaseStableDiffusionPipelineExplainer):
             else:
                 image = transform_images_to_pil_format([image], self.pipe)[0]
 
-        return  BaseMimicPipelineCallOutput(
-            images=image, nsfw_content_detected=has_nsfw_concept,
-            all_images_during_generation=all_generated_images
-        )
+        if return_dict:
+            return BaseMimicPipelineCallOutput(
+                images=image, nsfw_content_detected=has_nsfw_concept,
+                all_images_during_generation=all_generated_images
+            )
+        else:
+            return (image, all_generated_images, has_nsfw_concept)
 
 
 class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, BaseStableDiffusionPipelineExplainer):
@@ -228,23 +243,30 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
         text_input: BatchEncoding,
         text_embeddings: torch.Tensor,
         batch_size: int,
-        init_image: torch.FloatTensor,
+        init_image: Optional[torch.FloatTensor] = None,
         mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
+        height: Optional[int] = 512,
+        width: Optional[int] = 512,
         strength: float = 0.8,
         num_inference_steps: Optional[int] = 50,
         guidance_scale: Optional[float] = 7.5,
         eta: Optional[float] = 0.0,
         generator: Optional[torch.Generator] = None,
+        latents: Optional[torch.FloatTensor] = None,
         output_type: Optional[str] = 'pil',
         return_dict: bool = True,
         run_safety_checker: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
         get_images_for_all_inference_steps: bool = False
-    ) -> BaseMimicPipelineCallOutput:
+    ) -> Union[
+        BaseMimicPipelineCallOutput,
+        Tuple[Union[List[Image], torch.Tensor], Optional[Union[List[List[Image]], List[torch.Tensor]]], Optional[
+            List[bool]]]
+    ]:
 
-        if not return_dict:
-            raise NotImplementedError(
-                "`return_dict=False` not available in StableDiffusionPipelineExplainer._mimic_pipeline_call"
+        if latents is not None:
+            raise ValueError(
+                f"`latents` was passed to {self.__class__.__name__} and it is not expected."
             )
 
         # set timesteps
@@ -389,10 +411,14 @@ class StableDiffusionImg2ImgPipelineExplainer(BasePipelineImg2ImgExplainer, Base
             else:
                 image = transform_images_to_pil_format([image], self.pipe)[0]
 
-        return BaseMimicPipelineCallOutput(
-            images=image, nsfw_content_detected=has_nsfw_concept,
-            all_images_during_generation=all_generated_images
-        )
+        if return_dict:
+            return BaseMimicPipelineCallOutput(
+                images=image, nsfw_content_detected=has_nsfw_concept,
+                all_images_during_generation=all_generated_images
+            )
+        else:
+            return (image, all_generated_images, has_nsfw_concept)
+
 
 class StableDiffusionInpaintPipelineExplainer(StableDiffusionImg2ImgPipelineExplainer):
     # Actually the same as StableDiffusionImg2ImgPipelineExplainer

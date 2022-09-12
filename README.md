@@ -151,7 +151,7 @@ The attributions are now computed only for the area specified in the image.
 ```
 
 ### Explanations for StableDiffusionImg2ImgPipeline
-[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example_colab.ipynb)
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example.ipynb)
 
 ```python
 import torch
@@ -222,7 +222,7 @@ array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
 <ins>The attributions are always calculated for the model's input (image and text) with respect to the output image.</ins>
 
 ### Explanations for StableDiffusionInpaintPipeline
-[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example_colab.ipynb)
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb)
 
 Same as [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline), but now we also pass a `mask_image` argument to `explainer`.
 

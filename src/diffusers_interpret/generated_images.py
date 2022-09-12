@@ -145,7 +145,13 @@ class GeneratedImages:
         self.image_slider_iframe.height = height
         display.update(self.image_slider_iframe)
 
-    def gif(self, file_name = "diffusion_process.gif", duration = 400, show = True):
+    def gif(self, file_name: str = "diffusion_process.gif", duration: int = 400, show: bool = True) -> None:
+
+        if len(self.images) == 0:
+            raise Exception("`self.images` is an empty list, can't show any images")
+        if isinstance(self.images[0], list):
+            raise NotImplementedError("GeneratedImages.gif is not supported "
+                                                         "when `self.images` is a list of lists of images")
         '''
         Generate and display a GIF from the denoising process
         '''

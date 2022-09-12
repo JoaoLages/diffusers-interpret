@@ -190,6 +190,8 @@ class BasePipelineExplainer(ABC):
                 attribution_method=attribution_method,
                 tokens=tokens,
                 text_embeddings=text_embeddings,
+                init_image=init_image,
+                mask_image=mask_image,
                 explanation_2d_bounding_box=explanation_2d_bounding_box,
                 consider_special_tokens=consider_special_tokens,
                 clean_token_prefixes_and_suffixes=clean_token_prefixes_and_suffixes,
@@ -276,6 +278,8 @@ class BasePipelineExplainer(ABC):
         attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
+        init_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
@@ -461,6 +465,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         attribution_method: AttributionMethods,
         tokens: List[List[str]],
         text_embeddings: torch.Tensor,
+        init_image: Optional[torch.FloatTensor] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
@@ -472,9 +478,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         PipelineImg2ImgExplainerOutput,
         PipelineImg2ImgExplainerForBoundingBoxOutputOutput
     ]:
-        if 'init_image' not in kwargs:
+        if init_image is None:
             raise TypeError("missing 1 required positional argument: 'init_image'")
-        init_image: torch.Tensor = kwargs['init_image']
 
         input_embeds = (text_embeddings,)
         if n_last_diffusion_steps_to_consider_for_attributions is None:

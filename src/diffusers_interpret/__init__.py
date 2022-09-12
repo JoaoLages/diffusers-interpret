@@ -1,4 +1,4 @@
-from .explainer import CorePipelineExplainer, BasePipelineExplainer, BasePipelineImg2ImgExplainer
+from .explainer import BasePipelineExplainer, BasePipelineImg2ImgExplainer
 from .explainers.latent_diffusion import LDMTextToImagePipelineExplainer
 from .explainers.stable_diffusion import StableDiffusionPipelineExplainer, StableDiffusionImg2ImgPipelineExplainer, \
     StableDiffusionInpaintPipelineExplainer

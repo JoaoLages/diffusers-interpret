@@ -170,18 +170,17 @@ class BasePipelineExplainer(ABC):
             **kwargs
         )
 
-        # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput
+        # transform BaseMimicPipelineCallOutput to PipelineExplainerOutput or PipelineExplainerForBoundingBoxOutput
+        output_kwargs = {
+            'image': output.images[0],
+            'nsfw_content_detected': output.nsfw_content_detected,
+            'all_images_during_generation': output.all_images_during_generation,
+        }
         if explanation_2d_bounding_box is not None:
-            output: PipelineExplainerForBoundingBoxOutput = PipelineExplainerForBoundingBoxOutput(
-                image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
-                all_images_during_generation=output.all_images_during_generation,
-                explanation_2d_bounding_box=explanation_2d_bounding_box
-            )
+            output['explanation_2d_bounding_box'] = explanation_2d_bounding_box
+            output: PipelineExplainerForBoundingBoxOutput = PipelineExplainerForBoundingBoxOutput(**output_kwargs)
         else:
-            output: PipelineExplainerOutput = PipelineExplainerOutput(
-                image=output.images[0], nsfw_content_detected=output.nsfw_content_detected,
-                all_images_during_generation=output.all_images_during_generation
-            )
+            output: PipelineExplainerOutput = PipelineExplainerOutput(**output_kwargs)
 
         if output.nsfw_content_detected:
             raise Exception(

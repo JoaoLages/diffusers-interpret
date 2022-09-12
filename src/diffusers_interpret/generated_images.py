@@ -144,3 +144,18 @@ class GeneratedImages:
         self.image_slider_iframe.width = width
         self.image_slider_iframe.height = height
         display.update(self.image_slider_iframe)
+
+    def gif(self, file_name = "diffusion_process.gif", duration = 400, show = True):
+        '''
+        Generate and display a GIF from the denoising process
+        '''
+        self[0].save(file_name,
+                     save_all = True,
+                     append_images = self,
+                     optimize = False,
+                     duration = duration,
+                     loop = 0)
+        if show == True:
+            return IPython.display.Image(file_name)
+        else:
+            return None

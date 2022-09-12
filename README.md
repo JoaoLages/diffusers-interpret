@@ -222,6 +222,7 @@ array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
 
 ### Explanations for StableDiffusionInpaintPipeline
 <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+
 Same as [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline), but now we also pass a `mask_image` argument to `explainer`.
 
 ```python

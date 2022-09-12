@@ -183,7 +183,7 @@ with torch.autocast('cuda'):
     )
 ```
 
-`output` will have all the properties that were presented for `StableDiffusionPipeline`.  
+`output` will have all the properties that were presented for [StableDiffusionPipeline](#explanations-for-stablediffusionpipeline).  
 Additionally, it is also possible to visualize pixel attributions of the input image as a saliency map:
 ```python
 output.input_saliency_map.show()
@@ -222,7 +222,7 @@ array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
 
 ### Explanations for StableDiffusionInpaintPipeline
 <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
-Same as `StableDiffusionImg2ImgPipeline`, but now we also pass a `mask_image` argument to `explainer`.
+Same as [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline), but now we also pass a `mask_image` argument to `explainer`.
 
 ```python
 import torch
@@ -259,7 +259,7 @@ with torch.autocast('cuda'):
     )
 ```
 
-`output` will have all the properties that were presented for `StableDiffusionImg2ImgPipeline` and `StableDiffusionPipeline`.  
+`output` will have all the properties that were presented for [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline) and [StableDiffusionPipeline](#explanations-for-stablediffusionpipeline).  
 The only difference is that we can now see the masked part of the image:
 ```python
 output.input_saliency_map.show()

@@ -4,3 +4,6 @@ torch>=1.9.1
 diffusers~=0.3.0
 scipy>=1.7.3
 ftfy>=6.1.1
+cmapy>=0.6.6
+matplotlib>=3.5.3
+opencv-python>=4.6.0

@@ -22,7 +22,7 @@ Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https:/
 3. [Explanations for StableDiffusionInpaintPipeline](#explanations-for-stablediffusioninpaintpipeline)
 
 ### Explanations for StableDiffusionPipeline
-<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb)
 
 ```python
 import torch
@@ -45,10 +45,7 @@ pipe = StableDiffusionPipeline.from_pretrained(
 pipe.enable_attention_slicing()
 
 # pass pipeline to the explainer class
-explainer = StableDiffusionPipelineExplainer(
-    pipe, 
-    gradient_checkpointing=True # this also reduces GPU memory usage, but makes computation slower
-)
+explainer = StableDiffusionPipelineExplainer(pipe)
 
 # generate an image with `explainer`
 prompt = "A cute corgi with the Eiffel Tower in the background"
@@ -64,7 +61,6 @@ If you are having GPU memory problems, try reducing `n_last_diffusion_steps_to_c
 output = explainer(
     prompt, 
     num_inference_steps=15,
-    generator=generator,
     height=448,
     width=448,
     n_last_diffusion_steps_to_consider_for_attributions=5
@@ -75,7 +71,6 @@ You can completely deactivate token/pixel attributions computation by passing `n
 
 Gradient checkpointing also reduces GPU usage, but makes computations a bit slower:
 ```
-
 explainer = StableDiffusionPipelineExplainer(pipe, gradient_checkpointing=True)
 ```
 
@@ -127,12 +122,10 @@ Or their computed normalized version, in percentage:
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
 
 ```python
-generator = torch.Generator(device).manual_seed(2022) # re-use generator
 with torch.autocast('cuda') if device == 'cuda' else nullcontext():
     output = explainer(
         prompt, 
         num_inference_steps=15, 
-        generator=generator,
         explanation_2d_bounding_box=((70, 180), (400, 435)), # (upper left corner, bottom right corner)
     )
 output.image
@@ -158,7 +151,7 @@ The attributions are now computed only for the area specified in the image.
 ```
 
 ### Explanations for StableDiffusionImg2ImgPipeline
-<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example_colab.ipynb)
 
 ```python
 import torch
@@ -226,10 +219,10 @@ array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
 ```
 
 **Note:** Passing `explanation_2d_bounding_box` to the `explainer` will also change these values to explain a specific part of the **output** image. 
-<ins>The attributions are always calculated for the model's input with respect to the output image.</ins>
+<ins>The attributions are always calculated for the model's input (image and text) with respect to the output image.</ins>
 
 ### Explanations for StableDiffusionInpaintPipeline
-<a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example_colab.ipynb)
 
 Same as [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline), but now we also pass a `mask_image` argument to `explainer`.
 

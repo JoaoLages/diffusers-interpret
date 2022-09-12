@@ -447,7 +447,7 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         prompt, init_image, mask_image = super()._preprocess_input(
             prompt=prompt, init_image=init_image, mask_image=mask_image
         )
-        if init_image is not None:
+        if init_image is None:
             raise TypeError("missing 1 required positional argument: 'init_image'")
 
         init_image = preprocess(init_image).to(self.pipe.device).permute(0, 2, 3, 1)

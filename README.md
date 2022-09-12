@@ -174,7 +174,7 @@ url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/st
 
 response = requests.get(url)
 init_image = Image.open(BytesIO(response.content)).convert("RGB")
-init_image = init_image.resize((384, 256))
+init_image = init_image.resize((448, 448))
 
 with torch.autocast('cuda'):
     output = explainer(
@@ -192,36 +192,28 @@ output.input_saliency_map.show()
 or access their values directly:
 ```python
 >>> output.pixel_attributions
-array([[ 0.90722656,  1.7353516 ,  5.0039062 , ...,  8.671875  ,
-         5.3554688 ,  3.9589844 ],
-       [ 1.6640625 ,  5.3867188 , 12.3046875 , ..., 11.3515625 ,
-         5.25      ,  4.71875   ],
-       [ 7.2617188 ,  4.28125   , 28.171875  , ..., 52.1875    ,
-        28.296875  , 18.578125  ],
+array([[ 1.2714844 ,  4.15625   ,  7.8203125 , ...,  2.7753906 ,
+         2.1308594 ,  0.66552734],
+       [ 5.5078125 , 11.1953125 ,  4.8125    , ...,  5.6367188 ,
+         6.8828125 ,  3.0136719 ],
        ...,
-       [12.8828125 , 13.3046875 , 45.4375    , ..., 74.625     ,
-        39.625     , 54.65625   ],
-       [ 8.4453125 , 14.46875   , 23.40625   , ..., 44.34375   ,
-        36.96875   , 37.96875   ],
-       [ 3.0351562 ,  8.859375  , 12.171875  , ..., 37.8125    ,
-        13.7421875 , 10.328125  ]], dtype=float32)
+       [ 0.21386719,  1.8867188 ,  2.2109375 , ...,  3.0859375 ,
+         2.7421875 ,  0.7871094 ],
+       [ 0.85791016,  0.6694336 ,  1.71875   , ...,  3.8496094 ,
+         1.4589844 ,  0.5727539 ]], dtype=float32)
 ```
 or the normalized version:
 ```python
 >>> output.normalized_pixel_attributions
-array([[1.72888940e-05, 3.30703624e-05, 9.53587733e-05, ...,
-        1.65258753e-04, 1.02058446e-04, 7.54458379e-05],
-       [3.17118138e-05, 1.02653976e-04, 2.34488791e-04, ...,
-        2.16325207e-04, 1.00048543e-04, 8.99245861e-05],
-       [1.38385600e-04, 8.15872045e-05, 5.36867650e-04, ...,
-        9.94530157e-04, 5.39249799e-04, 3.54040851e-04],
+array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
+        1.56300011e-04, 1.20002325e-04, 3.74801020e-05],
+       [3.10180156e-04, 6.30479713e-04, 2.71022669e-04, ...,
+        3.17439699e-04, 3.87615233e-04, 1.69719147e-04],
        ...,
-       [2.45506031e-04, 2.53545644e-04, 8.65896349e-04, ...,
-        1.42211863e-03, 7.55128276e-04, 1.04157685e-03],
-       [1.60941199e-04, 2.75729020e-04, 4.46049758e-04, ...,
-        8.45052884e-04, 7.04508508e-04, 7.23565405e-04],
-       [5.78405670e-05, 1.68831917e-04, 2.31957805e-04, ...,
-        7.20587734e-04, 2.61883019e-04, 1.96821697e-04]], dtype=float32)
+       [1.20442292e-05, 1.06253210e-04, 1.24512037e-04, ...,
+        1.73788882e-04, 1.54430119e-04, 4.43271674e-05],
+       [4.83144104e-05, 3.77000870e-05, 9.67938031e-05, ...,
+        2.16796136e-04, 8.21647482e-05, 3.22554370e-05]], dtype=float32)
 ```
 
 **Note:** Passing `explanation_2d_bounding_box` to the `explainer` will also change these values to explain a specific part of the **output** image. 
@@ -257,8 +249,8 @@ prompt = "a cat sitting on a bench"
 img_url = "https://raw.githubusercontent.com/CompVis/latent-diffusion/main/data/inpainting_examples/overture-creations-5sI6fQgYIuo.png"
 mask_url = "https://raw.githubusercontent.com/CompVis/latent-diffusion/main/data/inpainting_examples/overture-creations-5sI6fQgYIuo_mask.png"
 
-init_image = download_image(img_url).resize((384, 384))
-mask_image = download_image(mask_url).resize((384, 384))
+init_image = download_image(img_url).resize((448, 448))
+mask_image = download_image(mask_url).resize((448, 448))
 
 with torch.autocast('cuda'):
     output = explainer(
@@ -266,7 +258,7 @@ with torch.autocast('cuda'):
     )
 ```
 
-`output` will have all the properties that were presented for `StableDiffusionImg2ImgPipeline`.  
+`output` will have all the properties that were presented for `StableDiffusionImg2ImgPipeline` and `StableDiffusionPipeline`.  
 The only difference is that we can now see the masked part of the image:
 ```python
 output.input_saliency_map.show()

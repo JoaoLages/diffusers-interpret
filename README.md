@@ -41,7 +41,7 @@ pipe = StableDiffusionPipeline.from_pretrained(
     torch_dtype=torch.float16 if device != 'cpu' else None
 ).to(device)
 
-# Enabling attention slicing to require less GPU memory
+# optional: reduce memory requirement with a speed trade off 
 pipe.enable_attention_slicing()
 
 # pass pipeline to the explainer class
@@ -59,17 +59,25 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
     )
 ```
 
-If you are still having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
-```python
+If you are having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
+```
 output = explainer(
     prompt, 
     num_inference_steps=15,
+    generator=generator,
     height=448,
     width=448,
     n_last_diffusion_steps_to_consider_for_attributions=5
 )
 ```
+
 You can completely deactivate token/pixel attributions computation by passing `n_last_diffusion_steps_to_consider_for_attributions=0`.  
+
+Gradient checkpointing also reduces GPU usage, but makes computations a bit slower:
+```
+
+explainer = StableDiffusionPipelineExplainer(pipe, gradient_checkpointing=True)
+```
 
 To see the final generated image:
 ```python
@@ -78,11 +86,11 @@ output.image
 
 ![](assets/corgi_eiffel_tower.png)
 
-You can also check all the images that the diffusion process generated at the end of each step.
+You can also check all the images that the diffusion process generated at the end of each step:
 ```python
 output.all_images_during_generation.show()
 ```
-![](assets/image_slider.gif)
+![](assets/image_slider_cropped.gif)
 
 To analyse how a token in the input `prompt` influenced the generation, you can study the token attribution scores:
 ```python

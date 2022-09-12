@@ -523,8 +523,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         # removes preprocessing done in diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.preprocess
         init_image = (init_image + 1.0) / 2.0
 
-        # get masks and add batch dimension if needed
-        masks = kwargs.get('mask_image')
+        # add batch dimension to mask if needed
+        masks = mask_image
         if isinstance(masks, Image):
             masks = [masks]
         elif torch.is_tensor(masks) and len(masks.shape) == 3:

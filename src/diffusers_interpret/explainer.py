@@ -33,8 +33,13 @@ class BasePipelineExplainer(ABC):
         if self.gradient_checkpointing:
             self.gradient_checkpointing_enable()
 
-    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
-        return kwargs
+    def _preprocess_input(
+        self,
+        prompt: str,
+        init_image: Optional[Union[torch.FloatTensor, Image]] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None
+    ) -> Tuple[Any, Any, Any]:
+        return prompt, init_image, mask_image
 
     def __call__(
         self,
@@ -133,7 +138,7 @@ class BasePipelineExplainer(ABC):
         if explanation_2d_bounding_box:
             pass
 
-        kwargs = self._preprocess_input(**kwargs)
+        prompt, init_image, mask_image = self._preprocess_input(prompt=prompt, init_image=init_image, mask_image=mask_image)
 
         # get prompt text embeddings
         tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
@@ -430,18 +435,25 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
     """
     Core base class to explain img2img and inpaint pipelines
     """
-    def _preprocess_input(self, **kwargs) -> Dict[str, Any]:
+    def _preprocess_input(
+        self,
+        prompt: str,
+        init_image: Optional[Union[torch.FloatTensor, Image]] = None,
+        mask_image: Optional[Union[torch.FloatTensor, Image]] = None
+    ) -> Tuple[Any, Any, Any]:
         """
         Converts input image to tensor
         """
-        kwargs = super()._preprocess_input(**kwargs)
-        if 'init_image' not in kwargs:
+        prompt, init_image, mask_image = super()._preprocess_input(
+            prompt=prompt, init_image=init_image, mask_image=mask_image
+        )
+        if init_image is not None:
             raise TypeError("missing 1 required positional argument: 'init_image'")
 
-        kwargs['init_image'] = preprocess(kwargs['init_image']).to(self.pipe.device).permute(0, 2, 3, 1)
-        kwargs['init_image'].requires_grad = True
+        init_image = preprocess(init_image).to(self.pipe.device).permute(0, 2, 3, 1)
+        init_image.requires_grad = True
 
-        return kwargs
+        return prompt, init_image, mask_image
 
     def _get_attributions(
         self,

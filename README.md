@@ -17,7 +17,11 @@ Install directly from PyPI:
 
 Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https://github.com/huggingface/diffusers#new--stable-diffusion-is-now-fully-compatible-with-diffusers)!**
 
-### Explanations for `StableDiffusionPipeline`
+1. [Explanations for StableDiffusionPipeline](#explanations-for-stablediffusionpipeline)
+2. [Explanations for StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline)
+3. [Explanations for StableDiffusionInpaintPipeline](#explanations-for-stablediffusioninpaintpipeline)
+
+### Explanations for StableDiffusionPipeline
 <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_example_colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
 
 ```python
@@ -48,12 +52,10 @@ explainer = StableDiffusionPipelineExplainer(
 
 # generate an image with `explainer`
 prompt = "A cute corgi with the Eiffel Tower in the background"
-generator = torch.Generator(device).manual_seed(2022)
 with torch.autocast('cuda') if device == 'cuda' else nullcontext():
     output = explainer(
         prompt, 
-        num_inference_steps=15,
-        generator=generator
+        num_inference_steps=15
     )
 ```
 
@@ -62,7 +64,6 @@ If you are still having GPU memory problems, try reducing `n_last_diffusion_step
 output = explainer(
     prompt, 
     num_inference_steps=15,
-    generator=generator,
     height=448,
     width=448,
     n_last_diffusion_steps_to_consider_for_attributions=5
@@ -148,7 +149,7 @@ The attributions are now computed only for the area specified in the image.
  ('background', 23.05)]
 ```
 
-### Explanations for `StableDiffusionImg2ImgPipeline`
+### Explanations for StableDiffusionImg2ImgPipeline
 <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_img2img_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
 
 ```python
@@ -178,7 +179,7 @@ init_image = init_image.resize((448, 448))
 
 with torch.autocast('cuda'):
     output = explainer(
-        prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5
+        prompt=prompt, init_image=init_image, strength=0.75
     )
 ```
 
@@ -219,7 +220,7 @@ array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
 **Note:** Passing `explanation_2d_bounding_box` to the `explainer` will also change these values to explain a specific part of the **output** image. 
 <ins>The attributions are always calculated for the model's input with respect to the output image.</ins>
 
-### Explanations for `StableDiffusionInpaintPipeline`
+### Explanations for StableDiffusionInpaintPipeline
 <a href="https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JoaoLages/diffusers-interpret/blob/main/notebooks/stable_diffusion_inpaint_example.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Run directly in Google Colab"/></a>
 Same as `StableDiffusionImg2ImgPipeline`, but now we also pass a `mask_image` argument to `explainer`.
 
@@ -228,8 +229,8 @@ import torch
 import requests
 from PIL import Image
 from io import BytesIO
-from diffusers import StableDiffusionImg2ImgPipeline
-from diffusers_interpret import StableDiffusionImg2ImgPipelineExplainer
+from diffusers import StableDiffusionInpaintPipeline
+from diffusers_interpret import StableDiffusionInpaintPipelineExplainer
 
 
 def download_image(url):
@@ -237,12 +238,12 @@ def download_image(url):
     return Image.open(BytesIO(response.content)).convert("RGB")
 
 
-pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+pipe = StableDiffusionInpaintPipeline.from_pretrained(
     "CompVis/stable-diffusion-v1-4", 
     use_auth_token=True,
 ).to('cuda')
 
-explainer = StableDiffusionImg2ImgPipelineExplainer(pipe)
+explainer = StableDiffusionInpaintPipelineExplainer(pipe)
 
 prompt = "a cat sitting on a bench"
 
@@ -254,7 +255,7 @@ mask_image = download_image(mask_url).resize((448, 448))
 
 with torch.autocast('cuda'):
     output = explainer(
-        prompt=prompt, init_image=init_image, strength=0.75, guidance_scale=7.5
+        prompt=prompt, init_image=init_image, mask_image=mask_image, strength=0.75
     )
 ```
 

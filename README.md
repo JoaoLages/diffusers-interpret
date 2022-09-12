@@ -288,4 +288,4 @@ Feel free to open an [Issue](https://github.com/JoaoLages/diffusers-interpret/is
 
 A special thanks to:
 - [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1) to show all the generated images during diffusion! 💪 
-- [@TomPham97](https://github.com/TomPham97) for README improvements and the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9)
+- [@TomPham97](https://github.com/TomPham97) for README improvements and the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9) 😁

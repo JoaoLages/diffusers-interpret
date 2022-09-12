@@ -37,7 +37,6 @@ class BasePipelineExplainer(ABC):
         """
         Converts input image to tensor
         """
-        kwargs = super()._preprocess_input(**kwargs)
         if 'init_image' not in kwargs:
             raise TypeError("missing 1 required positional argument: 'init_image'")
 

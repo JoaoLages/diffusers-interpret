@@ -37,7 +37,7 @@ class SaliencyMap:
             saliency_map = np.float32(saliency_map) / 255.0
 
             if mask is not None and apply_mask:
-                img *= (1 - mask / 255)
+                img = np.array(img) * (1 - mask / 255) # np.array so that we copy `img` and don't change it
                 saliency_map *= (1 - mask / 255)
 
             overlayed = (1 - image_weight) * saliency_map + image_weight * img

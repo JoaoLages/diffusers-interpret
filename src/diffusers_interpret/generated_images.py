@@ -162,7 +162,6 @@ class GeneratedImages:
                      optimize = False,
                      duration = duration,
                      loop = 0)
-        if show == True:
-            return IPython.display.Image(file_name)
-        else:
-            return None
+        if show:
+            d.Image(file_name)
+

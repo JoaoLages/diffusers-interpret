@@ -33,16 +33,14 @@ def plot(self, type: _TYPES = 'bar', title: str = 'Token Attributions', rot: int
 
     # Bar chart
     if type == 'bar':
-        df.plot.bar(x = 'Tokens',
-            ylabel = 'percent',
+        df.plot.bar(ylabel = 'percent',
             title = title,
             legend = False,
             rot = rot);
     
     # Horizontal bar chart
     elif type == 'barh':
-        df.plot.barh(x = 'Tokens',
-            ylabel = 'percent',
+        df.plot.barh(ylabel = 'percent',
             title = title,
             legend = False,
             rot = 0);

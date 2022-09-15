@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from typing import Union, List, Optional, Tuple, Any
@@ -7,7 +8,9 @@ import torch
 from PIL.Image import Image
 
 from diffusers_interpret.generated_images import GeneratedImages
+from diffusers_interpret.pixel_attributions import PixelAttributions
 from diffusers_interpret.saliency_map import SaliencyMap
+from diffusers_interpret.token_attributions import TokenAttributions
 
 
 @dataclass
@@ -49,22 +52,29 @@ class PipelineExplainerOutput:
             (nsfw) content.
         all_images_during_generation (`Optional[Union[GeneratedImages, List[torch.Tensor]]]`)
             A GeneratedImages object to visualize all the generated images during diffusion OR a list of tensors of those images
-        token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, token_attribution)
-        normalized_token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, normalized_token_attribution)
+        token_attributions (`Optional[TokenAttributions]`)
+            TokenAttributions that contains a list of tuples with (token, token_attribution)
     """
     image: Union[Image, torch.Tensor]
     nsfw_content_detected: Optional[bool] = None
     all_images_during_generation: Optional[Union[GeneratedImages, List[torch.Tensor]]] = None
-    token_attributions: Optional[List[Tuple[str, float]]] = None
-    normalized_token_attributions: Optional[List[Tuple[str, float]]] = None
+    token_attributions: Optional[TokenAttributions] = None
 
     def __getitem__(self, item):
         return getattr(self, item)
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+    def __getattr__(self, attr):
+        if attr == 'normalized_token_attributions':
+            warnings.warn(
+                f"`normalized_token_attributions` is deprecated as an attribute of `{self.__class__.__name__}` "
+                f"and will be removed in a future version. Consider using `output.token_attributions.normalized` instead",
+                DeprecationWarning, stacklevel=2
+            )
+            return self.token_attributions.normalized
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
 
 
 @dataclass
@@ -80,10 +90,8 @@ class PipelineExplainerForBoundingBoxOutput(PipelineExplainerOutput):
             (nsfw) content.
         all_images_during_generation (`Optional[Union[GeneratedImages, List[torch.Tensor]]]`)
             A GeneratedImages object to visualize all the generated images during diffusion OR a list of tensors of those images
-        token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, token_attribution)
-        normalized_token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, normalized_token_attribution)
+        token_attributions (`Optional[TokenAttributions]`)
+            TokenAttributions that contains a list of tuples with (token, token_attribution)
         explanation_2d_bounding_box: (`Tuple[Tuple[int, int], Tuple[int, int]]`)
             Tuple with the bounding box coordinates where the attributions were calculated for.
             The tuple is like (upper left corner, bottom right corner). Example: `((0, 0), (300, 300))`
@@ -104,20 +112,26 @@ class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
             (nsfw) content.
         all_images_during_generation (`Optional[Union[GeneratedImages, List[torch.Tensor]]]`)
             A GeneratedImages object to visualize all the generated images during diffusion OR a list of tensors of those images
-        token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, token_attribution)
-        normalized_token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, normalized_token_attribution)
-        pixel_attributions (`Optional[np.ndarray]`)
-            A numpy array of shape `(height, width)` with an attribution score per pixel in the input image
-        normalized_pixel_attributions (`Optional[np.ndarray]`)
-            A numpy array of shape `(height, width)` with a normalized attribution score per pixel in the input image
+        token_attributions (`Optional[TokenAttributions]`)
+            TokenAttributions that contains a list of tuples with (token, token_attribution)
+        pixel_attributions (`Optional[PixelAttributions]`)
+            PixelAttributions that is a numpy array of shape `(height, width)` with an attribution score per pixel in the input image
         input_saliency_map (`Optional[SaliencyMap]`)
             A SaliencyMap object to visualize the pixel attributions of the input image
     """
-    pixel_attributions: Optional[np.ndarray] = None
-    normalized_pixel_attributions: Optional[np.ndarray] = None
-    input_saliency_map: Optional[SaliencyMap] = None
+    pixel_attributions: Optional[PixelAttributions] = None
+
+    def __getattr__(self, attr):
+        if attr == 'normalized_pixel_attributions':
+            warnings.warn(
+                f"`normalized_pixel_attributions` is deprecated as an attribute of `{self.__class__.__name__}` "
+                f"and will be removed in a future version. Consider using `output.pixel_attributions.normalized` instead",
+                DeprecationWarning, stacklevel=2
+            )
+            return self.token_attributions.normalized
+        elif attr == 'input_saliency_map':
+            return self.pixel_attributions.saliency_map
+        return super().__getattr__(attr)
 
 
 @dataclass
@@ -133,14 +147,10 @@ class PipelineImg2ImgExplainerForBoundingBoxOutputOutput(PipelineExplainerForBou
             (nsfw) content.
         all_images_during_generation (`Optional[Union[GeneratedImages, List[torch.Tensor]]]`)
             A GeneratedImages object to visualize all the generated images during diffusion OR a list of tensors of those images
-        token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, token_attribution)
-        normalized_token_attributions (`Optional[List[Tuple[str, float]]]`)
-            A list of tuples with (token, normalized_token_attribution)
+        token_attributions (`Optional[TokenAttributions]`)
+            TokenAttributions that contains a list of tuples with (token, token_attribution)
         pixel_attributions (`Optional[np.ndarray]`)
-            A numpy array of shape `(height, width)` with an attribution score per pixel in the input image
-        normalized_pixel_attributions (`Optional[np.ndarray]`)
-            A numpy array of shape `(height, width)` with a normalized attribution score per pixel in the input image
+            PixelAttributions that is a numpy array of shape `(height, width)` with an attribution score per pixel in the input image
         input_saliency_map (`Optional[SaliencyMap]`)
             A SaliencyMap object to visualize the pixel attributions of the input image
         explanation_2d_bounding_box: (`Tuple[Tuple[int, int], Tuple[int, int]]`)

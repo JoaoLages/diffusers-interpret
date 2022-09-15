@@ -104,7 +104,7 @@ To analyse how a token in the input `prompt` influenced the generation, you can 
 
 Or their computed normalized version, in percentage:
 ```python
->>> output.normalized_token_attributions # (token, attribution_percentage)
+>>> output.token_attributions.normalized # (token, attribution_percentage)
 [('a', 3.884),
  ('cute', 1.519),
  ('corgi', 23.495),
@@ -116,6 +116,13 @@ Or their computed normalized version, in percentage:
  ('the', 2.395),
  ('background', 14.607)]
 ```
+
+You can also view token attributions as a plot!
+```python
+output.token_attributions.plot(normalize=True)
+```
+![](assets/token_attributions_1.gif)
+
 
 `diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 
@@ -137,7 +144,7 @@ The generated image now has a <span style="color:red"> **red bounding box** </sp
 The attributions are now computed only for the area specified in the image.
 
 ```python
->>> output.normalized_token_attributions # (token, attribution_percentage)
+>>> output.token_attributions.normalized # (token, attribution_percentage)
 [('a', 1.891),
  ('cute', 1.344),
  ('corgi', 23.115),
@@ -212,7 +219,7 @@ array([[ 1.2714844 ,  4.15625   ,  7.8203125 , ...,  2.7753906 ,
 ```
 or the normalized version:
 ```python
->>> output.normalized_pixel_attributions
+>>> output.pixel_attributions.normalized 
 array([[7.16054201e-05, 2.34065039e-04, 4.40411852e-04, ...,
         1.56300011e-04, 1.20002325e-04, 3.74801020e-05],
        [3.10180156e-04, 6.30479713e-04, 2.71022669e-04, ...,

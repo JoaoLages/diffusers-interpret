@@ -32,6 +32,7 @@ class SaliencyMap:
         saliency_map = cv2.cvtColor(saliency_map, cv2.COLOR_BGR2RGB)
         saliency_map = np.float32(saliency_map) / 255.0
 
+        img = self.img
         if self.mask is not None and apply_mask:
             img = np.array(self.img) * (1 - self.mask / 255) # np.array so that we copy `img` and don't change it
             saliency_map *= (1 - self.mask / 255)

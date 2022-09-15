@@ -184,7 +184,13 @@ with torch.autocast('cuda'):
     )
 ```
 
-`output` will have all the properties that were presented for [StableDiffusionPipeline](#explanations-for-stablediffusionpipeline).  
+`output` will have all the properties that were presented for [StableDiffusionPipeline](#explanations-for-stablediffusionpipeline).
+For example, to see the gif version of all the images during generation:
+```python
+output.all_images_during_generation.gif()
+```
+![](assets/img2img_1.gif)
+
 Additionally, it is also possible to visualize pixel attributions of the input image as a saliency map:
 ```python
 output.input_saliency_map.show()
@@ -262,7 +268,13 @@ with torch.autocast('cuda'):
 ```
 
 `output` will have all the properties that were presented for [StableDiffusionImg2ImgPipeline](#explanations-for-stablediffusionimg2imgpipeline) and [StableDiffusionPipeline](#explanations-for-stablediffusionpipeline).  
-The only difference is that we can now see the masked part of the image:
+For example, to see the gif version of all the images during generation:
+```python
+output.all_images_during_generation.gif()
+```
+![](assets/inpaint_1.gif)
+
+The only difference in `output` now, is that we can now see the masked part of the image:
 ```python
 output.input_saliency_map.show()
 ```

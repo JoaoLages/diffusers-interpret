@@ -24,5 +24,3 @@ class PixelAttributions(np.ndarray):
 
     def __setitem__(self, key: Union[str, int], value: Any) -> None:
         setattr(self, key, value)
-
-

@@ -121,8 +121,7 @@ You can also view token attributions as a plot!
 ```python
 output.token_attributions.plot(normalize=True)
 ```
-![](assets/token_attributions_1.gif)
-
+![](assets/token_attributions_1.png)
 
 `diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 

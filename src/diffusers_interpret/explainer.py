@@ -526,14 +526,20 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         elif torch.is_tensor(masks) and len(masks.shape) == 3:
             masks = masks.unsqueeze(0)
 
-        pixel_attributions = PixelAttributions(
-            pixel_attributions,
-            saliency_map=SaliencyMap(
-                images=init_image.detach().cpu().numpy(),
-                pixel_attributions=pixel_attributions,
-                masks=masks
-            )
-        )
+        # construct PixelAttributions objects
+        images = init_image.detach().cpu().numpy()
+        assert len(images) == len(pixel_attributions) == len(masks)
+        pixel_attributions = [
+            PixelAttributions(
+                attr,
+                saliency_map=SaliencyMap(
+                    image=img,
+                    pixel_attributions=attr,
+                    mask=mask
+                )
+            ) for img, attr, mask in zip(images, pixel_attributions, masks)
+        ]
+
         output_kwargs = {
             'image': output.image,
             'nsfw_content_detected': output.nsfw_content_detected,

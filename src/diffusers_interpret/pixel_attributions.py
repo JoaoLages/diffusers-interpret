@@ -6,7 +6,7 @@ from diffusers_interpret.saliency_map import SaliencyMap
 
 
 class PixelAttributions(np.ndarray):
-    def __new__(cls, pixel_attributions: np.ndarray, saliency_map: SaliencyMap):
+    def __new__(cls, pixel_attributions: np.ndarray, saliency_map: SaliencyMap) -> "PixelAttributions":
         # Construct new ndarray
         obj = np.asarray(pixel_attributions).view(cls)
         obj.pixel_attributions = pixel_attributions
@@ -14,11 +14,8 @@ class PixelAttributions(np.ndarray):
         obj.saliency_map = saliency_map
 
         # Calculate normalized
-        total = sum([attr for _, attr in pixel_attributions])
-        obj.normalized = [
-            (pixel, round(100 * attr / total, 3))
-            for pixel, attr in pixel_attributions
-        ]
+        obj.normalized = 100 * (pixel_attributions / pixel_attributions.sum())
+
         return obj
 
     def __getitem__(self, item: Union[str, int]) -> Any:

@@ -35,18 +35,21 @@ class TokenAttributions(list):
         ylabel = plot_kwargs.get('ylabel')
         title = plot_kwargs.get('title') or f'{prefix.title()}Token Attributions'
 
+        fig, ax = plt.subplots()
         if plot_type == 'bar':
             # Bar chart
-            plt.bar(tokens, attributions)
-            plt.xlabel(xlabel or 'tokens')
-            plt.ylabel(ylabel or f'{prefix}attribution value')
+            p = ax.bar(tokens, attributions)
+            ax.xlabel(xlabel or 'tokens')
+            ax.ylabel(ylabel or f'{prefix}attribution value')
+            ax.bar_label(p)
 
         elif plot_type == 'barh':
             # Horizontal bar chart
-            plt.barh(tokens, attributions)
-            plt.xlabel(xlabel or f'{prefix}attribution value')
-            plt.ylabel(ylabel or 'tokens')
-            plt.gca().invert_yaxis() # to have the order of tokens from top to bottom
+            p = ax.barh(tokens, attributions)
+            ax.xlabel(xlabel or f'{prefix}attribution value')
+            ax.ylabel(ylabel or 'tokens')
+            ax.gca().invert_yaxis() # to have the order of tokens from top to bottom
+            ax.bar_label(p)
 
         elif plot_type == 'pie':
             # Pie chart
@@ -55,16 +58,17 @@ class TokenAttributions(list):
                 'autopct': '%1.1f%%', 'pctdistance': 0.8,
                 **plot_kwargs    
             }
-            plt.pie(attributions, **plot_kwargs)
+            ax.pie(attributions, **plot_kwargs)
             if xlabel:
-              plt.xlabel(xlabel)
+              ax.xlabel(xlabel)
             if ylabel:
-              plt.ylabel(ylabel)
+              ax.ylabel(ylabel)
 
         else:
             raise NotImplementedError(
                 f"`plot_type={plot_type}` is not implemented. Choose one of: ['bar', 'barh', 'pie']"
             )
         
-        # set title
-        plt.title(title)
+        # set title and show
+        ax.title(title)
+        plt.show()

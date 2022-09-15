@@ -5,7 +5,7 @@ import numpy as np
 from diffusers_interpret.saliency_map import SaliencyMap
 
 
-class PixelAttributions(np.ndarray):
+class PixelAttributions(np.array):
     def __init__(self, pixel_attributions: np.array, saliency_map: SaliencyMap) -> None:
         super().__init__(pixel_attributions)
         self.pixel_attributions = pixel_attributions

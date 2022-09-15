@@ -13,7 +13,7 @@ class TokenAttributions(list):
     def __setitem__(self, key: Union[str, int], value: Any) -> None:
         setattr(self, key, value)
 
-    def plot(self, plot_type: str = 'barh', title: str = 'Token Attributions', **plot_kwargs) -> None:
+    def plot(self, plot_type: str = 'barh', **plot_kwargs) -> None:
         '''
         Plot the token attributions to have a comparative view.
         Available plot types include bar chart, horizontal bar chart, and pie chart.
@@ -23,7 +23,7 @@ class TokenAttributions(list):
         # get arguments from plot_kwargs
         xlabel = plot_kwargs.get('xlabel')
         ylabel = plot_kwargs.get('ylabel')
-        title = plot_kwargs.get('title') or title
+        title = plot_kwargs.get('title') or 'Token Attributions'
 
         if plot_type == 'bar':
             # Bar chart

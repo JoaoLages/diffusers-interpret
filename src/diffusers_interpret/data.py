@@ -74,6 +74,7 @@ class PipelineExplainerOutput:
                 DeprecationWarning, stacklevel=2
             )
             return self.token_attributions.normalized
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
 
 
 @dataclass

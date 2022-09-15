@@ -20,28 +20,31 @@ class TokenAttributions(list):
     def __setitem__(self, key: Union[str, int], value: Any) -> None:
         setattr(self, key, value)
 
-    def plot(self, plot_type: str = 'barh', **plot_kwargs) -> None:
+    def plot(self, plot_type: str = 'barh', normalize: bool = False, **plot_kwargs) -> None:
         '''
         Plot the token attributions to have a comparative view.
         Available plot types include bar chart, horizontal bar chart, and pie chart.
         '''
-        tokens, attributions = list(zip(*self.token_attributions))
+
+        attrs = self.normalized if normalize else self.token_attributions
+        tokens, attributions = list(zip(*attrs))
+        prefix = 'normalized ' if normalize else ''
 
         # get arguments from plot_kwargs
         xlabel = plot_kwargs.get('xlabel')
         ylabel = plot_kwargs.get('ylabel')
-        title = plot_kwargs.get('title') or 'Token Attributions'
+        title = plot_kwargs.get('title') or f'{prefix.title()}Token Attributions'
 
         if plot_type == 'bar':
             # Bar chart
             plt.bar(tokens, attributions)
             plt.xlabel(xlabel or 'tokens')
-            plt.ylabel(ylabel or 'attribution value')
+            plt.ylabel(ylabel or f'{prefix}attribution value')
 
         elif plot_type == 'barh':
             # Horizontal bar chart
             plt.barh(tokens, attributions)
-            plt.xlabel(xlabel or 'attribution value')
+            plt.xlabel(xlabel or f'{prefix}attribution value')
             plt.ylabel(ylabel or 'tokens')
             plt.gca().invert_yaxis() # to have the order of tokens from top to bottom
 

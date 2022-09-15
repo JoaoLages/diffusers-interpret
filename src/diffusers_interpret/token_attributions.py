@@ -35,23 +35,18 @@ class TokenAttributions(list):
         ylabel = plot_kwargs.get('ylabel')
         title = plot_kwargs.get('title') or f'{prefix.title()}Token Attributions'
 
-        fig, ax = plt.subplots()
         if plot_type == 'bar':
             # Bar chart
-            ax.bar(tokens, attributions)
+            plt.bar(tokens, attributions)
             plt.xlabel(xlabel or 'tokens')
             plt.ylabel(ylabel or f'{prefix}attribution value')
-            for i, v in enumerate(attributions):
-                ax.text(v + 3, i + .25, str(v))
 
         elif plot_type == 'barh':
             # Horizontal bar chart
-            ax.barh(tokens, attributions)
+            plt.barh(tokens, attributions)
             plt.xlabel(xlabel or f'{prefix}attribution value')
             plt.ylabel(ylabel or 'tokens')
             plt.gca().invert_yaxis() # to have the order of tokens from top to bottom
-            for i, v in enumerate(attributions):
-                ax.text(v + 3, i + .25, str(v))
 
         elif plot_type == 'pie':
             # Pie chart

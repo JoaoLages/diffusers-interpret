@@ -25,4 +25,4 @@ class PixelAttributions(np.ndarray):
         setattr(self, key, value)
 
     def __repr__(self) -> str:
-        return super().__repr__()
+        return self.pixel_attributions.__repr__()

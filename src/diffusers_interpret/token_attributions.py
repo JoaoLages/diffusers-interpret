@@ -70,5 +70,5 @@ class TokenAttributions(list):
             )
         
         # set title and show
-        ax.title(title)
+        plt.title(title)
         plt.show()

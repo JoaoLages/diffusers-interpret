@@ -13,7 +13,9 @@ from diffusers_interpret.data import PipelineExplainerOutput, PipelineImg2ImgExp
     BaseMimicPipelineCallOutput, AttributionMethods, AttributionAlgorithm, PipelineExplainerForBoundingBoxOutput, \
     PipelineImg2ImgExplainerForBoundingBoxOutputOutput
 from diffusers_interpret.generated_images import GeneratedImages
+from diffusers_interpret.pixel_attributions import PixelAttributions
 from diffusers_interpret.saliency_map import SaliencyMap
+from diffusers_interpret.token_attributions import TokenAttributions
 from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 
@@ -201,8 +203,7 @@ class BasePipelineExplainer(ABC):
 
         if batch_size == 1:
             # squash batch dimension
-            for k in ['nsfw_content_detected', 'token_attributions', 'normalized_token_attributions',
-                      'pixel_attributions', 'normalized_pixel_attributions']:
+            for k in ['nsfw_content_detected', 'token_attributions', 'pixel_attributions']:
                 if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
@@ -245,31 +246,26 @@ class BasePipelineExplainer(ABC):
     ) -> PipelineExplainerOutput:
         # remove special tokens
         assert len(token_attributions) == len(tokens)
-        output.token_attributions = []
-        output.normalized_token_attributions = []
+        token_attributions = []
         for image_token_attributions, image_tokens in zip(token_attributions, tokens):
             assert len(image_token_attributions) == len(image_tokens)
 
             # Add token attributions
-            output.token_attributions.append([])
+            token_attributions.append([])
             for attr, token in zip(image_token_attributions, image_tokens):
                 if consider_special_tokens or token not in self.special_tokens_attributes:
 
                     if clean_token_prefixes_and_suffixes:
                         token = clean_token_from_prefixes_and_suffixes(token)
 
-                    output.token_attributions[-1].append(
+                    token_attributions[-1].append(
                         (token, attr)
                     )
 
-            # Add normalized
-            total = sum([attr for _, attr in output.token_attributions[-1]])
-            output.normalized_token_attributions.append(
-                [
-                    (token, round(100 * attr / total, 3))
-                    for token, attr in output.token_attributions[-1]
-                ]
-            )
+            token_attributions[-1] = TokenAttributions(token_attributions[-1])
+
+        output.token_attributions = token_attributions
+
         return output
 
     def _get_attributions(
@@ -530,20 +526,20 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         elif torch.is_tensor(masks) and len(masks.shape) == 3:
             masks = masks.unsqueeze(0)
 
-        normalized_pixel_attributions = 100 * (pixel_attributions / pixel_attributions.sum())
+        pixel_attributions = PixelAttributions(
+            pixel_attributions,
+            saliency_map=SaliencyMap(
+                images=init_image.detach().cpu().numpy(),
+                pixel_attributions=pixel_attributions,
+                masks=masks
+            )
+        )
         output_kwargs = {
             'image': output.image,
             'nsfw_content_detected': output.nsfw_content_detected,
             'all_images_during_generation': output.all_images_during_generation,
             'token_attributions': output.token_attributions,
-            'normalized_token_attributions': output.normalized_token_attributions,
-            'pixel_attributions': pixel_attributions,
-            'normalized_pixel_attributions': normalized_pixel_attributions,
-            'input_saliency_map': SaliencyMap(
-                images=init_image.detach().cpu().numpy(),
-                pixel_attributions=pixel_attributions,
-                masks=masks
-            )
+            'pixel_attributions': pixel_attributions
         }
         if explanation_2d_bounding_box is not None:
             output_kwargs['explanation_2d_bounding_box'] = explanation_2d_bounding_box

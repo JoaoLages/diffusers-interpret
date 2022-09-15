@@ -5,8 +5,8 @@ import numpy as np
 from diffusers_interpret.saliency_map import SaliencyMap
 
 
-class PixelAttributions(np.array):
-    def __init__(self, pixel_attributions: np.array, saliency_map: SaliencyMap) -> None:
+class PixelAttributions(np.ndarray):
+    def __init__(self, pixel_attributions: np.ndarray, saliency_map: SaliencyMap) -> None:
         super().__init__(pixel_attributions)
         self.pixel_attributions = pixel_attributions
         self.normalized = 100 * (pixel_attributions / pixel_attributions.sum())
@@ -24,3 +24,5 @@ class PixelAttributions(np.array):
 
     def __setitem__(self, key: Union[str, int], value: Any) -> None:
         setattr(self, key, value)
+
+    def __getattr__(self, attr):

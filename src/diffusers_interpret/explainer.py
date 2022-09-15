@@ -526,7 +526,9 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
 
         # construct PixelAttributions objects
         images = init_image.detach().cpu().numpy()
-        assert len(images) == len(pixel_attributions) == len(masks)
+        assert len(images) == len(pixel_attributions)
+        if masks is not None:
+            assert len(images) == len(masks)
         pixel_attributions = [
             PixelAttributions(
                 attr,

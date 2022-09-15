@@ -117,12 +117,6 @@ Or their computed normalized version, in percentage:
  ('background', 14.607)]
 ```
 
-You can also view token attributions as a plot!
-```python
-output.token_attributions.plot(normalize=True)
-```
-![](assets/token_attributions_1.png)
-
 `diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:

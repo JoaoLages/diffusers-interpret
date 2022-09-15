@@ -131,7 +131,6 @@ class PipelineImg2ImgExplainerOutput(PipelineExplainerOutput):
             return self.token_attributions.normalized
         elif attr == 'input_saliency_map':
             return self.pixel_attributions.saliency_map
-        return super().__getattr__(attr)
 
 
 @dataclass

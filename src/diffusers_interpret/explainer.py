@@ -246,25 +246,23 @@ class BasePipelineExplainer(ABC):
     ) -> PipelineExplainerOutput:
         # remove special tokens
         assert len(token_attributions) == len(tokens)
-        token_attributions = []
+        output.token_attributions = []
         for image_token_attributions, image_tokens in zip(token_attributions, tokens):
             assert len(image_token_attributions) == len(image_tokens)
 
             # Add token attributions
-            token_attributions.append([])
+            output.token_attributions.append([])
             for attr, token in zip(image_token_attributions, image_tokens):
                 if consider_special_tokens or token not in self.special_tokens_attributes:
 
                     if clean_token_prefixes_and_suffixes:
                         token = clean_token_from_prefixes_and_suffixes(token)
 
-                    token_attributions[-1].append(
+                    output.token_attributions[-1].append(
                         (token, attr)
                     )
 
-            token_attributions[-1] = TokenAttributions(token_attributions[-1])
-
-        output.token_attributions = token_attributions
+            output.token_attributions[-1] = TokenAttributions(output.token_attributions[-1])
 
         return output
 

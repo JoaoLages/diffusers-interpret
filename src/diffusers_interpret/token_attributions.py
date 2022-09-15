@@ -39,16 +39,16 @@ class TokenAttributions(list):
         if plot_type == 'bar':
             # Bar chart
             p = ax.bar(tokens, attributions)
-            ax.xlabel(xlabel or 'tokens')
-            ax.ylabel(ylabel or f'{prefix}attribution value')
+            plt.xlabel(xlabel or 'tokens')
+            plt.ylabel(ylabel or f'{prefix}attribution value')
             ax.bar_label(p)
 
         elif plot_type == 'barh':
             # Horizontal bar chart
             p = ax.barh(tokens, attributions)
-            ax.xlabel(xlabel or f'{prefix}attribution value')
-            ax.ylabel(ylabel or 'tokens')
-            ax.gca().invert_yaxis() # to have the order of tokens from top to bottom
+            plt.xlabel(xlabel or f'{prefix}attribution value')
+            plt.ylabel(ylabel or 'tokens')
+            plt.gca().invert_yaxis() # to have the order of tokens from top to bottom
             ax.bar_label(p)
 
         elif plot_type == 'pie':
@@ -58,11 +58,11 @@ class TokenAttributions(list):
                 'autopct': '%1.1f%%', 'pctdistance': 0.8,
                 **plot_kwargs    
             }
-            ax.pie(attributions, **plot_kwargs)
+            plt.pie(attributions, **plot_kwargs)
             if xlabel:
-              ax.xlabel(xlabel)
+              plt.xlabel(xlabel)
             if ylabel:
-              ax.ylabel(ylabel)
+              plt.ylabel(ylabel)
 
         else:
             raise NotImplementedError(

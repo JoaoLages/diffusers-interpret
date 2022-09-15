@@ -537,7 +537,7 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
                     pixel_attributions=attr,
                     mask=mask
                 )
-            ) for img, attr, mask in zip(images, pixel_attributions, masks)
+            ) for img, attr, mask in zip(images, pixel_attributions, masks or [None] * len(images))
         ]
 
         output_kwargs = {

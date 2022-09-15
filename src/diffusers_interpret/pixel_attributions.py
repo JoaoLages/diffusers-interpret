@@ -23,3 +23,6 @@ class PixelAttributions(np.ndarray):
 
     def __setitem__(self, key: Union[str, int], value: Any) -> None:
         setattr(self, key, value)
+
+    def __repr__(self) -> str:
+        return super().__repr__()

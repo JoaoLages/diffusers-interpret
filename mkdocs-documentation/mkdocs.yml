@@ -2,3 +2,10 @@ site_name: Diffusers-Interpret Documentation
 
 theme:
   name: "material"
+
+nav:
+  - index.md
+  - tutorials.md
+  - how-to-guides.md
+  - reference.md
+  - explanation.md

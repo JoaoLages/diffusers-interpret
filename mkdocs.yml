@@ -7,7 +7,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [src]
+          paths: [src/diffusers_interpret]
   - search
 
 watch:

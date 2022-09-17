@@ -1,1 +1,1 @@
-::: diffusers_interpret.explainer
+::: explainer

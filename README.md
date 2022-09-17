@@ -26,19 +26,14 @@ Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https:/
 
 ```python
 import torch
-from contextlib import nullcontext
 from diffusers import StableDiffusionPipeline
 from diffusers_interpret import StableDiffusionPipelineExplainer
-
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 pipe = StableDiffusionPipeline.from_pretrained(
     "CompVis/stable-diffusion-v1-4", 
     use_auth_token=True,
-    
-    # FP16 is not working for 'cpu'
-    revision='fp16' if device != 'cpu' else None,
-    torch_dtype=torch.float16 if device != 'cpu' else None
+    revision='fp16',
+    torch_dtype=torch.float16
 ).to(device)
 
 # optional: reduce memory requirement with a speed trade off 
@@ -49,7 +44,7 @@ explainer = StableDiffusionPipelineExplainer(pipe)
 
 # generate an image with `explainer`
 prompt = "A cute corgi with the Eiffel Tower in the background"
-with torch.autocast('cuda') if device == 'cuda' else nullcontext():
+with torch.autocast('cuda'):
     output = explainer(
         prompt, 
         num_inference_steps=15

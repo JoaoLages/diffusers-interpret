@@ -117,7 +117,7 @@ Or their computed normalized version, in percentage:
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
 
 ```python
-with torch.autocast('cuda') if device == 'cuda' else nullcontext():
+with torch.autocast('cuda'):
     output = explainer(
         prompt, 
         num_inference_steps=15, 

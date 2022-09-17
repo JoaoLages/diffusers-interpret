@@ -3,6 +3,9 @@ site_name: Diffusers-Interpret Documentation
 theme:
   name: "material"
 
+plugins:
+  - mkdocstrings
+  
 nav:
   - index.md
   - tutorials.md

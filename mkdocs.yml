@@ -10,6 +10,9 @@ plugins:
           paths: [src]
   - search
 
+watch:
+  - src/diffusers_interpret
+
 nav:
   - index.md
   - tutorials.md

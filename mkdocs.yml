@@ -15,10 +15,8 @@ watch:
 
 nav:
   - index.md
-  - api:
-    - explainer.md
-    - attribution.md
-    - saliency_map.md
+  - API:
+    - Explainer: api/explainer.md
   - tutorials.md
   - how-to-guides.md
   - reference.md

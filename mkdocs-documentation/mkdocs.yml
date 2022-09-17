@@ -13,3 +13,14 @@ nav:
   - how-to-guides.md
   - reference.md
   - explanation.md
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.tasklist:
+      custom_checkbox: true

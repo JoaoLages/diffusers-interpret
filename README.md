@@ -34,7 +34,7 @@ pipe = StableDiffusionPipeline.from_pretrained(
     use_auth_token=True,
     revision='fp16',
     torch_dtype=torch.float16
-).to(device)
+).to('cuda')
 
 # optional: reduce memory requirement with a speed trade off 
 pipe.enable_attention_slicing()

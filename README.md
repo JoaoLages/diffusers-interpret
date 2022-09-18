@@ -70,7 +70,7 @@ output = explainer(
 You can completely deactivate token/pixel attributions computation by passing `n_last_diffusion_steps_to_consider_for_attributions=0`.  
 
 Gradient checkpointing also reduces GPU usage, but makes computations a bit slower:
-```
+```python
 explainer = StableDiffusionPipelineExplainer(pipe, gradient_checkpointing=True)
 ```
 

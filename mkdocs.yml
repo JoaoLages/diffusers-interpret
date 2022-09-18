@@ -5,6 +5,8 @@ repo_url: "https://github.com/JoaoLages/diffusers-interpret"
 
 theme:
   name: "material"
+  features:
+    - navigation.tabs
   palette:
   # Palette toggle for automatic mode
   - media: "(prefers-color-scheme)"

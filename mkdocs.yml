@@ -47,6 +47,8 @@ plugins:
         python:
           paths: [src/diffusers_interpret]
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
 
 watch:
   - src/diffusers_interpret

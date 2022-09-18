@@ -50,6 +50,7 @@ nav:
   - how-to-guides.md
   - reference.md
   - explanation.md
+  - License: license.md
 
 markdown_extensions:
   - attr_list

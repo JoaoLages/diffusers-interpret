@@ -62,6 +62,7 @@ markdown_extensions:
   - attr_list
   - admonition
   - pymdownx.magiclink
+  - pymdownx.b64
   - pymdownx.superfences # for code block syntax highlighting
   - pymdownx.snippets:
       check_paths: true

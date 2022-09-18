@@ -57,7 +57,7 @@ with torch.autocast('cuda') if device == 'cuda' else nullcontext():
 ```
 
 If you are having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
-```
+```python
 output = explainer(
     prompt, 
     num_inference_steps=15,

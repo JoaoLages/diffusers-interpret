@@ -75,3 +75,10 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
   - pymdownx.tasklist:
       custom_checkbox: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/JoaoLages
+    - icon: material/gmail
+      link: mailto:joaop.glages@gmail.com

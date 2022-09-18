@@ -11,6 +11,8 @@ theme:
   features:
     - navigation.top
     - navigation.tabs
+    - search.suggest
+    - search.highlight
   palette:
   # Palette toggle for automatic mode
   - media: "(prefers-color-scheme)"

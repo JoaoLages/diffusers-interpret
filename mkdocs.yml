@@ -25,6 +25,9 @@ nav:
 markdown_extensions:
   - attr_list
   - admonition
+  - pymdownx.magiclink
+  - pymdownx.snippets:
+      check_paths: true
   - toc:
       permalink: true
   - pymdownx.emoji:

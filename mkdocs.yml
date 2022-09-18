@@ -7,6 +7,7 @@ theme:
   name: "material"
   icon:
     logo: material/image-search-outline
+    repo: fontawesome/brands/github
   favicon: img/image-search.svg
   features:
     - navigation.top

@@ -26,20 +26,15 @@ Let's see how we can interpret the **[new 🎨🎨🎨 Stable Diffusion](https:/
 
 ```python
 import torch
-from contextlib import nullcontext
 from diffusers import StableDiffusionPipeline
 from diffusers_interpret import StableDiffusionPipelineExplainer
-
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 pipe = StableDiffusionPipeline.from_pretrained(
     "CompVis/stable-diffusion-v1-4", 
     use_auth_token=True,
-    
-    # FP16 is not working for 'cpu'
-    revision='fp16' if device != 'cpu' else None,
-    torch_dtype=torch.float16 if device != 'cpu' else None
-).to(device)
+    revision='fp16',
+    torch_dtype=torch.float16
+).to('cuda')
 
 # optional: reduce memory requirement with a speed trade off 
 pipe.enable_attention_slicing()
@@ -49,7 +44,7 @@ explainer = StableDiffusionPipelineExplainer(pipe)
 
 # generate an image with `explainer`
 prompt = "A cute corgi with the Eiffel Tower in the background"
-with torch.autocast('cuda') if device == 'cuda' else nullcontext():
+with torch.autocast('cuda'):
     output = explainer(
         prompt, 
         num_inference_steps=15
@@ -117,12 +112,19 @@ Or their computed normalized version, in percentage:
  ('background', 14.607)]
 ```
 
+Or plot them!
+```python
+output.token_attributions.plot(normalize=True)
+```
+![](assets/token_attributions_1.png)
+
+
 `diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
 
 ```python
-with torch.autocast('cuda') if device == 'cuda' else nullcontext():
+with torch.autocast('cuda'):
     output = explainer(
         prompt, 
         num_inference_steps=15, 
@@ -300,4 +302,4 @@ Feel free to open an [Issue](https://github.com/JoaoLages/diffusers-interpret/is
 
 A special thanks to:
 - [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1) to show all the generated images during diffusion! 💪 
-- [@TomPham97](https://github.com/TomPham97) for README improvements and the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9) 😁
+- [@TomPham97](https://github.com/TomPham97) for README improvements, the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9) and the [token attributions plot](https://github.com/JoaoLages/diffusers-interpret/pull/13) 😁

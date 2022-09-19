@@ -1,4 +1,5 @@
 site_name: "Diffusers-Interpret"
+site_url: "https://JoaoLages.github.io/diffusers-interpret/"
 site_description: "Model explainer tool built on top of the 🤗 Diffusers library"
 repo_name: "JoaoLages/diffusers-interpret"
 repo_url: "https://github.com/JoaoLages/diffusers-interpret"

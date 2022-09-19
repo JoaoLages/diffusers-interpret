@@ -112,6 +112,13 @@ Or their computed normalized version, in percentage:
  ('background', 14.607)]
 ```
 
+Or plot them!
+```python
+output.token_attributions.plot(normalize=True)
+```
+![](assets/token_attributions_1.png)
+
+
 `diffusers-interpret` also computes these token/pixel attributions for generating a particular part of the image. 
 
 To do that, call `explainer` with a particular 2D bounding box defined in `explanation_2d_bounding_box`:
@@ -295,4 +302,4 @@ Feel free to open an [Issue](https://github.com/JoaoLages/diffusers-interpret/is
 
 A special thanks to:
 - [@andrewizbatista](https://github.com/andrewizbatista) for creating a great [image slider](https://github.com/JoaoLages/diffusers-interpret/pull/1) to show all the generated images during diffusion! 💪 
-- [@TomPham97](https://github.com/TomPham97) for README improvements and the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9) 😁
+- [@TomPham97](https://github.com/TomPham97) for README improvements, the [GIF visualization](https://github.com/JoaoLages/diffusers-interpret/pull/9) and the [token attributions plot](https://github.com/JoaoLages/diffusers-interpret/pull/13) 😁

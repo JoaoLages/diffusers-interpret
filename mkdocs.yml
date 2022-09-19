@@ -12,6 +12,7 @@ theme:
   features:
     - navigation.top
     - navigation.tabs
+    - navigation.indexes
     - search.suggest
     - search.highlight
   palette:
@@ -55,12 +56,6 @@ watch:
 
 nav:
   - index.md
-  - API:
-    - Explainer: api/explainer.md
-  - tutorials.md
-  - how-to-guides.md
-  - reference.md
-  - explanation.md
   - License: license.md
 
 markdown_extensions:

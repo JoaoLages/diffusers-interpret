@@ -36,8 +36,8 @@ class GeneratedImages:
             else:
                 self.images.append(batch_images)
 
+        self.html = None
         self.loading_iframe = None
-        self.image_slider_iframe = None
         if prepare_image_slider:
             self.prepare_image_slider()
 
@@ -96,14 +96,11 @@ class GeneratedImages:
               })(document);
             </script>
         """ % json.dumps(json_payload)
-        html_with_image_slider = html[:index] + add + html[index:]
+        self.html_with_image_slider = html[:index] + add + html[index:]
 
-        # save files and load IFrame to be displayed in self.__repr__
+        # Save loading to IFrame right away
         with open(os.path.join(image_slider_dir, "loading.html"), 'w') as fp:
             fp.write(html)
-        with open(os.path.join(image_slider_dir, "final.html"), 'w') as fp:
-            fp.write(html_with_image_slider)
-
         self.loading_iframe = d.IFrame(
             os.path.relpath(
                 os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "loading.html"),
@@ -112,19 +109,19 @@ class GeneratedImages:
             width="100%", height="400px"
         )
 
-        self.image_slider_iframe = d.IFrame(
-            os.path.relpath(
-                os.path.join(os.path.dirname(diffusers_interpret.__file__), "dataviz", "image-slider", "final.html"),
-                '.'
-            ),
-            width="100%", height="400px"
-        )
-
     def __getitem__(self, item: int) -> Union[Image, List[Image]]:
         return self.images[item]
 
-    def show(self, width: Union[str, int] = "100%", height: Union[str, int] = "400px") -> None:
-
+    def show(
+        self,
+        file_name: str = "diffusion_process.html",
+        width: Union[str, int] = "100%",
+        height: Union[str, int] = "400px",
+        show: bool = True
+    ) -> None:
+        '''
+        Generate and display an HTML visualization of the denoising process
+        '''
         if len(self.images) == 0:
             raise Exception("`self.images` is an empty list, can't show any images")
 
@@ -132,29 +129,32 @@ class GeneratedImages:
             raise NotImplementedError("GeneratedImages.show visualization is not supported "
                                       "when `self.images` is a list of lists of images")
 
-        if self.image_slider_iframe is None:
+        if self.loading_iframe is None or self.html_with_image_slider is None:
             self.prepare_image_slider()
 
-        # display loading
-        self.loading_iframe.width = width
-        self.loading_iframe.height = height
-        display = d.display(self.loading_iframe, display_id=random.randint(0, 9999999))
+        # save HTML file
+        with open(file_name, 'w') as fp:
+            fp.write(self.html_with_image_slider)
 
-        # display image slider
-        self.image_slider_iframe.width = width
-        self.image_slider_iframe.height = height
-        display.update(self.image_slider_iframe)
+        if show:
+            # display loading
+            self.loading_iframe.width = width
+            self.loading_iframe.height = height
+            display = d.display(self.loading_iframe, display_id=random.randint(0, 9999999))
+
+            # display image slider
+            image_slider_iframe = d.IFrame(file_name, width=width, height=height)
+            display.update(image_slider_iframe)
 
     def gif(self, file_name: str = "diffusion_process.gif", duration: int = 400, show: bool = True) -> None:
-
+        '''
+        Generate and display a GIF from the denoising process
+        '''
         if len(self.images) == 0:
             raise Exception("`self.images` is an empty list, can't show any images")
         if isinstance(self.images[0], list):
             raise NotImplementedError("GeneratedImages.gif is not supported "
                                                          "when `self.images` is a list of lists of images")
-        '''
-        Generate and display a GIF from the denoising process
-        '''
         self[0].save(file_name,
                      save_all = True,
                      append_images = self[1:],

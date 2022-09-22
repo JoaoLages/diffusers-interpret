@@ -17,13 +17,13 @@ theme:
     - search.suggest
     - search.highlight
   palette:
-  # Palette toggle for automatic mode
-  - media: "(prefers-color-scheme)"
-    primary: yellow
-    accent: red
-    toggle:
-      icon: material/brightness-auto
-      name: Switch to light mode
+  # Palette toggle for automatic mode (sponsors-only)
+  # - media: "(prefers-color-scheme)"
+  #   primary: yellow
+  #   accent: red
+  #   toggle:
+  #     icon: material/brightness-auto
+  #     name: Switch to light mode
 
   # Palette toggle for light mode    
   - media: "(prefers-color-scheme: light)"

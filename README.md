@@ -1,11 +1,11 @@
-<!-- <div align="center"> -->
+<div align="center">
 
 # Diffusers-Interpret 🤗🧨🕵️‍♀️
 
 ![PyPI Latest Package Version](https://img.shields.io/pypi/v/diffusers-interpret?logo=pypi&style=flat&color=orange) ![GitHub License](https://img.shields.io/github/license/JoaoLages/diffusers-interpret?logo=github&style=flat&color=green) [![Documentation Status](https://readthedocs.org/projects/diffusers-interpret/badge/?version=latest)](https://diffusers-interpret.readthedocs.io/en/latest/?badge=latest)
 
 `diffusers-interpret` is a model explainability tool built on top of [🤗 Diffusers](https://github.com/huggingface/diffusers)
-<!-- </div> -->
+</div>
 
 ## Installation
 

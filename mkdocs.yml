@@ -57,6 +57,7 @@ watch:
 
 nav:
   - index.md
+  - explainer: api/explainer.md
   - License: license.md
 
 markdown_extensions:

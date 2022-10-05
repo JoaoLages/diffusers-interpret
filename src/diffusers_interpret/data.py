@@ -30,12 +30,22 @@ class BaseMimicPipelineCallOutput:
     """
     images: Union[List[Image], torch.Tensor]
     nsfw_content_detected: Optional[List[bool]] = None
-    all_images_during_generation: Optional[Union[List[List[Image]], List[torch.Tensor]]] = None
+    all_images_during_generation: Optional[Union[List[List[Image]],
+                                                 List[torch.Tensor]]] = None
 
     def __getitem__(self, item):
+        '''
+        Args:
+            item (str): name of the attribute to get
+        '''
         return getattr(self, item)
 
     def __setitem__(self, key, value):
+        '''
+        Args:
+            key (str): name of the attribute to set
+            value (Any): value to set
+        '''
         setattr(self, key, value)
 
 
@@ -57,16 +67,30 @@ class PipelineExplainerOutput:
     """
     image: Union[Image, torch.Tensor]
     nsfw_content_detected: Optional[bool] = None
-    all_images_during_generation: Optional[Union[GeneratedImages, List[torch.Tensor]]] = None
+    all_images_during_generation: Optional[Union[GeneratedImages,
+                                                 List[torch.Tensor]]] = None
     token_attributions: Optional[TokenAttributions] = None
 
     def __getitem__(self, item):
+        '''
+        Args:
+            item (str): name of the attribute to get
+        '''
         return getattr(self, item)
 
     def __setitem__(self, key, value):
+        '''
+        Args:
+            key (str): name of the attribute to set
+            value (Any): value to set
+        '''
         setattr(self, key, value)
 
     def __getattr__(self, attr):
+        '''
+        Args:
+            attr (str): name of the attribute to get
+        '''
         if attr == 'normalized_token_attributions':
             warnings.warn(
                 f"`normalized_token_attributions` is deprecated as an attribute of `{self.__class__.__name__}` "
@@ -74,7 +98,8 @@ class PipelineExplainerOutput:
                 DeprecationWarning, stacklevel=2
             )
             return self.token_attributions.normalized
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{attr}'")
 
 
 @dataclass
@@ -96,7 +121,8 @@ class PipelineExplainerForBoundingBoxOutput(PipelineExplainerOutput):
             Tuple with the bounding box coordinates where the attributions were calculated for.
             The tuple is like (upper left corner, bottom right corner). Example: `((0, 0), (300, 300))`
     """
-    explanation_2d_bounding_box: Tuple[Tuple[int, int], Tuple[int, int]] = None  # (upper left corner, bottom right corner)
+    explanation_2d_bounding_box: Tuple[Tuple[int, int], Tuple[int,
+                                                              int]] = None  # (upper left corner, bottom right corner)
 
 
 @dataclass
@@ -184,5 +210,32 @@ class AttributionAlgorithm(ExplicitEnum):
 
 @dataclass
 class AttributionMethods:
-    tokens_attribution_method: Union[str, AttributionAlgorithm] = AttributionAlgorithm.GRAD_X_INPUT
-    pixels_attribution_method: Optional[Union[str, AttributionAlgorithm]] = AttributionAlgorithm.MAX_GRAD
+    '''
+    Args:
+        tokens_attribution_method (`AttributionAlgorithm`)
+            The attribution algorithm to use for the tokens. Possible values are:
+            - `AttributionAlgorithm.GRAD_X_INPUT`: The attribution score for a token is the sum of the gradients of the
+            output with respect to the input multiplied by the input. This is the same as the gradient of the output with
+            respect to the input.
+            - `AttributionAlgorithm.MAX_GRAD`: The attribution score for a token is the maximum of the gradients of the
+            output with respect to the input.
+            - `AttributionAlgorithm.MEAN_GRAD`: The attribution score for a token is the mean of the gradients of the
+            output with respect to the input.
+            - `AttributionAlgorithm.MIN_GRAD`: The attribution score for a token is the minimum of the gradients of the
+            output with respect to the input.
+        pixels_attribution_method (`AttributionAlgorithm`)
+            The attribution algorithm to use for the pixels. Possible values are:
+            - `AttributionAlgorithm.GRAD_X_INPUT`: The attribution score for a pixel is the sum of the gradients of the
+            output with respect to the input multiplied by the input. This is the same as the gradient of the output with
+            respect to the input.
+            - `AttributionAlgorithm.MAX_GRAD`: The attribution score for a pixel is the maximum of the gradients of the
+            output with respect to the input.
+            - `AttributionAlgorithm.MEAN_GRAD`: The attribution score for a pixel is the mean of the gradients of the
+            output with respect to the input.
+            - `AttributionAlgorithm.MIN_GRAD`: The attribution score for a pixel is the minimum of the gradients of the
+            output with respect to the input.
+    '''
+    tokens_attribution_method: Union[str,
+                                     AttributionAlgorithm] = AttributionAlgorithm.GRAD_X_INPUT
+    pixels_attribution_method: Optional[Union[str,
+                                              AttributionAlgorithm]] = AttributionAlgorithm.MAX_GRAD

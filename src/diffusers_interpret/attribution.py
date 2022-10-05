@@ -9,15 +9,31 @@ def gradients_attribution(
     pred_logits: torch.Tensor,
     input_embeds: Tuple[torch.Tensor],
     attribution_algorithms: List[AttributionAlgorithm],
-    explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+    explanation_2d_bounding_box: Optional[Tuple[Tuple[int,
+                                                      int], Tuple[int, int]]] = None,
     retain_graph: bool = False
 ) -> List[torch.Tensor]:
+    """Compute gradients attribution.
+
+    Args:
+        pred_logits: The logits of the model's prediction.
+        input_embeds: The input embeddings.
+        attribution_algorithms: The attribution algorithms to use.
+        explanation_2d_bounding_box: The 2D bounding box to use for the explanation.
+        retain_graph: Whether to retain the computation graph.
+
+    Returns:
+        The attribution maps.
+
+    Raises:
+        ValueError: If the number of attribution algorithms does not match the number of input embeddings.
+    """
     # TODO: add description
 
     assert len(pred_logits.shape) == 3
     if explanation_2d_bounding_box:
         upper_left, bottom_right = explanation_2d_bounding_box
-        pred_logits = pred_logits[upper_left[0]: bottom_right[0], upper_left[1]: bottom_right[1], :]
+        pred_logits = pred_logits[upper_left[0]                                  : bottom_right[0], upper_left[1]: bottom_right[1], :]
 
     assert len(input_embeds) == len(attribution_algorithms)
 
@@ -36,9 +52,11 @@ def gradients_attribution(
         # FP16 may cause NaN gradients https://github.com/pytorch/pytorch/issues/40497
         # TODO: this is still an issue, the code below does not solve it
         with torch.autocast(input_embeds[0].device.type, enabled=False):
-            grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
+            grads = torch.autograd.grad(
+                tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
     else:
-        grads = torch.autograd.grad(tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
+        grads = torch.autograd.grad(
+            tuple_of_pred_logits, input_embeds, retain_graph=retain_graph)
 
     if torch.isnan(grads[-1]).any():
         raise RuntimeError(
@@ -60,6 +78,7 @@ def gradients_attribution(
         elif attr_alg == AttributionAlgorithm.MIN_GRAD:
             aggregated_grads.append(grad.abs().min(-1).values)
         else:
-            raise NotImplementedError(f"aggregation type `{attr_alg}` not implemented")
+            raise NotImplementedError(
+                f"aggregation type `{attr_alg}` not implemented")
 
     return aggregated_grads

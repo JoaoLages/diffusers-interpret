@@ -21,10 +21,21 @@ from diffusers_interpret.utils import clean_token_from_prefixes_and_suffixes
 
 class BasePipelineExplainer(ABC):
     """
-    Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines
+    Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines.
+
+    Attributes:
+        pipe (DiffusionPipeline): The DiffusionPipeline to explain.
+        verbose (bool): If True, print progress bars and other information.
+        gradient_checkpointing (bool): If True, use gradient checkpointing to save memory.
     """
 
     def __init__(self, pipe: DiffusionPipeline, verbose: bool = True, gradient_checkpointing: bool = False) -> None:
+        '''
+        Args:
+            pipe (DiffusionPipeline): The DiffusionPipeline to explain.
+            verbose (bool): If True, print progress bars and other information.
+            gradient_checkpointing (bool): If True, use gradient checkpointing to save memory.
+        '''
         self.pipe = pipe
         self.verbose = verbose
         self.pipe._progress_bar_config = {
@@ -49,7 +60,8 @@ class BasePipelineExplainer(ABC):
         init_image: Optional[Union[torch.FloatTensor, Image]] = None,
         mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
         attribution_method: Union[str, AttributionMethods] = None,
-        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int,
+                                                          int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
         run_safety_checker: bool = False,
@@ -110,18 +122,28 @@ class BasePipelineExplainer(ABC):
             [`PipelineExplainerForBoundingBoxOutput`] if `init_image=None` and `explanation_2d_bounding_box is not None`
             [`PipelineImg2ImgExplainerOutput`] if `init_image is not None` and `explanation_2d_bounding_box=None`
             [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`] if `init_image is not None` and `explanation_2d_bounding_box is not None`
+
+        Raises:
+            ValueError: If `explanation_2d_bounding_box` is provided but `init_image` is not.
+            ValueError: If `explanation_2d_bounding_box` is provided but `output_type` is not `"pil"`.
+            ValueError: If `explanation_2d_bounding_box` is provided but `attribution_method` is not provided.
+            ValueError: If `explanation_2d_bounding_box` is provided but `attribution_method` is not a `str` or `AttributionMethods`.
+            ValueError: If `explanation_2d_bounding_box` is provided but `attribution_method` is not a `AttributionMethods.BOUNDING_BOX`.
         """
 
         attribution_method = attribution_method or AttributionMethods()
 
         if isinstance(attribution_method, str):
             attribution_method = AttributionMethods(
-                tokens_attribution_method=AttributionAlgorithm(attribution_method),
-                pixels_attribution_method=AttributionAlgorithm(attribution_method)
+                tokens_attribution_method=AttributionAlgorithm(
+                    attribution_method),
+                pixels_attribution_method=AttributionAlgorithm(
+                    attribution_method)
             )
         else:
             if not isinstance(attribution_method, AttributionMethods):
-                raise ValueError("`attribution_method` has to be of type `str` or `AttributionMethods`")
+                raise ValueError(
+                    "`attribution_method` has to be of type `str` or `AttributionMethods`")
 
             for k in ['tokens_attribution_method', 'pixels_attribution_method']:
                 v = getattr(attribution_method, k)
@@ -129,25 +151,29 @@ class BasePipelineExplainer(ABC):
                     setattr(attribution_method, k, AttributionAlgorithm(v))
 
         if isinstance(prompt, str):
-            batch_size = 1 # TODO: make compatible with bigger batch sizes
+            batch_size = 1  # TODO: make compatible with bigger batch sizes
         elif isinstance(prompt, list) and len(prompt) > 0 and isinstance(prompt[0], str):
             batch_size = len(prompt)
-            raise NotImplementedError("Passing a list of strings in `prompt` is still not implemented yet.")
+            raise NotImplementedError(
+                "Passing a list of strings in `prompt` is still not implemented yet.")
         else:
-            raise ValueError(f"`prompt` has to be of type `str` but is {type(prompt)}")
+            raise ValueError(
+                f"`prompt` has to be of type `str` but is {type(prompt)}")
 
         # TODO: add asserts for out of bounds
         if explanation_2d_bounding_box:
             pass
 
-        prompt, init_image, mask_image = self._preprocess_input(prompt=prompt, init_image=init_image, mask_image=mask_image)
+        prompt, init_image, mask_image = self._preprocess_input(
+            prompt=prompt, init_image=init_image, mask_image=mask_image)
 
         # get prompt text embeddings
-        tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(prompt=prompt)
+        tokens, text_input, text_embeddings = self.get_prompt_tokens_token_ids_and_embeds(
+            prompt=prompt)
 
         # Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions > 0`
         calculate_attributions = n_last_diffusion_steps_to_consider_for_attributions is None \
-                                 or n_last_diffusion_steps_to_consider_for_attributions > 0
+            or n_last_diffusion_steps_to_consider_for_attributions > 0
         if not calculate_attributions:
             torch.set_grad_enabled(False)
         else:
@@ -175,9 +201,11 @@ class BasePipelineExplainer(ABC):
         }
         if explanation_2d_bounding_box is not None:
             output['explanation_2d_bounding_box'] = explanation_2d_bounding_box
-            output: PipelineExplainerForBoundingBoxOutput = PipelineExplainerForBoundingBoxOutput(**output_kwargs)
+            output: PipelineExplainerForBoundingBoxOutput = PipelineExplainerForBoundingBoxOutput(
+                **output_kwargs)
         else:
-            output: PipelineExplainerOutput = PipelineExplainerOutput(**output_kwargs)
+            output: PipelineExplainerOutput = PipelineExplainerOutput(
+                **output_kwargs)
 
         if output.nsfw_content_detected:
             raise Exception(
@@ -207,7 +235,8 @@ class BasePipelineExplainer(ABC):
                 if getattr(output, k, None) is not None:
                     output[k] = output[k][0]
             if output.all_images_during_generation:
-                output.all_images_during_generation = [b[0] for b in output.all_images_during_generation]
+                output.all_images_during_generation = [
+                    b[0] for b in output.all_images_during_generation]
 
         else:
             raise NotImplementedError
@@ -216,9 +245,10 @@ class BasePipelineExplainer(ABC):
         # also draw bounding box in the last image if requested
         if output.all_images_during_generation or output_type == "pil":
             all_images = GeneratedImages(
-                all_generated_images=output.all_images_during_generation or [output.image],
+                all_generated_images=output.all_images_during_generation or [
+                    output.image],
                 pipe=self.pipe,
-                remove_batch_dimension=batch_size==1,
+                remove_batch_dimension=batch_size == 1,
                 prepare_image_slider=bool(output.all_images_during_generation)
             )
             if output.all_images_during_generation:
@@ -262,7 +292,8 @@ class BasePipelineExplainer(ABC):
                         (token, attr)
                     )
 
-            output.token_attributions[-1] = TokenAttributions(output.token_attributions[-1])
+            output.token_attributions[-1] = TokenAttributions(
+                output.token_attributions[-1])
 
         return output
 
@@ -274,7 +305,8 @@ class BasePipelineExplainer(ABC):
         text_embeddings: torch.Tensor,
         init_image: Optional[torch.FloatTensor] = None,
         mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
-        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int,
+                                                          int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
@@ -291,7 +323,8 @@ class BasePipelineExplainer(ABC):
         token_attributions = gradients_attribution(
             pred_logits=output.image,
             input_embeds=(text_embeddings,),
-            attribution_algorithms=[attribution_method.tokens_attribution_method],
+            attribution_algorithms=[
+                attribution_method.tokens_attribution_method],
             explanation_2d_bounding_box=explanation_2d_bounding_box
         )[0].detach().cpu().numpy()
 
@@ -310,6 +343,12 @@ class BasePipelineExplainer(ABC):
 
     @property
     def special_tokens_attributes(self) -> Set[str]:
+        '''
+        Returns a set of special tokens that are not considered when calculating attributions.
+
+        Returns:
+            A set of special tokens that are not considered when calculating attributions.
+        '''
 
         # remove verbosity
         verbose = self.tokenizer.verbose
@@ -339,10 +378,25 @@ class BasePipelineExplainer(ABC):
     @property
     @abstractmethod
     def tokenizer(self) -> PreTrainedTokenizerBase:
+        '''
+        Returns the tokenizer used by the model.
+
+        Raises:
+            NotImplementedError: This method must be implemented by the child class.
+        '''
         raise NotImplementedError
 
     @abstractmethod
     def get_prompt_tokens_token_ids_and_embeds(self, prompt: Union[str, List[str]]) -> Tuple[List[List[str]], BatchEncoding, torch.Tensor]:
+        '''
+        Returns the tokens, token ids and embeddings of the prompt.
+
+        Returns:
+            A tuple containing the tokens, token ids and embeddings of the prompt.
+
+        Raises:
+            NotImplementedError: This method must be implemented by the child class.
+        '''
         raise NotImplementedError
 
     @abstractmethod
@@ -368,7 +422,8 @@ class BasePipelineExplainer(ABC):
         get_images_for_all_inference_steps: bool = False
     ) -> Union[
         BaseMimicPipelineCallOutput,
-        Tuple[Union[List[Image], torch.Tensor], Optional[Union[List[List[Image]], List[torch.Tensor]]], Optional[List[bool]]]
+        Tuple[Union[List[Image], torch.Tensor],
+              Optional[Union[List[List[Image]], List[torch.Tensor]]], Optional[List[bool]]]
     ]:
         r"""
         Mimics DiffusionPipeline.__call__ but adds extra functionality to calculate explanations.
@@ -425,6 +480,9 @@ class BasePipelineExplainer(ABC):
             the second element contains all the generated images during the diffusion process and the third element is a
             list of `bool`s denoting whether the corresponding generated image likely represents "not-safe-for-work"
             (nsfw) content, according to the `safety_checker` .
+
+        Raises:
+            NotImplementedError: This method must be implemented by the child class.
         """
         raise NotImplementedError
 
@@ -432,7 +490,65 @@ class BasePipelineExplainer(ABC):
 class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
     """
     Core base class to explain img2img and inpaint pipelines
+
+    Attributes:
+        model (`torch.nn.Module`):
+            The model to be explained.
+        tokenizer (`PreTrainedTokenizer`):
+            The tokenizer to be used.
+        text_encoder (`torch.nn.Module`):
+            The text encoder to be used.
+        image_encoder (`torch.nn.Module`):
+            The image encoder to be used.
+        image_decoder (`torch.nn.Module`):
+            The image decoder to be used.
+        safety_checker (`SafetyChecker`):
+            The safety checker to be used.
+        device (`torch.device`):
+            The device to be used.
+        model_type (`str`):
+            The model type to be used.
+        model_name (`str`):
+            The model name to be used.
+        model_version (`str`):
+            The model version to be used.
+        model_config (`DictConfig`):
+            The model config to be used.
+        model_config_path (`str`):
+            The model config path to be used.
+        model_checkpoint_path (`str`):
+            The model checkpoint path to be used.
+        model_checkpoint_version (`str`):
+            The model checkpoint version to be used.
+        model_checkpoint_name (`str`):
+            The model checkpoint name to be used.
+        model_checkpoint_url (`str`):
+            The model checkpoint url to be used.
+        model_checkpoint_cache_dir (`str`):
+            The model checkpoint cache dir to be used.
+        model_checkpoint_force_download (`bool`):
+            Whether or not to force download the model checkpoint.
+        model_checkpoint_force_extract (`bool`):
+            Whether or not to force extract the model checkpoint.
+        model_checkpoint_local_files_only (`bool`):
+            Whether or not to only use local files for the model checkpoint.
+        model_checkpoint_use_cdn (`bool`):
+            Whether or not to use the cdn for the model checkpoint.
+        model_checkpoint_kwargs (`DictConfig`):
+            The model checkpoint kwargs to be used.
+        model_checkpoint_map_location (`str`):
+            The model checkpoint map location to be used.
+        model_checkpoint_force_map_location (`bool`):
+            Whether or not to force map location for the model checkpoint.
+        model_checkpoint_ignore_mismatched_sizes (`bool`):
+            Whether or not to ignore mismatched sizes for the model checkpoint.
+        model_checkpoint_strict (`bool`):
+            Whether or not to use strict for the model checkpoint.
+        model_checkpoint_return_unused_kwargs (`bool`):
+            Whether or not to return unused kwargs for the model checkpoint.
+        model_checkpoint_kwargs
     """
+
     def _preprocess_input(
         self,
         prompt: str,
@@ -446,9 +562,11 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
             prompt=prompt, init_image=init_image, mask_image=mask_image
         )
         if init_image is None:
-            raise TypeError("missing 1 required positional argument: 'init_image'")
+            raise TypeError(
+                "missing 1 required positional argument: 'init_image'")
 
-        init_image = preprocess(init_image).to(self.pipe.device).permute(0, 2, 3, 1)
+        init_image = preprocess(init_image).to(
+            self.pipe.device).permute(0, 2, 3, 1)
         init_image.requires_grad = True
 
         return prompt, init_image, mask_image
@@ -461,7 +579,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         text_embeddings: torch.Tensor,
         init_image: Optional[torch.FloatTensor] = None,
         mask_image: Optional[Union[torch.FloatTensor, Image]] = None,
-        explanation_2d_bounding_box: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None,
+        explanation_2d_bounding_box: Optional[Tuple[Tuple[int,
+                                                          int], Tuple[int, int]]] = None,
         consider_special_tokens: bool = False,
         clean_token_prefixes_and_suffixes: bool = True,
         n_last_diffusion_steps_to_consider_for_attributions: Optional[int] = None,
@@ -473,7 +592,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         PipelineImg2ImgExplainerForBoundingBoxOutputOutput
     ]:
         if init_image is None:
-            raise TypeError("missing 1 required positional argument: 'init_image'")
+            raise TypeError(
+                "missing 1 required positional argument: 'init_image'")
 
         input_embeds = (text_embeddings,)
         if n_last_diffusion_steps_to_consider_for_attributions is None:
@@ -549,7 +669,8 @@ class BasePipelineImg2ImgExplainer(BasePipelineExplainer):
         }
         if explanation_2d_bounding_box is not None:
             output_kwargs['explanation_2d_bounding_box'] = explanation_2d_bounding_box
-            output = PipelineImg2ImgExplainerForBoundingBoxOutputOutput(**output_kwargs)
+            output = PipelineImg2ImgExplainerForBoundingBoxOutputOutput(
+                **output_kwargs)
         else:
             output = PipelineImg2ImgExplainerOutput(**output_kwargs)
 

@@ -48,6 +48,8 @@ plugins:
       handlers:
         python:
           paths: [src/diffusers_interpret]
+          options:
+            members_order: source
   - search
   - git-revision-date-localized:
       enable_creation_date: true

@@ -50,6 +50,7 @@ plugins:
           paths: [src/diffusers_interpret]
           options:
             members_order: source
+            docstring_section_style: list
   - search
   - git-revision-date-localized:
       enable_creation_date: true

@@ -51,6 +51,7 @@ plugins:
           options:
             members_order: source
             docstring_section_style: list
+            show_if_no_docstring: true
   - search
   - git-revision-date-localized:
       enable_creation_date: true

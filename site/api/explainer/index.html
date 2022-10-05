@@ -1351,197 +1351,107 @@
   
       <p>Calls a DiffusionPipeline and generates explanations for a given prompt.</p>
 
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>prompt</code></td>
-          <td>
-                <code>`str`</code>
-          </td>
-          <td><p>Input string for the diffusion model</p></td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr>
-          <td><code>init_image</code></td>
-          <td>
-                <code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>
-          </td>
-          <td><p><code>Image</code>, or tensor representing an image batch, that will be used as the starting point for the process.
-If provided, output will be of type <code>PipelineImg2ImgExplainerOutput</code> or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>.</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>mask_image</code></td>
-          <td>
-                <code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>
-          </td>
-          <td><p><code>Image</code>, or tensor representing an image batch, to mask <code>init_image</code>. White pixels in the mask will be
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b>prompt</b>
+            (<code>`str`</code>)
+        – <p>Input string for the diffusion model</p>
+      </li>
+      <li class="field-body">
+        <b>init_image</b>
+            (<code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>)
+        – <p><code>Image</code>, or tensor representing an image batch, that will be used as the starting point for the process.
+If provided, output will be of type <code>PipelineImg2ImgExplainerOutput</code> or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>mask_image</b>
+            (<code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>)
+        – <p><code>Image</code>, or tensor representing an image batch, to mask <code>init_image</code>. White pixels in the mask will be
 replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be
-converted to a single channel (luminance) before use.</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>attribution_method</code></td>
-          <td>
-                <code>`Union[str, AttributionMethods]`, *optional*</code>
-          </td>
-          <td><p><code>AttributionMethods</code> or <code>str</code> with the attribution algorithms to compute.
+converted to a single channel (luminance) before use.</p>
+      </li>
+      <li class="field-body">
+        <b>attribution_method</b>
+            (<code>`Union[str, AttributionMethods]`, *optional*</code>)
+        – <p><code>AttributionMethods</code> or <code>str</code> with the attribution algorithms to compute.
 Only one algorithm per type of attribution. If <code>str</code> is provided, the same algorithm
-will be applied to calculate both token and pixel attributions.</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>explanation_2d_bounding_box</code></td>
-          <td>
-                <code>`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*</code>
-          </td>
-          <td><p>Tuple with the bounding box coordinates to calculate attributions for.
+will be applied to calculate both token and pixel attributions.</p>
+      </li>
+      <li class="field-body">
+        <b>explanation_2d_bounding_box</b>
+            (<code>`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*</code>)
+        – <p>Tuple with the bounding box coordinates to calculate attributions for.
 The tuple is like (upper left corner, bottom right corner). Example: <code>((0, 0), (300, 300))</code>
 If this argument is provided, the output will be of type <code>PipelineExplainerForBoundingBoxOutput</code>
-or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>-</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>consider_special_tokens</code></td>
-          <td>
-                <code>bool, defaults to `True`</code>
-          </td>
-          <td><p>If True, token attributions will also show attributions for <code>pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES</code></p></td>
-          <td>
-                <code>False</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>clean_token_prefixes_and_suffixes</code></td>
-          <td>
-                <code>bool, defaults to `True`</code>
-          </td>
-          <td><p>If True, tries to clean prefixes and suffixes added by the <code>pipe.tokenizer</code>.</p></td>
-          <td>
-                <code>True</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>run_safety_checker</code></td>
-          <td>
-                <code>bool, defaults to `False`</code>
-          </td>
-          <td><p>If True, will run the NSFW checker and return a black image if the safety checker says so.</p></td>
-          <td>
-                <code>False</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>n_last_diffusion_steps_to_consider_for_attributions</code></td>
-          <td>
-                <code>int, *optional*</code>
-          </td>
-          <td><p>If not provided, it will calculate explanations for the output image based on all the diffusion steps.
+or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>-</p>
+      </li>
+      <li class="field-body">
+        <b>consider_special_tokens</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, token attributions will also show attributions for <code>pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES</code></p>
+      </li>
+      <li class="field-body">
+        <b>clean_token_prefixes_and_suffixes</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, tries to clean prefixes and suffixes added by the <code>pipe.tokenizer</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>run_safety_checker</b>
+            (<code>bool, defaults to `False`</code>)
+        – <p>If True, will run the NSFW checker and return a black image if the safety checker says so.</p>
+      </li>
+      <li class="field-body">
+        <b>n_last_diffusion_steps_to_consider_for_attributions</b>
+            (<code>int, *optional*</code>)
+        – <p>If not provided, it will calculate explanations for the output image based on all the diffusion steps.
 If given a number, it will only use the last provided diffusion steps.
-Set to <code>n_last_diffusion_steps_to_consider_for_attributions=0</code> for deactivating attributions calculation.</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>get_images_for_all_inference_steps</code></td>
-          <td>
-                <code>bool, defaults to `True`</code>
-          </td>
-          <td><p>If True, will return all the images during diffusion in <code>output.all_images_during_generation</code></p></td>
-          <td>
-                <code>True</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>output_type</code></td>
-          <td>
-                <code>str, *optional*, defaults to `&#34;pil&#34;`</code>
-          </td>
-          <td><p>The output format of the generated image. Choose between
-<a href="https://pillow.readthedocs.io/en/stable/">PIL</a>: <code>PIL.Image.Image</code> or <code>torch.Tensor</code>.</p></td>
-          <td>
-                <code>&#39;pil&#39;</code>
-          </td>
-        </tr>
-        <tr>
-          <td><code>**kwargs</code></td>
-          <td>
-          </td>
-          <td><p>Used to pass more arguments to DiffusionPipeline.<strong>call</strong>.</p></td>
-          <td>
-                <code>{}</code>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+Set to <code>n_last_diffusion_steps_to_consider_for_attributions=0</code> for deactivating attributions calculation.</p>
+      </li>
+      <li class="field-body">
+        <b>get_images_for_all_inference_steps</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, will return all the images during diffusion in <code>output.all_images_during_generation</code></p>
+      </li>
+      <li class="field-body">
+        <b>output_type</b>
+            (<code>str, *optional*, defaults to `&#34;pil&#34;`</code>)
+        – <p>The output format of the generated image. Choose between
+<a href="https://pillow.readthedocs.io/en/stable/">PIL</a>: <code>PIL.Image.Image</code> or <code>torch.Tensor</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>**kwargs</b>
+        – <p>Used to pass more arguments to DiffusionPipeline.<strong>call</strong>.</p>
+      </li>
+  </ul>
 
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineExplainerOutput</code>], [<code>PipelineExplainerForBoundingBoxOutput</code>],</p></td>
-        </tr>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineImg2ImgExplainerOutput</code>] or [<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>]</p></td>
-        </tr>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineExplainerOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box=None</code></p></td>
-        </tr>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineExplainerForBoundingBoxOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box is not None</code></p></td>
-        </tr>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineImg2ImgExplainerOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box=None</code></p></td>
-        </tr>
-        <tr>
-          <td>
-                <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
-          </td>
-          <td><p>[<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box is not None</code></p></td>
-        </tr>
-    </tbody>
-  </table>
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerOutput</code>], [<code>PipelineExplainerForBoundingBoxOutput</code>],</p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerOutput</code>] or [<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>]</p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box=None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerForBoundingBoxOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box is not None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box=None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box is not None</code></p>
+      </li>
+  </ul>
 
       <details class="quote">
         <summary>Source code in <code>diffusers_interpret/explainer.py</code></summary>

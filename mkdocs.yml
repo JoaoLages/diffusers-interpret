@@ -1,0 +1,89 @@
+site_name: "Diffusers-Interpret"
+site_url: "https://JoaoLages.github.io/diffusers-interpret/"
+site_description: "Model explainer tool built on top of the 🤗 Diffusers library"
+repo_name: "JoaoLages/diffusers-interpret"
+repo_url: "https://github.com/JoaoLages/diffusers-interpret"
+
+theme:
+  name: "material"
+  icon:
+    logo: material/image-search-outline
+    repo: fontawesome/brands/github
+  favicon: img/image-search.svg
+  features:
+    - navigation.top
+    - navigation.tabs
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+  palette:
+  # Palette toggle for automatic mode (sponsors-only)
+  # - media: "(prefers-color-scheme)"
+  #   primary: yellow
+  #   accent: red
+  #   toggle:
+  #     icon: material/brightness-auto
+  #     name: Switch to light mode
+
+  # Palette toggle for light mode    
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    primary: yellow
+    accent: red
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to dark mode
+  
+  # Palette toggle for dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: yellow
+    accent: red
+    toggle:
+      icon: material/weather-night
+      name: Switch to light mode
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src/diffusers_interpret]
+          options:
+            members_order: source
+            docstring_section_style: list
+            show_if_no_docstring: true
+            show_signature_annotations: true
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+watch:
+  - src/diffusers_interpret
+
+nav:
+  - index.md
+  - explainer: api/explainer.md
+  - License: license.md
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - pymdownx.magiclink
+  - pymdownx.b64
+  - pymdownx.superfences # for code block syntax highlighting
+  - pymdownx.snippets:
+      check_paths: true
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/JoaoLages
+    - icon: material/gmail
+      link: mailto:joaop.glages@gmail.com

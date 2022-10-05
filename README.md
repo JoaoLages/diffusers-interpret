@@ -2,7 +2,7 @@
 
 # Diffusers-Interpret 🤗🧨🕵️‍♀️
 
-![PyPI Latest Package Version](https://img.shields.io/pypi/v/diffusers-interpret?logo=pypi&style=flat&color=orange) ![GitHub License](https://img.shields.io/github/license/JoaoLages/diffusers-interpret?logo=github&style=flat&color=green) 
+![PyPI Latest Package Version](https://img.shields.io/pypi/v/diffusers-interpret?logo=pypi&style=flat&color=orange) ![GitHub License](https://img.shields.io/github/license/JoaoLages/diffusers-interpret?logo=github&style=flat&color=green) [![Documentation Status](https://readthedocs.org/projects/diffusers-interpret/badge/?version=latest)](https://diffusers-interpret.readthedocs.io/en/latest/?badge=latest)
 
 `diffusers-interpret` is a model explainability tool built on top of [🤗 Diffusers](https://github.com/huggingface/diffusers)
 </div>
@@ -52,7 +52,7 @@ with torch.autocast('cuda'):
 ```
 
 If you are having GPU memory problems, try reducing `n_last_diffusion_steps_to_consider_for_attributions`, `height`, `width` and/or `num_inference_steps`.
-```
+```python
 output = explainer(
     prompt, 
     num_inference_steps=15,
@@ -65,7 +65,7 @@ output = explainer(
 You can completely deactivate token/pixel attributions computation by passing `n_last_diffusion_steps_to_consider_for_attributions=0`.  
 
 Gradient checkpointing also reduces GPU usage, but makes computations a bit slower:
-```
+```python
 explainer = StableDiffusionPipelineExplainer(pipe, gradient_checkpointing=True)
 ```
 

@@ -1,0 +1,2281 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Model explainer tool built on top of the 🤗 Diffusers library">
+      
+      
+      
+        <link rel="canonical" href="https://JoaoLages.github.io/diffusers-interpret/api/explainer/">
+      
+      <link rel="icon" href="../../img/image-search.svg">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.5.1">
+    
+    
+      
+        <title>explainer - Diffusers-Interpret</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.2e8b5541.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.cbb835fc.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="yellow" data-md-color-accent="red">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#explainer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Diffusers-Interpret" class="md-header__button md-logo" aria-label="Diffusers-Interpret" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.5 9c.7 0 1.29-.24 1.77-.73.49-.48.73-1.07.73-1.77 0-.67-.24-1.27-.73-1.77-.48-.5-1.07-.73-1.77-.73-.67 0-1.27.23-1.77.73S13 5.83 13 6.5c0 .7.23 1.29.73 1.77.5.49 1.1.73 1.77.73m3.81-.09 3.1 3.09L21 13.41l-3.14-3.1c-.78.47-1.58.69-2.39.69-1.25 0-2.31-.42-3.17-1.3-.85-.87-1.3-1.93-1.3-3.2 0-1.23.45-2.3 1.33-3.17C13.2 2.45 14.27 2 15.5 2c1.27 0 2.33.45 3.2 1.33.88.87 1.3 1.94 1.3 3.17 0 .83-.22 1.63-.69 2.41M16.5 18h-11l2.75-3.5 1.97 2.33 2.72-3.52L16.5 18m1.5-5 2 2v5c0 .55-.19 1-.59 1.4-.41.39-.88.6-1.41.6H4c-.55 0-1-.21-1.4-.6-.39-.4-.6-.85-.6-1.4V6c0-.53.21-1 .6-1.41C3 4.19 3.45 4 4 4h5.5c-.3.64-.47 1.31-.5 2H4v14h14v-7Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Diffusers-Interpret
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              explainer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="yellow" data-md-color-accent="red"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="yellow" data-md-color-accent="red"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/JoaoLages/diffusers-interpret" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    JoaoLages/diffusers-interpret
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../.." class="md-tabs__link">
+      Home
+    </a>
+  </li>
+
+      
+        
+  
+  
+    
+  
+
+
+  <li class="md-tabs__item">
+    <a href="./" class="md-tabs__link md-tabs__link--active">
+      explainer
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../../license/" class="md-tabs__link">
+      License
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Diffusers-Interpret" class="md-nav__button md-logo" aria-label="Diffusers-Interpret" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.5 9c.7 0 1.29-.24 1.77-.73.49-.48.73-1.07.73-1.77 0-.67-.24-1.27-.73-1.77-.48-.5-1.07-.73-1.77-.73-.67 0-1.27.23-1.77.73S13 5.83 13 6.5c0 .7.23 1.29.73 1.77.5.49 1.1.73 1.77.73m3.81-.09 3.1 3.09L21 13.41l-3.14-3.1c-.78.47-1.58.69-2.39.69-1.25 0-2.31-.42-3.17-1.3-.85-.87-1.3-1.93-1.3-3.2 0-1.23.45-2.3 1.33-3.17C13.2 2.45 14.27 2 15.5 2c1.27 0 2.33.45 3.2 1.33.88.87 1.3 1.94 1.3 3.17 0 .83-.22 1.63-.69 2.41M16.5 18h-11l2.75-3.5 1.97 2.33 2.72-3.52L16.5 18m1.5-5 2 2v5c0 .55-.19 1-.59 1.4-.41.39-.88.6-1.41.6H4c-.55 0-1-.21-1.4-.6-.39-.4-.6-.85-.6-1.4V6c0-.53.21-1 .6-1.41C3 4.19 3.45 4 4 4h5.5c-.3.64-.47 1.31-.5 2H4v14h14v-7Z"/></svg>
+
+    </a>
+    Diffusers-Interpret
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/JoaoLages/diffusers-interpret" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    JoaoLages/diffusers-interpret
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          explainer
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        explainer
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#explainer" class="md-nav__link">
+    explainer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explainer.BasePipelineExplainer" class="md-nav__link">
+    BasePipelineExplainer
+  </a>
+  
+    <nav class="md-nav" aria-label="BasePipelineExplainer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explainer.BasePipelineExplainer.__call__" class="md-nav__link">
+    __call__()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explainer.BasePipelineImg2ImgExplainer" class="md-nav__link">
+    BasePipelineImg2ImgExplainer
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../license/" class="md-nav__link">
+        License
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#explainer" class="md-nav__link">
+    explainer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explainer.BasePipelineExplainer" class="md-nav__link">
+    BasePipelineExplainer
+  </a>
+  
+    <nav class="md-nav" aria-label="BasePipelineExplainer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explainer.BasePipelineExplainer.__call__" class="md-nav__link">
+    __call__()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explainer.BasePipelineImg2ImgExplainer" class="md-nav__link">
+    BasePipelineImg2ImgExplainer
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/JoaoLages/diffusers-interpret/edit/master/docs/api/explainer.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+  <h1>explainer</h1>
+
+<div class="doc doc-object doc-module">
+
+
+<a id="explainer"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="explainer.BasePipelineExplainer" class="doc doc-heading">
+        <code>BasePipelineExplainer</code>
+
+
+<a href="#explainer.BasePipelineExplainer" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="abc.ABC">ABC</span></code></p>
+
+  
+      <p>Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>diffusers_interpret/explainer.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">BasePipelineExplainer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Core base class to explain all DiffusionPipeline: text2img, img2img and inpaint pipelines</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">:</span> <span class="n">DiffusionPipeline</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gradient_checkpointing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span> <span class="o">=</span> <span class="n">pipe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="o">.</span><span class="n">_progress_bar_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">,</span> <span class="s1">&#39;_progress_bar_config&#39;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}),</span>
+            <span class="s1">&#39;disable&#39;</span><span class="p">:</span> <span class="ow">not</span> <span class="n">verbose</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span> <span class="o">=</span> <span class="n">gradient_checkpointing</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing_enable</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_preprocess_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">attribution_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AttributionMethods</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explanation_2d_bounding_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">consider_special_tokens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">run_safety_checker</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">get_images_for_all_inference_steps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">output_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pil&#39;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">PipelineExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>
+    <span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls a DiffusionPipeline and generates explanations for a given prompt.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prompt (`str`):</span>
+<span class="sd">                Input string for the diffusion model</span>
+<span class="sd">            init_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):</span>
+<span class="sd">                `Image`, or tensor representing an image batch, that will be used as the starting point for the process.</span>
+<span class="sd">                If provided, output will be of type `PipelineImg2ImgExplainerOutput` or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`.</span>
+<span class="sd">            mask_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):</span>
+<span class="sd">                `Image`, or tensor representing an image batch, to mask `init_image`. White pixels in the mask will be</span>
+<span class="sd">                replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be</span>
+<span class="sd">                converted to a single channel (luminance) before use.</span>
+<span class="sd">            attribution_method (`Union[str, AttributionMethods]`, *optional*):</span>
+<span class="sd">                `AttributionMethods` or `str` with the attribution algorithms to compute.</span>
+<span class="sd">                Only one algorithm per type of attribution. If `str` is provided, the same algorithm</span>
+<span class="sd">                will be applied to calculate both token and pixel attributions.</span>
+<span class="sd">            explanation_2d_bounding_box (`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*):</span>
+<span class="sd">                Tuple with the bounding box coordinates to calculate attributions for.</span>
+<span class="sd">                The tuple is like (upper left corner, bottom right corner). Example: `((0, 0), (300, 300))`</span>
+<span class="sd">                If this argument is provided, the output will be of type `PipelineExplainerForBoundingBoxOutput`</span>
+<span class="sd">                or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`-</span>
+<span class="sd">            consider_special_tokens (bool, defaults to `True`):</span>
+<span class="sd">                If True, token attributions will also show attributions for `pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES`</span>
+<span class="sd">            clean_token_prefixes_and_suffixes (bool, defaults to `True`):</span>
+<span class="sd">                If True, tries to clean prefixes and suffixes added by the `pipe.tokenizer`.</span>
+<span class="sd">            run_safety_checker (bool, defaults to `False`):</span>
+<span class="sd">                If True, will run the NSFW checker and return a black image if the safety checker says so.</span>
+<span class="sd">            n_last_diffusion_steps_to_consider_for_attributions (int, *optional*):</span>
+<span class="sd">                If not provided, it will calculate explanations for the output image based on all the diffusion steps.</span>
+<span class="sd">                If given a number, it will only use the last provided diffusion steps.</span>
+<span class="sd">                Set to `n_last_diffusion_steps_to_consider_for_attributions=0` for deactivating attributions calculation.</span>
+<span class="sd">            get_images_for_all_inference_steps (bool, defaults to `True`):</span>
+<span class="sd">                If True, will return all the images during diffusion in `output.all_images_during_generation`</span>
+<span class="sd">            output_type (str, *optional*, defaults to `&quot;pil&quot;`):</span>
+<span class="sd">                The output format of the generated image. Choose between</span>
+<span class="sd">                [PIL](https://pillow.readthedocs.io/en/stable/): `PIL.Image.Image` or `torch.Tensor`.</span>
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Used to pass more arguments to DiffusionPipeline.__call__.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [`PipelineExplainerOutput`], [`PipelineExplainerForBoundingBoxOutput`],</span>
+<span class="sd">            [`PipelineImg2ImgExplainerOutput`] or [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`]</span>
+
+<span class="sd">            [`PipelineExplainerOutput`] if `init_image=None` and `explanation_2d_bounding_box=None`</span>
+<span class="sd">            [`PipelineExplainerForBoundingBoxOutput`] if `init_image=None` and `explanation_2d_bounding_box is not None`</span>
+<span class="sd">            [`PipelineImg2ImgExplainerOutput`] if `init_image is not None` and `explanation_2d_bounding_box=None`</span>
+<span class="sd">            [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`] if `init_image is not None` and `explanation_2d_bounding_box is not None`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">attribution_method</span> <span class="o">=</span> <span class="n">attribution_method</span> <span class="ow">or</span> <span class="n">AttributionMethods</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">attribution_method</span> <span class="o">=</span> <span class="n">AttributionMethods</span><span class="p">(</span>
+                <span class="n">tokens_attribution_method</span><span class="o">=</span><span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">),</span>
+                <span class="n">pixels_attribution_method</span><span class="o">=</span><span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">AttributionMethods</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`attribution_method` has to be of type `str` or `AttributionMethods`&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;tokens_attribution_method&#39;</span><span class="p">,</span> <span class="s1">&#39;pixels_attribution_method&#39;</span><span class="p">]:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">AttributionAlgorithm</span><span class="p">):</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># TODO: make compatible with bigger batch sizes</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Passing a list of strings in `prompt` is still not implemented yet.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`prompt` has to be of type `str` but is </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: add asserts for out of bounds</span>
+        <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_input</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">)</span>
+
+        <span class="c1"># get prompt text embeddings</span>
+        <span class="n">tokens</span><span class="p">,</span> <span class="n">text_input</span><span class="p">,</span> <span class="n">text_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_prompt_tokens_token_ids_and_embeds</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">)</span>
+
+        <span class="c1"># Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions &gt; 0`</span>
+        <span class="n">calculate_attributions</span> <span class="o">=</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="ow">is</span> <span class="kc">None</span> \
+                                 <span class="ow">or</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">calculate_attributions</span><span class="p">:</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Get prediction with their associated gradients</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">BaseMimicPipelineCallOutput</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mimic_pipeline_call</span><span class="p">(</span>
+            <span class="n">text_input</span><span class="o">=</span><span class="n">text_input</span><span class="p">,</span>
+            <span class="n">text_embeddings</span><span class="o">=</span><span class="n">text_embeddings</span><span class="p">,</span>
+            <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span>
+            <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">run_safety_checker</span><span class="o">=</span><span class="n">run_safety_checker</span><span class="p">,</span>
+            <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="o">=</span><span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">,</span>
+            <span class="n">get_images_for_all_inference_steps</span><span class="o">=</span><span class="n">get_images_for_all_inference_steps</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="c1"># transform BaseMimicPipelineCallOutput to PipelineExplainerOutput or PipelineExplainerForBoundingBoxOutput</span>
+        <span class="n">output_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s1">&#39;nsfw_content_detected&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">nsfw_content_detected</span><span class="p">,</span>
+            <span class="s1">&#39;all_images_during_generation&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">[</span><span class="s1">&#39;explanation_2d_bounding_box&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">explanation_2d_bounding_box</span>
+            <span class="n">output</span><span class="p">:</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span> <span class="o">=</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">:</span> <span class="n">PipelineExplainerOutput</span> <span class="o">=</span> <span class="n">PipelineExplainerOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">nsfw_content_detected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;NSFW content was detected, it is not possible to provide an explanation. &quot;</span>
+                <span class="s2">&quot;Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Calculate primary attribution scores</span>
+        <span class="k">if</span> <span class="n">calculate_attributions</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PipelineExplainerOutput</span><span class="p">,</span> <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attributions</span><span class="p">(</span>
+                <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+                <span class="n">attribution_method</span><span class="o">=</span><span class="n">attribution_method</span><span class="p">,</span>
+                <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+                <span class="n">text_embeddings</span><span class="o">=</span><span class="n">text_embeddings</span><span class="p">,</span>
+                <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span>
+                <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">,</span>
+                <span class="n">explanation_2d_bounding_box</span><span class="o">=</span><span class="n">explanation_2d_bounding_box</span><span class="p">,</span>
+                <span class="n">consider_special_tokens</span><span class="o">=</span><span class="n">consider_special_tokens</span><span class="p">,</span>
+                <span class="n">clean_token_prefixes_and_suffixes</span><span class="o">=</span><span class="n">clean_token_prefixes_and_suffixes</span><span class="p">,</span>
+                <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="o">=</span><span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># squash batch dimension</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nsfw_content_detected&#39;</span><span class="p">,</span> <span class="s1">&#39;token_attributions&#39;</span><span class="p">,</span> <span class="s1">&#39;pixel_attributions&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+        <span class="c1"># convert to PIL Image if requested</span>
+        <span class="c1"># also draw bounding box in the last image if requested</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="ow">or</span> <span class="n">output_type</span> <span class="o">==</span> <span class="s2">&quot;pil&quot;</span><span class="p">:</span>
+            <span class="n">all_images</span> <span class="o">=</span> <span class="n">GeneratedImages</span><span class="p">(</span>
+                <span class="n">all_generated_images</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="ow">or</span> <span class="p">[</span><span class="n">output</span><span class="o">.</span><span class="n">image</span><span class="p">],</span>
+                <span class="n">pipe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">,</span>
+                <span class="n">remove_batch_dimension</span><span class="o">=</span><span class="n">batch_size</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">prepare_image_slider</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="o">=</span> <span class="n">all_images</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">all_images</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span><span class="p">:</span>
+                <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+                <span class="n">draw</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">explanation_2d_bounding_box</span><span class="p">,</span> <span class="n">outline</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">output_type</span> <span class="o">==</span> <span class="s2">&quot;pil&quot;</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">_post_process_token_attributions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">PipelineExplainerOutput</span><span class="p">,</span>
+        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">token_attributions</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">consider_special_tokens</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineExplainerOutput</span><span class="p">:</span>
+        <span class="c1"># remove special tokens</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_attributions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">image_token_attributions</span><span class="p">,</span> <span class="n">image_tokens</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">token_attributions</span><span class="p">,</span> <span class="n">tokens</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_token_attributions</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_tokens</span><span class="p">)</span>
+
+            <span class="c1"># Add token attributions</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">token</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">image_token_attributions</span><span class="p">,</span> <span class="n">image_tokens</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">consider_special_tokens</span> <span class="ow">or</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">special_tokens_attributes</span><span class="p">:</span>
+
+                    <span class="k">if</span> <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span>
+                        <span class="n">token</span> <span class="o">=</span> <span class="n">clean_token_from_prefixes_and_suffixes</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+                    <span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">TokenAttributions</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">def</span> <span class="nf">_get_attributions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PipelineExplainerOutput</span><span class="p">,</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">],</span>
+        <span class="n">attribution_method</span><span class="p">:</span> <span class="n">AttributionMethods</span><span class="p">,</span>
+        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">text_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explanation_2d_bounding_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">consider_special_tokens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">PipelineExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>
+    <span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating token attributions... &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">token_attributions</span> <span class="o">=</span> <span class="n">gradients_attribution</span><span class="p">(</span>
+            <span class="n">pred_logits</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
+            <span class="n">input_embeds</span><span class="o">=</span><span class="p">(</span><span class="n">text_embeddings</span><span class="p">,),</span>
+            <span class="n">attribution_algorithms</span><span class="o">=</span><span class="p">[</span><span class="n">attribution_method</span><span class="o">.</span><span class="n">tokens_attribution_method</span><span class="p">],</span>
+            <span class="n">explanation_2d_bounding_box</span><span class="o">=</span><span class="n">explanation_2d_bounding_box</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_process_token_attributions</span><span class="p">(</span>
+            <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+            <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+            <span class="n">token_attributions</span><span class="o">=</span><span class="n">token_attributions</span><span class="p">,</span>
+            <span class="n">consider_special_tokens</span><span class="o">=</span><span class="n">consider_special_tokens</span><span class="p">,</span>
+            <span class="n">clean_token_prefixes_and_suffixes</span><span class="o">=</span><span class="n">clean_token_prefixes_and_suffixes</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">special_tokens_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+        <span class="c1"># remove verbosity</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># get special tokens</span>
+        <span class="n">special_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">SPECIAL_TOKENS_ATTRIBUTES</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">special_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">special_tokens</span> <span class="o">+=</span> <span class="n">t</span>
+
+        <span class="c1"># reset verbosity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">special_tokens</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">gradient_checkpointing_enable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">gradient_checkpointing_disable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_checkpointing</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">tokenizer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreTrainedTokenizerBase</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_prompt_tokens_token_ids_and_embeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">BatchEncoding</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_mimic_pipeline_call</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">text_input</span><span class="p">:</span> <span class="n">BatchEncoding</span><span class="p">,</span>
+        <span class="n">text_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">height</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+        <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+        <span class="n">strength</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">num_inference_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">guidance_scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">7.5</span><span class="p">,</span>
+        <span class="n">eta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">generator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">latents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pil&#39;</span><span class="p">,</span>
+        <span class="n">return_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">run_safety_checker</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">get_images_for_all_inference_steps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">BaseMimicPipelineCallOutput</span><span class="p">,</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Image</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Image</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span>
+    <span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mimics DiffusionPipeline.__call__ but adds extra functionality to calculate explanations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            text_input (`BatchEncoding`):</span>
+<span class="sd">                Tokenized input string.</span>
+<span class="sd">            text_embeddings (`torch.Tensor`):</span>
+<span class="sd">                Output of the text encoder.</span>
+<span class="sd">            batch_size (`int`):</span>
+<span class="sd">                Batch size to be used.</span>
+<span class="sd">            init_image (`torch.FloatTensor`, *optional*):</span>
+<span class="sd">                `Image`, or tensor representing an image batch, that will be used as the starting point for the</span>
+<span class="sd">                process.</span>
+<span class="sd">            mask_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):</span>
+<span class="sd">                `Image`, or tensor representing an image batch, to mask `init_image`. White pixels in the mask will be</span>
+<span class="sd">                replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be</span>
+<span class="sd">                converted to a single channel (luminance) before use.</span>
+<span class="sd">            strength (`float`, *optional*, defaults to 0.8):</span>
+<span class="sd">                Conceptually, indicates how much to inpaint the masked area. Must be between 0 and 1. When `strength`</span>
+<span class="sd">                is 1, the denoising process will be run on the masked area for the full number of iterations specified</span>
+<span class="sd">                in `num_inference_steps`. `init_image` will be used as a reference for the masked area, adding more</span>
+<span class="sd">                noise to that region the larger the `strength`. If `strength` is 0, no inpainting will occur.</span>
+<span class="sd">            num_inference_steps (`int`, *optional*, defaults to 50):</span>
+<span class="sd">                The reference number of denoising steps. More denoising steps usually lead to a higher quality image at</span>
+<span class="sd">                the expense of slower inference. This parameter will be modulated by `strength`, as explained above.</span>
+<span class="sd">            guidance_scale (`float`, *optional*, defaults to 7.5):</span>
+<span class="sd">                Guidance scale as defined in [Classifier-Free Diffusion Guidance](https://arxiv.org/abs/2207.12598).</span>
+<span class="sd">                `guidance_scale` is defined as `w` of equation 2. of [Imagen</span>
+<span class="sd">                Paper](https://arxiv.org/pdf/2205.11487.pdf). Guidance scale is enabled by setting `guidance_scale &gt;</span>
+<span class="sd">                1`. Higher guidance scale encourages to generate images that are closely linked to the text `prompt`,</span>
+<span class="sd">                usually at the expense of lower image quality.</span>
+<span class="sd">            eta (`float`, *optional*, defaults to 0.0):</span>
+<span class="sd">                Corresponds to parameter eta (η) in the DDIM paper: https://arxiv.org/abs/2010.02502. Only applies to</span>
+<span class="sd">                [`schedulers.DDIMScheduler`], will be ignored for others.</span>
+<span class="sd">            generator (`torch.Generator`, *optional*):</span>
+<span class="sd">                A [torch generator](https://pytorch.org/docs/stable/generated/torch.Generator.html) to make generation</span>
+<span class="sd">                deterministic.</span>
+<span class="sd">            latents (`torch.FloatTensor`, *optional*):</span>
+<span class="sd">                Pre-generated noisy latents, sampled from a Gaussian distribution, to be used as inputs for image</span>
+<span class="sd">                generation. Can be used to tweak the same generation with different prompts. If not provided, a latents</span>
+<span class="sd">                tensor will ge generated by sampling using the supplied random `generator`.</span>
+<span class="sd">            output_type (`str`, *optional*, defaults to `&quot;pil&quot;`):</span>
+<span class="sd">                The output format of the generate image. Choose between</span>
+<span class="sd">                [PIL](https://pillow.readthedocs.io/en/stable/): `PIL.Image.Image` or `nd.array`.</span>
+<span class="sd">            return_dict (`bool`, *optional*, defaults to `True`):</span>
+<span class="sd">                Whether or not to return a [`~pipelines.stable_diffusion.StableDiffusionPipelineOutput`] instead of a</span>
+<span class="sd">                plain tuple.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            [`BaseMimicPipelineCallOutput`] or `tuple`:</span>
+<span class="sd">            [`BaseMimicPipelineCallOutput`] if `return_dict` is True, otherwise a `tuple`.</span>
+<span class="sd">            When returning a tuple, the first element is a list with the generated images,</span>
+<span class="sd">            the second element contains all the generated images during the diffusion process and the third element is a</span>
+<span class="sd">            list of `bool`s denoting whether the corresponding generated image likely represents &quot;not-safe-for-work&quot;</span>
+<span class="sd">            (nsfw) content, according to the `safety_checker` .</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="explainer.BasePipelineExplainer.__call__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__call__</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask_image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attribution_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">explanation_2d_bounding_box</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">consider_special_tokens</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clean_token_prefixes_and_suffixes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">run_safety_checker</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">get_images_for_all_inference_steps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s1">&#39;pil&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#explainer.BasePipelineExplainer.__call__" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Calls a DiffusionPipeline and generates explanations for a given prompt.</p>
+
+  <p>Parameters:</p>
+  <ul>
+      <li class="field-body">
+        <b>prompt</b>
+            (<code>`str`</code>)
+        – <p>Input string for the diffusion model</p>
+      </li>
+      <li class="field-body">
+        <b>init_image</b>
+            (<code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>)
+        – <p><code>Image</code>, or tensor representing an image batch, that will be used as the starting point for the process.
+If provided, output will be of type <code>PipelineImg2ImgExplainerOutput</code> or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>mask_image</b>
+            (<code>`torch.FloatTensor` or `PIL.Image.Image`, *optional*</code>)
+        – <p><code>Image</code>, or tensor representing an image batch, to mask <code>init_image</code>. White pixels in the mask will be
+replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be
+converted to a single channel (luminance) before use.</p>
+      </li>
+      <li class="field-body">
+        <b>attribution_method</b>
+            (<code>`Union[str, AttributionMethods]`, *optional*</code>)
+        – <p><code>AttributionMethods</code> or <code>str</code> with the attribution algorithms to compute.
+Only one algorithm per type of attribution. If <code>str</code> is provided, the same algorithm
+will be applied to calculate both token and pixel attributions.</p>
+      </li>
+      <li class="field-body">
+        <b>explanation_2d_bounding_box</b>
+            (<code>`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*</code>)
+        – <p>Tuple with the bounding box coordinates to calculate attributions for.
+The tuple is like (upper left corner, bottom right corner). Example: <code>((0, 0), (300, 300))</code>
+If this argument is provided, the output will be of type <code>PipelineExplainerForBoundingBoxOutput</code>
+or <code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>-</p>
+      </li>
+      <li class="field-body">
+        <b>consider_special_tokens</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, token attributions will also show attributions for <code>pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES</code></p>
+      </li>
+      <li class="field-body">
+        <b>clean_token_prefixes_and_suffixes</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, tries to clean prefixes and suffixes added by the <code>pipe.tokenizer</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>run_safety_checker</b>
+            (<code>bool, defaults to `False`</code>)
+        – <p>If True, will run the NSFW checker and return a black image if the safety checker says so.</p>
+      </li>
+      <li class="field-body">
+        <b>n_last_diffusion_steps_to_consider_for_attributions</b>
+            (<code>int, *optional*</code>)
+        – <p>If not provided, it will calculate explanations for the output image based on all the diffusion steps.
+If given a number, it will only use the last provided diffusion steps.
+Set to <code>n_last_diffusion_steps_to_consider_for_attributions=0</code> for deactivating attributions calculation.</p>
+      </li>
+      <li class="field-body">
+        <b>get_images_for_all_inference_steps</b>
+            (<code>bool, defaults to `True`</code>)
+        – <p>If True, will return all the images during diffusion in <code>output.all_images_during_generation</code></p>
+      </li>
+      <li class="field-body">
+        <b>output_type</b>
+            (<code>str, *optional*, defaults to `&#34;pil&#34;`</code>)
+        – <p>The output format of the generated image. Choose between
+<a href="https://pillow.readthedocs.io/en/stable/">PIL</a>: <code>PIL.Image.Image</code> or <code>torch.Tensor</code>.</p>
+      </li>
+      <li class="field-body">
+        <b>**kwargs</b>
+        – <p>Used to pass more arguments to DiffusionPipeline.<strong>call</strong>.</p>
+      </li>
+  </ul>
+
+  <p>Returns:</p>
+  <ul>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerOutput</code>], [<code>PipelineExplainerForBoundingBoxOutput</code>],</p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerOutput</code>] or [<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>]</p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box=None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineExplainerForBoundingBoxOutput</code>] if <code>init_image=None</code> and <code>explanation_2d_bounding_box is not None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box=None</code></p>
+      </li>
+      <li class="field-body">
+            <code><span title="typing.Union">Union</span>[<span title="diffusers_interpret.data.PipelineExplainerOutput">PipelineExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineExplainerForBoundingBoxOutput">PipelineExplainerForBoundingBoxOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerOutput">PipelineImg2ImgExplainerOutput</span>, <span title="diffusers_interpret.data.PipelineImg2ImgExplainerForBoundingBoxOutputOutput">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>]</code>
+        – <p>[<code>PipelineImg2ImgExplainerForBoundingBoxOutputOutput</code>] if <code>init_image is not None</code> and <code>explanation_2d_bounding_box is not None</code></p>
+      </li>
+  </ul>
+
+      <details class="quote">
+        <summary>Source code in <code>diffusers_interpret/explainer.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">attribution_method</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AttributionMethods</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">explanation_2d_bounding_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">consider_special_tokens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">run_safety_checker</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">get_images_for_all_inference_steps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pil&#39;</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">PipelineExplainerOutput</span><span class="p">,</span>
+    <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">,</span>
+    <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">,</span>
+    <span class="n">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>
+<span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls a DiffusionPipeline and generates explanations for a given prompt.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prompt (`str`):</span>
+<span class="sd">            Input string for the diffusion model</span>
+<span class="sd">        init_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):</span>
+<span class="sd">            `Image`, or tensor representing an image batch, that will be used as the starting point for the process.</span>
+<span class="sd">            If provided, output will be of type `PipelineImg2ImgExplainerOutput` or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`.</span>
+<span class="sd">        mask_image (`torch.FloatTensor` or `PIL.Image.Image`, *optional*):</span>
+<span class="sd">            `Image`, or tensor representing an image batch, to mask `init_image`. White pixels in the mask will be</span>
+<span class="sd">            replaced by noise and therefore repainted, while black pixels will be preserved. The mask image will be</span>
+<span class="sd">            converted to a single channel (luminance) before use.</span>
+<span class="sd">        attribution_method (`Union[str, AttributionMethods]`, *optional*):</span>
+<span class="sd">            `AttributionMethods` or `str` with the attribution algorithms to compute.</span>
+<span class="sd">            Only one algorithm per type of attribution. If `str` is provided, the same algorithm</span>
+<span class="sd">            will be applied to calculate both token and pixel attributions.</span>
+<span class="sd">        explanation_2d_bounding_box (`Tuple[Tuple[int, int], Tuple[int, int]]`, *optional*):</span>
+<span class="sd">            Tuple with the bounding box coordinates to calculate attributions for.</span>
+<span class="sd">            The tuple is like (upper left corner, bottom right corner). Example: `((0, 0), (300, 300))`</span>
+<span class="sd">            If this argument is provided, the output will be of type `PipelineExplainerForBoundingBoxOutput`</span>
+<span class="sd">            or `PipelineImg2ImgExplainerForBoundingBoxOutputOutput`-</span>
+<span class="sd">        consider_special_tokens (bool, defaults to `True`):</span>
+<span class="sd">            If True, token attributions will also show attributions for `pipe.tokenizer.SPECIAL_TOKENS_ATTRIBUTES`</span>
+<span class="sd">        clean_token_prefixes_and_suffixes (bool, defaults to `True`):</span>
+<span class="sd">            If True, tries to clean prefixes and suffixes added by the `pipe.tokenizer`.</span>
+<span class="sd">        run_safety_checker (bool, defaults to `False`):</span>
+<span class="sd">            If True, will run the NSFW checker and return a black image if the safety checker says so.</span>
+<span class="sd">        n_last_diffusion_steps_to_consider_for_attributions (int, *optional*):</span>
+<span class="sd">            If not provided, it will calculate explanations for the output image based on all the diffusion steps.</span>
+<span class="sd">            If given a number, it will only use the last provided diffusion steps.</span>
+<span class="sd">            Set to `n_last_diffusion_steps_to_consider_for_attributions=0` for deactivating attributions calculation.</span>
+<span class="sd">        get_images_for_all_inference_steps (bool, defaults to `True`):</span>
+<span class="sd">            If True, will return all the images during diffusion in `output.all_images_during_generation`</span>
+<span class="sd">        output_type (str, *optional*, defaults to `&quot;pil&quot;`):</span>
+<span class="sd">            The output format of the generated image. Choose between</span>
+<span class="sd">            [PIL](https://pillow.readthedocs.io/en/stable/): `PIL.Image.Image` or `torch.Tensor`.</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            Used to pass more arguments to DiffusionPipeline.__call__.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        [`PipelineExplainerOutput`], [`PipelineExplainerForBoundingBoxOutput`],</span>
+<span class="sd">        [`PipelineImg2ImgExplainerOutput`] or [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`]</span>
+
+<span class="sd">        [`PipelineExplainerOutput`] if `init_image=None` and `explanation_2d_bounding_box=None`</span>
+<span class="sd">        [`PipelineExplainerForBoundingBoxOutput`] if `init_image=None` and `explanation_2d_bounding_box is not None`</span>
+<span class="sd">        [`PipelineImg2ImgExplainerOutput`] if `init_image is not None` and `explanation_2d_bounding_box=None`</span>
+<span class="sd">        [`PipelineImg2ImgExplainerForBoundingBoxOutputOutput`] if `init_image is not None` and `explanation_2d_bounding_box is not None`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">attribution_method</span> <span class="o">=</span> <span class="n">attribution_method</span> <span class="ow">or</span> <span class="n">AttributionMethods</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">attribution_method</span> <span class="o">=</span> <span class="n">AttributionMethods</span><span class="p">(</span>
+            <span class="n">tokens_attribution_method</span><span class="o">=</span><span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">),</span>
+            <span class="n">pixels_attribution_method</span><span class="o">=</span><span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">AttributionMethods</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`attribution_method` has to be of type `str` or `AttributionMethods`&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;tokens_attribution_method&#39;</span><span class="p">,</span> <span class="s1">&#39;pixels_attribution_method&#39;</span><span class="p">]:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">AttributionAlgorithm</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">attribution_method</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">AttributionAlgorithm</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># TODO: make compatible with bigger batch sizes</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prompt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Passing a list of strings in `prompt` is still not implemented yet.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;`prompt` has to be of type `str` but is </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># TODO: add asserts for out of bounds</span>
+    <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_input</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">)</span>
+
+    <span class="c1"># get prompt text embeddings</span>
+    <span class="n">tokens</span><span class="p">,</span> <span class="n">text_input</span><span class="p">,</span> <span class="n">text_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_prompt_tokens_token_ids_and_embeds</span><span class="p">(</span><span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">)</span>
+
+    <span class="c1"># Enable gradient, if `n_last_diffusion_steps_to_consider_for_attributions &gt; 0`</span>
+    <span class="n">calculate_attributions</span> <span class="o">=</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="ow">is</span> <span class="kc">None</span> \
+                             <span class="ow">or</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">calculate_attributions</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Get prediction with their associated gradients</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">BaseMimicPipelineCallOutput</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mimic_pipeline_call</span><span class="p">(</span>
+        <span class="n">text_input</span><span class="o">=</span><span class="n">text_input</span><span class="p">,</span>
+        <span class="n">text_embeddings</span><span class="o">=</span><span class="n">text_embeddings</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">run_safety_checker</span><span class="o">=</span><span class="n">run_safety_checker</span><span class="p">,</span>
+        <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="o">=</span><span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">,</span>
+        <span class="n">get_images_for_all_inference_steps</span><span class="o">=</span><span class="n">get_images_for_all_inference_steps</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span>
+
+    <span class="c1"># transform BaseMimicPipelineCallOutput to PipelineExplainerOutput or PipelineExplainerForBoundingBoxOutput</span>
+    <span class="n">output_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s1">&#39;nsfw_content_detected&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">nsfw_content_detected</span><span class="p">,</span>
+        <span class="s1">&#39;all_images_during_generation&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output</span><span class="p">[</span><span class="s1">&#39;explanation_2d_bounding_box&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">explanation_2d_bounding_box</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span> <span class="o">=</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">PipelineExplainerOutput</span> <span class="o">=</span> <span class="n">PipelineExplainerOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">nsfw_content_detected</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s2">&quot;NSFW content was detected, it is not possible to provide an explanation. &quot;</span>
+            <span class="s2">&quot;Try to set `run_safety_checker=False` if you really want to skip the NSFW safety check.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Calculate primary attribution scores</span>
+    <span class="k">if</span> <span class="n">calculate_attributions</span><span class="p">:</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PipelineExplainerOutput</span><span class="p">,</span> <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attributions</span><span class="p">(</span>
+            <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+            <span class="n">attribution_method</span><span class="o">=</span><span class="n">attribution_method</span><span class="p">,</span>
+            <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+            <span class="n">text_embeddings</span><span class="o">=</span><span class="n">text_embeddings</span><span class="p">,</span>
+            <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span>
+            <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span><span class="p">,</span>
+            <span class="n">explanation_2d_bounding_box</span><span class="o">=</span><span class="n">explanation_2d_bounding_box</span><span class="p">,</span>
+            <span class="n">consider_special_tokens</span><span class="o">=</span><span class="n">consider_special_tokens</span><span class="p">,</span>
+            <span class="n">clean_token_prefixes_and_suffixes</span><span class="o">=</span><span class="n">clean_token_prefixes_and_suffixes</span><span class="p">,</span>
+            <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="o">=</span><span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">batch_size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># squash batch dimension</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nsfw_content_detected&#39;</span><span class="p">,</span> <span class="s1">&#39;token_attributions&#39;</span><span class="p">,</span> <span class="s1">&#39;pixel_attributions&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="c1"># convert to PIL Image if requested</span>
+    <span class="c1"># also draw bounding box in the last image if requested</span>
+    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="ow">or</span> <span class="n">output_type</span> <span class="o">==</span> <span class="s2">&quot;pil&quot;</span><span class="p">:</span>
+        <span class="n">all_images</span> <span class="o">=</span> <span class="n">GeneratedImages</span><span class="p">(</span>
+            <span class="n">all_generated_images</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="ow">or</span> <span class="p">[</span><span class="n">output</span><span class="o">.</span><span class="n">image</span><span class="p">],</span>
+            <span class="n">pipe</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="p">,</span>
+            <span class="n">remove_batch_dimension</span><span class="o">=</span><span class="n">batch_size</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">prepare_image_slider</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span> <span class="o">=</span> <span class="n">all_images</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">all_images</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span><span class="p">:</span>
+            <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">draw</span><span class="o">.</span><span class="n">rectangle</span><span class="p">(</span><span class="n">explanation_2d_bounding_box</span><span class="p">,</span> <span class="n">outline</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output_type</span> <span class="o">==</span> <span class="s2">&quot;pil&quot;</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+
+    <span class="k">return</span> <span class="n">output</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="explainer.BasePipelineImg2ImgExplainer" class="doc doc-heading">
+        <code>BasePipelineImg2ImgExplainer</code>
+
+
+<a href="#explainer.BasePipelineImg2ImgExplainer" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><a class="autorefs autorefs-internal" title="explainer.BasePipelineExplainer" href="#explainer.BasePipelineExplainer">BasePipelineExplainer</a></code></p>
+
+  
+      <p>Core base class to explain img2img and inpaint pipelines</p>
+
+
+        <details class="quote">
+          <summary>Source code in <code>diffusers_interpret/explainer.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">BasePipelineImg2ImgExplainer</span><span class="p">(</span><span class="n">BasePipelineExplainer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Core base class to explain img2img and inpaint pipelines</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_preprocess_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts input image to tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_preprocess_input</span><span class="p">(</span>
+            <span class="n">prompt</span><span class="o">=</span><span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="o">=</span><span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span><span class="o">=</span><span class="n">mask_image</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">init_image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;missing 1 required positional argument: &#39;init_image&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">init_image</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">init_image</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">init_image</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">init_image</span><span class="p">,</span> <span class="n">mask_image</span>
+
+    <span class="k">def</span> <span class="nf">_get_attributions</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PipelineExplainerOutput</span><span class="p">,</span> <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">],</span>
+        <span class="n">attribution_method</span><span class="p">:</span> <span class="n">AttributionMethods</span><span class="p">,</span>
+        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">text_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">init_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">Image</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">explanation_2d_bounding_box</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">consider_special_tokens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">clean_token_prefixes_and_suffixes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">PipelineExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineExplainerForBoundingBoxOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">,</span>
+        <span class="n">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span>
+    <span class="p">]:</span>
+        <span class="k">if</span> <span class="n">init_image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;missing 1 required positional argument: &#39;init_image&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">input_embeds</span> <span class="o">=</span> <span class="p">(</span><span class="n">text_embeddings</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_embeds</span> <span class="o">=</span> <span class="p">(</span><span class="n">text_embeddings</span><span class="p">,</span> <span class="n">init_image</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating token and image pixel attributions... &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Can&#39;t calculate image pixel attributions &quot;</span>
+                    <span class="s2">&quot;with a specified `n_last_diffusion_steps_to_consider_for_attributions`. &quot;</span>
+                    <span class="s2">&quot;Set `n_last_diffusion_steps_to_consider_for_attributions=None` &quot;</span>
+                    <span class="s2">&quot;if you wish to calculate image pixel attributions&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating token attributions... &quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">attributions</span> <span class="o">=</span> <span class="n">gradients_attribution</span><span class="p">(</span>
+            <span class="n">pred_logits</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
+            <span class="n">input_embeds</span><span class="o">=</span><span class="n">input_embeds</span><span class="p">,</span>
+            <span class="n">attribution_algorithms</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">attribution_method</span><span class="o">.</span><span class="n">tokens_attribution_method</span><span class="p">,</span> <span class="n">attribution_method</span><span class="o">.</span><span class="n">pixels_attribution_method</span>
+            <span class="p">],</span>
+            <span class="n">explanation_2d_bounding_box</span><span class="o">=</span><span class="n">explanation_2d_bounding_box</span>
+        <span class="p">)</span>
+
+        <span class="n">token_attributions</span> <span class="o">=</span> <span class="n">attributions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">pixel_attributions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">n_last_diffusion_steps_to_consider_for_attributions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pixel_attributions</span> <span class="o">=</span> <span class="n">attributions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_process_token_attributions</span><span class="p">(</span>
+            <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+            <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+            <span class="n">token_attributions</span><span class="o">=</span><span class="n">token_attributions</span><span class="p">,</span>
+            <span class="n">consider_special_tokens</span><span class="o">=</span><span class="n">consider_special_tokens</span><span class="p">,</span>
+            <span class="n">clean_token_prefixes_and_suffixes</span><span class="o">=</span><span class="n">clean_token_prefixes_and_suffixes</span>
+        <span class="p">)</span>
+
+        <span class="c1"># removes preprocessing done in diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.preprocess</span>
+        <span class="n">init_image</span> <span class="o">=</span> <span class="p">(</span><span class="n">init_image</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+        <span class="c1"># add batch dimension to mask if needed</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">mask_image</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="p">[</span><span class="n">masks</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">masks</span> <span class="o">=</span> <span class="n">masks</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># construct PixelAttributions objects</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">init_image</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixel_attributions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">masks</span><span class="p">)</span>
+        <span class="n">pixel_attributions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">PixelAttributions</span><span class="p">(</span>
+                <span class="n">attr</span><span class="p">,</span>
+                <span class="n">saliency_map</span><span class="o">=</span><span class="n">SaliencyMap</span><span class="p">(</span>
+                    <span class="n">image</span><span class="o">=</span><span class="n">img</span><span class="p">,</span>
+                    <span class="n">pixel_attributions</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span>
+                    <span class="n">mask</span><span class="o">=</span><span class="n">mask</span>
+                <span class="p">)</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">img</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">pixel_attributions</span><span class="p">,</span> <span class="n">masks</span> <span class="ow">or</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="n">output_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
+            <span class="s1">&#39;nsfw_content_detected&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">nsfw_content_detected</span><span class="p">,</span>
+            <span class="s1">&#39;all_images_during_generation&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">all_images_during_generation</span><span class="p">,</span>
+            <span class="s1">&#39;token_attributions&#39;</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">token_attributions</span><span class="p">,</span>
+            <span class="s1">&#39;pixel_attributions&#39;</span><span class="p">:</span> <span class="n">pixel_attributions</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">explanation_2d_bounding_box</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output_kwargs</span><span class="p">[</span><span class="s1">&#39;explanation_2d_bounding_box&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">explanation_2d_bounding_box</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">PipelineImg2ImgExplainerForBoundingBoxOutputOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">PipelineImg2ImgExplainerOutput</span><span class="p">(</span><span class="o">**</span><span class="n">output_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 17, 2022</span>
+      
+        <br>
+        Created:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">September 16, 2022</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Home
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../../license/" class="md-footer__link md-footer__link--next" aria-label="Next: License" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              License
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+      
+      
+    
+    <a href="https://github.com/JoaoLages" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    <a href="mailto:joaop.glages@gmail.com" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.top", "navigation.tabs", "navigation.indexes", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.ecf98df9.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d691e9de.min.js"></script>
+      
+    
+  </body>
+</html>
